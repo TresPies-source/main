@@ -7,7 +7,7 @@ import { Flame, Trophy, TrendingUp } from "lucide-react";
 
 export default function DashboardPage() {
   return (
-    <MainLayout title="Growth">
+    <MainLayout title="Growth Dashboard">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -34,8 +34,8 @@ export default function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-bold">5 <span className="text-lg font-normal text-muted-foreground">days</span></p>
-              <p className="text-sm text-muted-foreground mt-1">You're on a roll! Keep it up.</p>
+              <p className="text-4xl font-bold">0 <span className="text-lg font-normal text-muted-foreground">days</span></p>
+              <p className="text-sm text-muted-foreground mt-1">Start your first focus session to build a streak!</p>
             </CardContent>
           </Card>
           <Card>
@@ -45,15 +45,8 @@ export default function DashboardPage() {
                 Personal Records
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between items-center">
-                <p className="text-sm">Longest Focus Session</p>
-                <Badge variant="secondary">45:12</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm">Most Wins in a Day</p>
-                <Badge variant="secondary">7</Badge>
-              </div>
+            <CardContent className="space-y-4 text-center text-sm text-muted-foreground pt-4">
+              <p>Your personal bests will appear here as you use the app.</p>
             </CardContent>
           </Card>
         </div>

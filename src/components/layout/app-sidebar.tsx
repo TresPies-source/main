@@ -11,7 +11,6 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   BrainCircuit,
   Gift,
@@ -22,6 +21,7 @@ import {
   Sparkles,
   Sunrise,
 } from "lucide-react";
+import Link from "next/link";
 
 const menuItems = [
   { href: "/", label: "Growth", icon: LayoutDashboard },
@@ -30,6 +30,10 @@ const menuItems = [
   { href: "/gratitude", label: "Gratitude Jar", icon: Gift },
   { href: "/intention", label: "Intention Setter", icon: Sunrise },
 ];
+
+const bottomMenuItems = [
+    { href: "/settings", label: "Settings", icon: Settings },
+]
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -42,7 +46,7 @@ export default function AppSidebar() {
           <span className="text-xl font-semibold font-headline">Zen Jar</span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 flex-1">
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.label}>
@@ -51,21 +55,32 @@ export default function AppSidebar() {
                 isActive={pathname === item.href}
                 tooltip={{ children: item.label }}
               >
-                <a href={item.href}>
+                <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <Separator />
       <SidebarFooter className="p-2">
-        <Button variant="ghost" className="justify-start gap-2">
-          <Settings />
-          <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-        </Button>
+        <SidebarMenu>
+            {bottomMenuItems.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={{ children: item.label }}
+                >
+                    <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                    </Link>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+        </SidebarMenu>
         <Button variant="ghost" className="justify-start gap-2">
           <LogOut />
            <span className="group-data-[collapsible=icon]:hidden">Logout</span>

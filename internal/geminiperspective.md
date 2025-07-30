@@ -68,4 +68,16 @@ The wireframe covers empty states for the individual jars, which is excellent. F
 
 These small touches can make the initial experience much more welcoming and guide the user on how to get started.
 
+### 4. Further Questions on Project Direction
+
+1.  **Cross-Platform Prioritization:** The roadmap includes a web app, Chrome extension, Slack bot, and Discord bot. What is the priority for these? Should we aim for a simultaneous launch, or focus on perfecting the web app and one extension (like Chrome) first to gather initial user feedback before building out the bots?
+
+2.  **Monetization Teasers:** For Pro features like the "Growth Insights" on the dashboard, what is the preferred user experience for free users? Should we show a disabled or blurred-out version of the charts to visually entice them, or simply use a card with a clear "Upgrade to Pro to unlock your Growth Dashboard" call-to-action?
+
+3.  **Data Export and Portability:** The "Export All Data" feature is key for user trust. What format would be most valuable for the user? A developer-friendly JSON file, or something more human-readable like separate CSV files for tasks, wins, and gratitude entries? Also, should we include a "Delete My Account and All Data" button in the settings from day one?
+
+4.  **Initial Onboarding Experience:** How do we want to introduce a new user to ZenJar's philosophy? Should there be a brief, dismissible tour or a series of pop-up tips that highlight the "count-up" timer and the purpose of each jar when they first visit a page?
+
+5.  **Long-Term AI Vision:** The current AI features are focused on organization and encouragement. Looking ahead to "Phase 7: AI Agent Integration Readiness," what kind of collaborative tasks do we envision? For instance, could an external AI agent eventually be given permission to proactively suggest tasks based on a user's calendar, or to create a "gratitude summary" at the end of the week? Understanding this helps in designing a scalable and secure backend API.
+
 These are my initial thoughts to help us build the best possible version of ZenJar. I'm excited to move forward and am ready for the next step!

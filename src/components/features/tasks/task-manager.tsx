@@ -80,45 +80,81 @@ export function TaskManager() {
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
+    const currentMount = mountRef.current;
 
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf3f0e9);
-    const camera = new THREE.PerspectiveCamera(75, mountRef.current.clientWidth / mountRef.current.clientHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 5;
     
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-    mountRef.current.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
+    currentMount.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
     
-    // Placeholder Jar
+    // Jar
     const geometry = new THREE.BoxGeometry(1.5, 2, 1.5);
     const material = new THREE.MeshStandardMaterial({ color: 'royalblue' });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    const jarMesh = new THREE.Mesh(geometry, material);
+    scene.add(jarMesh);
+    
+    // Animation variables
+    let isAnimating = false;
+    let animationProgress = 0;
+    const animationDuration = 0.3; // seconds
 
     // Animation loop
     let animationFrameId: number;
+    const clock = new THREE.Clock();
+    
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      cube.rotation.x += 0.005;
-      cube.rotation.y += 0.005;
+      const deltaTime = clock.getDelta();
+
+      if (isAnimating) {
+        animationProgress += deltaTime;
+        const phase = animationProgress / animationDuration;
+
+        if (phase < 0.5) {
+          // Scaling up
+          const scale = 1 + 0.2 * Math.sin(phase * 2 * Math.PI);
+          jarMesh.scale.set(scale, scale, scale);
+        } else if (phase < 1) {
+          // Scaling down
+           const scale = 1 + 0.2 * Math.sin(phase * 2 * Math.PI);
+          jarMesh.scale.set(scale, scale, scale);
+        } else {
+          // End of animation
+          jarMesh.scale.set(1, 1, 1);
+          isAnimating = false;
+          animationProgress = 0;
+        }
+      }
+
+      jarMesh.rotation.y += 0.005;
+
       renderer.render(scene, camera);
     };
+    
+    if (playAddAnimation) {
+        isAnimating = true;
+        setPlayAddAnimation(false); // Reset state after triggering
+    }
+
     animate();
 
     // Handle resize
     const handleResize = () => {
-        if(mountRef.current) {
-            const width = mountRef.current.clientWidth;
-            const height = mountRef.current.clientHeight;
+        if(currentMount) {
+            const width = currentMount.clientWidth;
+            const height = currentMount.clientHeight;
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
@@ -131,22 +167,15 @@ export function TaskManager() {
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
-      if (mountRef.current) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (currentMount) {
+        currentMount.removeChild(renderer.domElement);
       }
       geometry.dispose();
       material.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [playAddAnimation]);
 
-
-  useEffect(() => {
-    if (playAddAnimation) {
-        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
-        return () => clearTimeout(timer);
-    }
-  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -331,7 +360,7 @@ export function TaskManager() {
     }
     setSubtaskState({ task: task, loading: true, subtasks: [] });
     try {
-        const result = await callGenerateSubtasks(task);
+        const result = await callGenerateSubtasks({ task: task.task });
         setSubtaskState({ task: task, loading: false, subtasks: result.subtasks });
     } catch (error) {
         console.error("Error generating subtasks: ", error);

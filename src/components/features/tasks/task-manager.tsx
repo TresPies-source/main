@@ -71,13 +71,13 @@ export function TaskManager() {
       return;
     }
 
-    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid), orderBy('createdAt', 'asc'));
+    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedTasks: Task[] = [];
       querySnapshot.forEach((doc) => {
         fetchedTasks.push({ ...doc.data(), id: doc.id } as Task);
       });
-      setTasks(fetchedTasks);
+      setTasks(fetchedTasks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
     });
 
     return () => unsubscribe();
@@ -186,7 +186,12 @@ export function TaskManager() {
         return;
     }
 
-    const tasksToSync = tasks.map(t => ({...t, task: t.task}));
+    const tasksToSync = tasks.map(t => ({
+        task: t.task,
+        category: t.category,
+        priority: t.priority,
+        completed: t.completed
+    }));
 
     try {
         const result = await syncWithGoogleTasks({ accessToken: token, tasks: tasksToSync });
@@ -203,9 +208,9 @@ export function TaskManager() {
         } else {
             throw new Error(result.message);
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error syncing with Google Tasks:', error);
-        toast({ title: 'Sync Error', description: 'Failed to sync tasks with Google. Please try again.', variant: 'destructive' });
+        toast({ title: 'Sync Error', description: error.message || 'Failed to sync tasks with Google. Please try again.', variant: 'destructive' });
     }
     setIsSyncing(false);
   }
@@ -221,7 +226,8 @@ export function TaskManager() {
     }
 
     try {
-        const result = await createCalendarEvent({ accessToken: token, task: drawnTask });
+        const taskToEvent = { ...drawnTask, createdAt: drawnTask.createdAt.toMillis() }
+        const result = await createCalendarEvent({ accessToken: token, task: taskToEvent });
         if (result.success) {
             toast({
                 title: 'Event Created!',
@@ -235,9 +241,9 @@ export function TaskManager() {
         } else {
             throw new Error(result.message);
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating calendar event:', error);
-        toast({ title: 'Calendar Error', description: 'Failed to create event in Google Calendar.', variant: 'destructive' });
+        toast({ title: 'Calendar Error', description: error.message || 'Failed to create event in Google Calendar.', variant: 'destructive' });
     }
     setIsCreatingEvent(false);
     setDrawnTask(null); // Close the dialog
@@ -317,24 +323,13 @@ export function TaskManager() {
             <div className="flex justify-between items-center">
                 <CardTitle className="font-headline">Your Tasks</CardTitle>
                 <div className="flex items-center gap-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" disabled={tasks.length === 0 || !googleAccessToken} onClick={handleExportToGoogleTasks}>
-                              {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4" />}
-                              <span className="sr-only">Export Tasks</span>
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                          <DropdownMenuLabel>Export To</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={handleExportToGoogleTasks} disabled={isSyncing || tasks.length === 0}>
-                            {isSyncing ? 'Syncing...' : 'Google Tasks'}
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button variant="outline" size="icon" disabled={tasks.length === 0} onClick={handleExportToGoogleTasks} title="Export to Google Tasks">
+                      {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4" />}
+                      <span className="sr-only">Export Tasks</span>
+                    </Button>
                     <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
                         <AlertDialogTrigger asChild>
-                           <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
+                           <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask} title="Draw a task">
                                 <Dices className="h-4 w-4" />
                                 <span className="sr-only">Draw a task</span>
                             </Button>
@@ -355,7 +350,7 @@ export function TaskManager() {
                                     </div>
                                 </div>
                                 <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
-                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
+                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent}>
                                     {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
                                     Add to Google Calendar
                                   </Button>
@@ -366,7 +361,7 @@ export function TaskManager() {
                     </AlertDialog>
                      <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                            <Button variant="destructive" size="icon" disabled={tasks.length === 0} title="Empty Jar">
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Empty Jar</span>
                             </Button>
@@ -392,43 +387,49 @@ export function TaskManager() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 h-[200px] overflow-y-auto pr-2">
-              {tasks.length > 0 ? (
-                <>
-                {pendingTasks.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-                    <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
-                    <div className={`w-2 h-10 rounded-full ${getPriorityColor(item.priority)}`}></div>
-                    <div className="flex-1">
-                      <p className="font-medium">{item.task}</p>
-                      <Badge variant="outline" className="mt-1">{item.category}</Badge>
+              {user ? (
+                tasks.length > 0 ? (
+                  <>
+                  {pendingTasks.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                      <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
+                      <div className={`w-2 h-10 rounded-full ${getPriorityColor(item.priority)}`}></div>
+                      <div className="flex-1">
+                        <p className="font-medium">{item.task}</p>
+                        <Badge variant="outline" className="mt-1">{item.category}</Badge>
+                      </div>
+                      <div className="text-sm font-bold">{item.priority}</div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
+                          <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <div className="text-sm font-bold">{item.priority}</div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
-                        <X className="h-4 w-4" />
-                    </Button>
+                  ))}
+                  {completedTasks.length > 0 && (
+                      <div className="pt-4">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Completed</h4>
+                          {completedTasks.map((item) => (
+                              <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg text-muted-foreground">
+                                  <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
+                                  <div className="flex-1">
+                                      <p className="font-medium line-through">{item.task}</p>
+                                      <Badge variant="outline" className="mt-1">{item.category}</Badge>
+                                  </div>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
+                                      <X className="h-4 w-4" />
+                                  </Button>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground pt-12">
+                    <p>Tasks will appear here once processed.</p>
                   </div>
-                ))}
-                {completedTasks.length > 0 && (
-                    <div className="pt-4">
-                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Completed</h4>
-                        {completedTasks.map((item) => (
-                            <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg text-muted-foreground">
-                                <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
-                                <div className="flex-1">
-                                    <p className="font-medium line-through">{item.task}</p>
-                                    <Badge variant="outline" className="mt-1">{item.category}</Badge>
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                </>
+                )
               ) : (
                 <div className="text-center text-muted-foreground pt-12">
-                    {user ? <p>Tasks will appear here once processed.</p> : <p>Please sign in to manage your tasks.</p>}
+                  <p>Please sign in to manage your tasks.</p>
                 </div>
               )}
             </div>

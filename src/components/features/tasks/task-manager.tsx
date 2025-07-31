@@ -16,9 +16,17 @@ import {
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, Check, X } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, Check, X, Download, Upload } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -169,10 +177,26 @@ export function TaskManager() {
       <div>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <Wand2 className="text-accent" />
-              Brain Dump
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="font-headline flex items-center gap-2">
+                <Wand2 className="text-accent" />
+                Brain Dump
+              </CardTitle>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={!user}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Import From</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>Google Keep</DropdownMenuItem>
+                  <DropdownMenuItem disabled>Google Docs</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <CardDescription>
               Enter your tasks below, separated by commas or new lines. Our AI will do the rest.
             </CardDescription>
@@ -212,6 +236,20 @@ export function TaskManager() {
             <div className="flex justify-between items-center">
                 <CardTitle className="font-headline">Your Tasks</CardTitle>
                 <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" disabled={tasks.length === 0}>
+                              <Download className="h-4 w-4" />
+                              <span className="sr-only">Export Tasks</span>
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                          <DropdownMenuLabel>Export To</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem disabled>Google Tasks</DropdownMenuItem>
+                          <DropdownMenuItem disabled>Google Calendar</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                            <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>

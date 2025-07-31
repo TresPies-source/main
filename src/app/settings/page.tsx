@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Info } from "lucide-react";
+import { Info, Link as LinkIcon, Power, PowerOff } from "lucide-react";
 
 function AccountCard() {
     const { user, loading } = useAuth();
@@ -41,12 +41,48 @@ function AccountCard() {
     );
 }
 
+function IntegrationsCard() {
+  // Mock connection status
+  const isConnected = false; 
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Integrations</CardTitle>
+        <CardDescription>Connect ZenJar with your other productivity tools.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div>
+            <h3 className="font-semibold">Google Suite</h3>
+            <p className="text-sm text-muted-foreground">Sync with Calendar, Tasks, Keep, and Drive.</p>
+          </div>
+          <Button variant={isConnected ? 'destructive' : 'outline'}>
+            {isConnected ? (
+              <>
+                <PowerOff className="mr-2 h-4 w-4"/>
+                Disconnect
+              </>
+            ) : (
+              <>
+                 <Power className="mr-2 h-4 w-4"/>
+                Connect
+              </>
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 
 export default function SettingsPage() {
   return (
     <MainLayout title="Settings">
       <div className="space-y-6 max-w-3xl">
         <AccountCard />
+        <IntegrationsCard />
         <Card>
             <CardHeader>
                 <CardTitle>About</CardTitle>

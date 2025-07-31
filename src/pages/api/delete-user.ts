@@ -29,7 +29,7 @@ const adminAuth = admin.auth();
 
 
 async function deleteUserCollections(userId: string) {
-    const collectionsToDelete = ['tasks', 'wins', 'focusSessions', 'gratitude', 'intentions', 'affirmations'];
+    const collectionsToDelete = ['tasks', 'wins', 'focusSessions', 'gratitude', 'intentions', 'affirmations', 'userMappings'];
     const batch = adminDb.batch();
 
     for (const collectionName of collectionsToDelete) {

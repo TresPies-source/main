@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus, ListChecks, RefreshCw, Zap } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, Zap } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +51,7 @@ import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
     id: string;
@@ -334,20 +335,19 @@ export function TaskManager() {
                 <Wand2 className="text-accent" />
                 Brain Dump
               </CardTitle>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={!user}>
+              <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={!user} onClick={handleGoogleDocImport}>
                     <Upload className="mr-2 h-4 w-4" />
-                    Import
+                    Import Doc
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Import From</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>Google Keep (API not available)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleGoogleDocImport}>Google Docs</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Import tasks from a Google Doc</p>
+                </TooltipContent>
+              </Tooltip>
+              </TooltipProvider>
             </div>
             <CardDescription>
               Enter your tasks below, separated by commas or new lines. Our AI will do the rest.
@@ -397,17 +397,29 @@ export function TaskManager() {
             <div className="flex justify-between items-center">
                 <CardTitle className="font-headline">Your Tasks</CardTitle>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" disabled={tasks.length === 0 || isSyncing} onClick={handleSyncToGoogleTasks} title="Sync with Google Tasks">
-                      {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="h-4 w-4" />}
-                      <span className="sr-only">Sync Tasks</span>
-                    </Button>
+                    <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" disabled={tasks.length === 0 || isSyncing} onClick={handleSyncToGoogleTasks}>
+                          {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="h-4 w-4" />}
+                          <span className="sr-only">Sync Tasks</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Sync with Google Tasks</TooltipContent>
+                    </Tooltip>
+                    
                     <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
-                        <AlertDialogTrigger asChild>
-                           <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask} title="Draw a task">
-                                <Dices className="h-4 w-4" />
-                                <span className="sr-only">Draw a task</span>
-                            </Button>
-                        </AlertDialogTrigger>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                               <AlertDialogTrigger asChild>
+                                   <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
+                                        <Dices className="h-4 w-4" />
+                                        <span className="sr-only">Draw a task</span>
+                                    </Button>
+                                </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Draw a Task</TooltipContent>
+                        </Tooltip>
                          {drawnTask && (
                              <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -434,12 +446,17 @@ export function TaskManager() {
                          )}
                     </AlertDialog>
                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon" disabled={tasks.length === 0} title="Empty Jar">
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Empty Jar</span>
-                            </Button>
-                        </AlertDialogTrigger>
+                        <Tooltip>
+                           <TooltipTrigger asChild>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Empty Jar</span>
+                                    </Button>
+                                </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Empty Jar</TooltipContent>
+                        </Tooltip>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -453,6 +470,7 @@ export function TaskManager() {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
+                    </TooltipProvider>
                 </div>
             </div>
             <CardDescription>

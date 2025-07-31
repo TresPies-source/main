@@ -37,10 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // In a real app, you would fetch the user's subscription status here
       // from Firestore or via custom claims after they sign in.
       // For this prototype, we will default all users to the Free tier.
-      // To test Pro features, you can temporarily set this to true.
       if (user) {
-        // To test pro features, uncomment the line below
-        // setIsPro(true); 
+        // You would typically check for a custom claim like `user.getIdTokenResult().then(r => r.claims.pro)`
+        setIsPro(false);
       } else {
         setIsPro(false);
       }

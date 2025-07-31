@@ -1,0 +1,52 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user is the owner of the data
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Task Jar: Users can only access their own tasks
+    match /tasks/{taskId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+    
+    // Gratitude Jar: Users can only access their own gratitude entries
+    match /gratitude/{gratitudeId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Win Jar: Users can only access their own wins
+    match /wins/{winId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+    
+    // Focus Timer Sessions: Users can only access their own sessions
+    match /focusSessions/{sessionId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+    
+    // Intention Setter: Users can only access their own intentions
+    match /intentions/{intentionId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Custom Affirmations: Users can only access their own affirmations
+    match /affirmations/{affirmationId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+    
+    // User Mappings for Bots (e.g., Slack, Discord)
+    // A user should only be able to create a mapping for their own ZenJar user ID.
+    // Reading/deleting might be handled by a backend service.
+    match /userMappings/{mappingId} {
+      allow read: if request.auth != null;
+      allow create: if isOwner(request.resource.data.zenJarUserId);
+      allow update, delete: if false; // Disallow client-side updates/deletes for security
+    }
+
+  }
+}

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, Zap, ChevronsDown, ChevronsUp, FileText, StickyNote } from 'lucide-react';
 import {
   AlertDialog,
@@ -48,6 +49,7 @@ import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-a
 import { generateSubtasks } from '@/ai/flows/generate-subtasks';
 import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
 import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
+import { importFromGoogleDoc } from '@/ai/flows/import-from-google-doc';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
@@ -68,6 +70,9 @@ export function TaskManager() {
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [drawnTask, setDrawnTask] = useState<Task | null>(null);
   const [subtaskState, setSubtaskState] = useState<{task: Task | null, loading: boolean, subtasks: string[]}>({ task: null, loading: false, subtasks: [] });
+  const [isDocImportOpen, setIsDocImportOpen] = useState(false);
+  const [googleDocId, setGoogleDocId] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -273,20 +278,35 @@ export function TaskManager() {
     }
   }
 
-  const handleGoogleDocImport = () => {
-      // In a real app, this would open the Google Picker API to select a file.
-      // For now, it's a placeholder.
-      toast({
-          title: "Feature in development",
-          description: "A file picker to select your Google Doc is coming soon!"
-      })
-  }
+  const handleConfirmImport = async () => {
+    if (!googleDocId) {
+        toast({ title: 'No Document ID', description: 'Please paste the ID of your Google Doc.', variant: 'destructive' });
+        return;
+    }
+    setIsImporting(true);
 
-  const handleGoogleKeepImport = () => {
-      toast({
-          title: "Feature in development",
-          description: "Importing from Google Keep is planned for a future update."
-      })
+    const token = await handleAuthForApi();
+    if(!token) {
+        setIsImporting(false);
+        return;
+    }
+    
+    try {
+        const result = await importFromGoogleDoc({ accessToken: token, documentId: googleDocId });
+        if (result.success && result.content) {
+            setTaskInput(prev => prev ? `${prev}\n${result.content}` : result.content);
+            toast({ title: 'Import Successful', description: 'Your Google Doc content has been added to the text area.'});
+            setIsDocImportOpen(false);
+            setGoogleDocId('');
+        } else {
+            throw new Error(result.message || "Failed to import document.");
+        }
+    } catch (error: any) {
+        console.error("Error importing from Google Doc: ", error);
+        toast({ title: 'Import Error', description: error.message, variant: 'destructive' });
+    }
+
+    setIsImporting(false);
   }
 
 
@@ -301,6 +321,32 @@ export function TaskManager() {
 
   return (
     <>
+    <AlertDialog open={isDocImportOpen} onOpenChange={setIsDocImportOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Import from Google Docs</AlertDialogTitle>
+                <AlertDialogDescription>
+                    To import, open your Google Doc, copy the ID from the URL, and paste it below.
+                    <br />
+                    For example, if your URL is `.../document/d/THIS_IS_THE_ID/edit`, paste "THIS_IS_THE_ID".
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input 
+                placeholder="Paste Google Doc ID here"
+                value={googleDocId}
+                onChange={(e) => setGoogleDocId(e.target.value)}
+                disabled={isImporting}
+            />
+            <AlertDialogFooter>
+                <AlertDialogCancel disabled={isImporting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmImport} disabled={isImporting}>
+                    {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4" />}
+                    Import
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
     <AlertDialog open={!!subtaskState.task} onOpenChange={(open) => !open && setSubtaskState({ task: null, loading: false, subtasks: [] })}>
         {subtaskState.task && (
             <AlertDialogContent>
@@ -353,13 +399,9 @@ export function TaskManager() {
                     <DropdownMenuContent>
                         <DropdownMenuLabel>Import From</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleGoogleDocImport}>
+                        <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)}>
                             <FileText className="mr-2 h-4 w-4" />
                             Google Doc
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleGoogleKeepImport}>
-                             <StickyNote className="mr-2 h-4 w-4" />
-                            Google Keep
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

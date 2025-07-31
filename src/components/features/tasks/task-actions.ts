@@ -1,7 +1,7 @@
 
 'use server';
 
-import { writeBatch, collection, doc, Timestamp, query, where, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { writeBatch, collection, doc, Timestamp, query, where, getDocs, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   categorizeAndPrioritizeTasks,
@@ -23,14 +23,8 @@ export async function processTasks(userId: string, taskInput: string): Promise<C
     throw new Error('User ID and task input are required.');
   }
 
+  // This flow now just processes the text and returns the result without writing to the DB.
   const result = await categorizeAndPrioritizeTasks({ tasks: taskInput });
-  
-  const batch = writeBatch(db);
-  result.forEach((task) => {
-    const docRef = doc(collection(db, 'tasks'));
-    batch.set(docRef, { ...task, userId, createdAt: Timestamp.now(), completed: false });
-  });
-  await batch.commit();
   
   return result;
 }
@@ -76,3 +70,5 @@ export async function callGenerateSubtasks(task: Task) {
 export async function callImportFromGoogleDoc(accessToken: string, documentId: string) {
     return await importFromGoogleDoc({ accessToken, documentId });
 }
+
+    

@@ -11,6 +11,7 @@ import {
   where,
   onSnapshot,
   Timestamp,
+  addDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -52,7 +53,7 @@ import {
     callGenerateSubtasks,
     callImportFromGoogleDoc
 } from './task-actions';
-
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
     id: string;
@@ -80,11 +81,15 @@ export function TaskManager() {
   const [isDocImportOpen, setIsDocImportOpen] = useState(false);
   const [googleDocId, setGoogleDocId] = useState('');
   const [isImporting, setIsImporting] = useState(false);
-  const [playAddAnimation, setPlayAddAnimation] = useState(false);
+  const [playAddAnimation, setPlayAddAnimation] = useState<Task | null>(null);
+  const [playRemoveAnimation, setPlayRemoveAnimation] = useState(false);
+  const [isModelLoading, setIsModelLoading] = useState(true);
+  const [pending3DTasks, setPending3DTasks] = useState<CategorizeAndPrioritizeTasksOutput>([]);
+
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const modelRef = useRef<THREE.Mesh | null>(null);
+  const modelRef = useRef<THREE.Group | null>(null);
   const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
 
   useLayoutEffect(() => {
@@ -94,7 +99,7 @@ export function TaskManager() {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
-    camera.position.z = 4;
+    camera.position.z = 5;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setClearColor(0x000000, 0);
@@ -107,44 +112,133 @@ export function TaskManager() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const geometry = new THREE.BoxGeometry(2, 2, 2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x6B83A3, transparent: true, opacity: 0.8 });
-    const model = new THREE.Mesh(geometry, material);
-    modelRef.current = model;
-    scene.add(model);
+    const loader = new GLTFLoader();
+    setIsModelLoading(true);
+    loader.load(
+        '/models/task-jar.glb',
+        (gltf) => {
+            const model = gltf.scene;
+            model.scale.set(1.5, 1.5, 1.5);
+            model.position.y = -1;
+            modelRef.current = model;
+            scene.add(model);
+            setIsModelLoading(false);
+        },
+        undefined, // onProgress callback not needed
+        (error) => {
+            console.error('An error happened while loading the model.', error);
+            setIsModelLoading(false);
+        }
+    );
     
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    let draggedObject: THREE.Object3D | null = null;
+    const dragPlane = new THREE.Plane();
+    const dragOffset = new THREE.Vector3();
 
     const originalColor = new THREE.Color(0x6B83A3);
     const clickColor = new THREE.Color(0xE5989B);
     
-    let animatedObjects: { mesh: THREE.Mesh; progress: number; }[] = [];
+    let animatedObjects: { mesh: THREE.Mesh; progress: number; type: 'add' | 'remove', targetPosition: THREE.Vector3, startPosition: THREE.Vector3 }[] = [];
     
     const animationDuration = 0.3; 
     const taskAnimationDuration = 1.0;
 
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0, type: 'addTask' };
-      setPlayAddAnimation(false);
+        animatedObjects.push({ 
+            mesh: new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), new THREE.MeshStandardMaterial({ color: 0xffffff })), 
+            progress: 0, 
+            type: 'add',
+            startPosition: new THREE.Vector3(Math.random() * 4 - 2, Math.random() * 4 - 2, 2),
+            targetPosition: new THREE.Vector3(0,0,0)
+        });
+        animatedObjects[animatedObjects.length-1].mesh.position.copy(animatedObjects[animatedObjects.length-1].startPosition);
+        scene.add(animatedObjects[animatedObjects.length-1].mesh);
+        setPlayAddAnimation(null);
+    }
+
+    if (playRemoveAnimation) {
+         animatedObjects.push({ 
+            mesh: new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), new THREE.MeshStandardMaterial({ color: 0xff0000 })), 
+            progress: 0, 
+            type: 'remove',
+            startPosition: new THREE.Vector3(0,0,0),
+            targetPosition: new THREE.Vector3(Math.random() * 6 - 3, Math.random() * 6 - 3, 3)
+        });
+        animatedObjects[animatedObjects.length-1].mesh.position.copy(animatedObjects[animatedObjects.length-1].startPosition);
+        scene.add(animatedObjects[animatedObjects.length-1].mesh);
+        setPlayRemoveAnimation(false);
     }
     
-    const handleMouseDown = (event: MouseEvent) => {
-        if (!currentMount) return;
+    const onMouseDown = (event: MouseEvent) => {
+        if (!currentMount || !modelRef.current) return;
+        const rect = currentMount.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children, true);
+        const clickableObjects = scene.children.filter(c => c.userData.isPendingTask);
+
+        if (intersects.length > 0) {
+            const intersectedObject = intersects[0].object;
+            if(clickableObjects.includes(intersectedObject)) {
+                draggedObject = intersectedObject;
+                dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(dragPlane.normal), draggedObject.position);
+                const intersectionPoint = new THREE.Vector3();
+                raycaster.ray.intersectPlane(dragPlane, intersectionPoint);
+                dragOffset.copy(intersectionPoint).sub(draggedObject.position);
+            } else if (modelRef.current.children.includes(intersectedObject) || intersectedObject === modelRef.current) {
+                animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+            }
+        }
+    };
+    
+    const onMouseMove = (event: MouseEvent) => {
+        if (!draggedObject || !currentMount) return;
         const rect = currentMount.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
+        const intersectionPoint = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersectionPoint);
+        draggedObject.position.copy(intersectionPoint).sub(dragOffset);
+    };
 
-        const intersects = raycaster.intersectObjects(scene.children);
-        
-        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
-            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+    const onMouseUp = async () => {
+        if (draggedObject && modelRef.current) {
+            const jarBox = new THREE.Box3().setFromObject(modelRef.current);
+            const taskBox = new THREE.Box3().setFromObject(draggedObject);
+
+            if (jarBox.intersectsBox(taskBox)) {
+                // Find the task data associated with the dragged object
+                const taskData = pending3DTasks.find(t => t.task === draggedObject?.userData.taskName);
+                if (taskData && user) {
+                    try {
+                        const docRef = await addDoc(collection(db, 'tasks'), { 
+                            ...taskData, 
+                            userId: user.uid, 
+                            createdAt: Timestamp.now(), 
+                            completed: false 
+                        });
+                         setPlayAddAnimation({ ...taskData, id: docRef.id, completed: false, createdAt: Timestamp.now() });
+
+                        // Remove from pending list
+                        setPending3DTasks(prev => prev.filter(t => t.task !== taskData.task));
+                    } catch (error) {
+                         console.error("Error adding task from drop:", error);
+                    }
+                }
+            }
+            draggedObject = null;
         }
     };
     
-    renderer.domElement.addEventListener('mousedown', handleMouseDown);
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('mouseup', onMouseUp);
 
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -153,44 +247,19 @@ export function TaskManager() {
       animationFrameId = requestAnimationFrame(animate);
       const deltaTime = clock.getDelta();
 
-      if(model) {
-        model.rotation.y += 0.005;
-        model.rotation.x += 0.005;
+      if(modelRef.current) {
+        modelRef.current.rotation.y += 0.005;
       }
       
-      if (animationState.current.isAnimating && model) {
-        animationState.current.progress += deltaTime;
-        const phase = animationState.current.progress / animationDuration;
-        
-        if (animationState.current.type === 'click') {
-            if (phase < 1) {
-                (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
-            } else {
-                (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
-                animationState.current.isAnimating = false;
-            }
-        } else if (animationState.current.type === 'addTask') {
-            const taskGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-            const taskMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-            const taskCube = new THREE.Mesh(taskGeometry, taskMaterial);
-            taskCube.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, 2);
-            scene.add(taskCube);
-            animatedObjects.push({ mesh: taskCube, progress: 0 });
-            animationState.current.isAnimating = false; // Reset for next trigger
-        }
-      }
-
-      // Handle animating task cubes into the jar
-      animatedObjects.forEach((obj) => {
+      animatedObjects.forEach((obj, index) => {
         obj.progress += deltaTime / taskAnimationDuration;
         if (obj.progress < 1) {
-            obj.mesh.position.lerp(new THREE.Vector3(0, 0, 0), deltaTime * 2);
+            obj.mesh.position.lerp(obj.targetPosition, deltaTime * 2);
         } else {
             scene.remove(obj.mesh);
+            animatedObjects.splice(index, 1);
         }
       });
-      animatedObjects = animatedObjects.filter(obj => obj.progress < 1);
-
 
       renderer.render(scene, camera);
     };
@@ -209,17 +278,45 @@ export function TaskManager() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('mousemove', onMouseMove);
+      renderer.domElement.removeEventListener('mouseup', onMouseUp);
       cancelAnimationFrame(animationFrameId);
-      if (currentMount) {
+      if (currentMount && renderer.domElement) {
         currentMount.removeChild(renderer.domElement);
       }
+      scene.children.forEach(child => {
+        if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            child.material.dispose();
+        }
+      });
       scene.clear();
       renderer.dispose();
-      geometry.dispose();
-      material.dispose();
     };
-  }, [playAddAnimation]);
+  }, [playAddAnimation, playRemoveAnimation, pending3DTasks, user]);
+
+  useEffect(() => {
+    if (!sceneRef.current) return;
+
+    // Clear old pending tasks
+    sceneRef.current.children.forEach(child => {
+        if (child.userData.isPendingTask) {
+            sceneRef.current?.remove(child);
+        }
+    });
+
+    // Add new pending tasks
+    pending3DTasks.forEach((task, index) => {
+        const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+        const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(-3 + (index % 3) * 3, 2 - Math.floor(index / 3) * 2, 0);
+        cube.userData = { isPendingTask: true, taskName: task.task };
+        sceneRef.current?.add(cube);
+    });
+  }, [pending3DTasks]);
+
 
   useEffect(() => {
     if (!user) {
@@ -229,7 +326,7 @@ export function TaskManager() {
 
     const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        if (querySnapshot.empty) {
+        if (querySnapshot.empty && !user) {
             setTasks(initialTasks);
             return;
         }
@@ -259,11 +356,11 @@ export function TaskManager() {
     setIsLoading(true);
     try {
       const result = await processTasks(user.uid, taskInput);
+      setPending3DTasks(prev => [...prev, ...result]);
       setTaskInput('');
-      setPlayAddAnimation(true);
       toast({
-        title: 'Tasks Added',
-        description: `${result.length} new task(s) have been saved to your jar.`
+        title: 'Tasks Ready to Add',
+        description: `Drag the new items into the jar to save them.`
       })
     } catch (error) {
       console.error('Error processing tasks:', error);
@@ -294,6 +391,7 @@ export function TaskManager() {
     
     try {
         await emptyJar(user.uid);
+        setPlayRemoveAnimation(true);
         toast({
             title: 'Jar Emptied',
             description: 'All tasks have been cleared from your account.',
@@ -307,6 +405,7 @@ export function TaskManager() {
   const handleDeleteTask = async (taskId: string) => {
     try {
         await deleteTask(taskId);
+        setPlayRemoveAnimation(true);
         toast({
             title: "Task Deleted",
             description: "The task has been removed from your jar."
@@ -455,7 +554,7 @@ export function TaskManager() {
     return 'bg-green-500';
   };
   
-  const pendingTasks = tasks.filter(t => !t.completed);
+  const pendingTasksCount = tasks.filter(t => !t.completed).length;
   const completedTasks = tasks.filter(t => t.completed);
 
   return (
@@ -517,10 +616,15 @@ export function TaskManager() {
     </AlertDialog>
 
      <div className="flex flex-col h-full w-full">
-        <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+        <div className="w-full h-[300px] bg-card rounded-lg relative">
+            {isModelLoading && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            )}
             <div ref={mountRef} className="w-full h-full" />
         </div>
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 mt-8">
             <div className="space-y-4">
                 <Card>
                 <CardHeader>
@@ -548,7 +652,7 @@ export function TaskManager() {
                         </DropdownMenu>
                     </div>
                     <CardDescription>
-                    Enter your tasks below. They will appear in the list on the right.
+                    Enter your tasks below. They will appear as items to drag into the jar.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -590,7 +694,7 @@ export function TaskManager() {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
+                                        <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
                                                 <Dices className="h-4 w-4" />
                                                 <span className="sr-only">Draw a task</span>
                                             </Button>
@@ -668,7 +772,7 @@ export function TaskManager() {
                         </div>
                     </div>
                     <CardDescription>
-                        {tasks.length > 0 ? `You have ${pendingTasks.length} pending task(s).` : "Your task jar is empty. Add some tasks!"}
+                        {tasks.length > 0 ? `You have ${pendingTasksCount} pending task(s).` : "Your task jar is empty. Add some tasks!"}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto">
@@ -676,7 +780,7 @@ export function TaskManager() {
                     {
                         tasks.length > 0 ? (
                         <>
-                        {pendingTasks.map((item) => (
+                        {tasks.filter(t => !t.completed).map((item) => (
                             <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
                             <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
                             <div className={`w-2 h-10 rounded-full ${getPriorityColor(item.priority)}`}></div>
@@ -735,3 +839,5 @@ export function TaskManager() {
     </>
   );
 }
+
+    

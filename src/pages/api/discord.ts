@@ -1,6 +1,11 @@
 // src/pages/api/discord.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import { handleDiscordCommand, HandleDiscordCommandInput, HandleDiscordCommandOutput } from '@/ai/flows/handle-discord-command';
+import { handleDiscordCommand } from '@/ai/flows/handle-discord-command';
+
+// In a real app, you would use a library like 'discord-interactions' to handle verification.
+// const { verifyKey } = require('discord-interactions');
+
+const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY;
 
 // Discord interaction types (simplified)
 const INTERACTION_TYPE = {
@@ -21,7 +26,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // In a real app, you MUST verify the request signature here.
     // This is a simplified example and skips verification for prototype purposes.
-    // See: https://discord.com/developers/docs/interactions/receiving-and-responding#security-and-authorization
+    // To implement, get your public key from the Discord Developer Portal.
+    if (DISCORD_PUBLIC_KEY) {
+        const signature = req.headers['x-signature-ed25519'];
+        const timestamp = req.headers['x-signature-timestamp'];
+        const body = req.body; // Raw body is needed, this might require custom body parser config
+
+        // const isVerified = verifyKey(body, signature, timestamp, DISCORD_PUBLIC_KEY);
+        // if (!isVerified) {
+        //     return res.status(401).end('invalid request signature');
+        // }
+    } else {
+        console.warn("Discord signature verification skipped. Set DISCORD_PUBLIC_KEY for production.")
+    }
+
 
     const interaction = req.body;
 
@@ -47,14 +65,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }
             }
             const user_id = interaction.member.user.id;
+            const user_name = interaction.member.user.username;
 
-            // Defer the reply to give our AI flow time to process
-            // We will send a follow-up message later. This is now handled by the response.
-            // But we need to respond to the initial ping quickly.
             
             // This is a simplified, synchronous response for prototyping.
-            // A real-world app should use deferred responses for AI calls.
-             const result = await handleDiscordCommand({ command, options, user_id });
+            // A real-world app should use deferred responses for AI calls to avoid timeouts.
+             const result = await handleDiscordCommand({ command, options, discordUserId: user_id, discordUserName: user_name });
 
             return res.status(200).json({
                 type: COMMAND_RESPONSE_TYPE.CHANNEL_MESSAGE_WITH_SOURCE,

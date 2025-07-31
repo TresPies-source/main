@@ -12,16 +12,29 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { categorizeAndPrioritizeTasks } from './categorize-and-prioritize-tasks';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query, where, getDocs, limit } from 'firebase/firestore';
 
+// In a real app, you would look up the ZenJar user ID associated with the Discord user ID.
+// This requires an OAuth flow where the user links their accounts, typically in the app's settings.
+async function getZenJarUserIdFromDiscordId(discordUserId: string): Promise<string | null> {
+    const userMappingQuery = query(
+        collection(db, 'userMappings'), 
+        where('discordId', '==', discordUserId),
+        limit(1)
+    );
+    const snapshot = await getDocs(userMappingQuery);
+    if (snapshot.empty) {
+        return null; // User has not linked their account
+    }
+    return snapshot.docs[0].data().zenJarUserId;
+}
 
-// In a real app, map Discord user ID to ZenJar user ID. Using a mock for now.
-const MOCK_USER_ID = "discord-user-prototype";
 
 export const HandleDiscordCommandInputSchema = z.object({
   command: z.string().describe("The name of the command."),
   options: z.record(z.any()).optional().describe("The options provided by the user."),
-  user_id: z.string().describe("The Discord user ID."),
+  discordUserId: z.string().describe("The Discord user ID."),
+  discordUserName: z.string().describe("The Discord user's display name.")
 });
 export type HandleDiscordCommandInput = z.infer<typeof HandleDiscordCommandInputSchema>;
 
@@ -31,6 +44,7 @@ export const HandleDiscordCommandOutputSchema = z.object({
 });
 export type HandleDiscordCommandOutput = z.infer<typeof HandleDiscordCommandOutputSchema>;
 
+// This can be moved to a shared utility file.
 const quotes = [
     "The secret of getting ahead is getting started.",
     "The only way to do great work is to love what you do.",
@@ -39,13 +53,14 @@ const quotes = [
     "Success is not final, failure is not fatal: it is the courage to continue that counts.",
 ];
 
-async function getMotivation() {
+async function getMotivation(zenJarUserId: string) {
+    // In a production app, this could also pull from user's custom affirmations.
     const randomIndex = Math.floor(Math.random() * quotes.length);
     return quotes[randomIndex];
 }
 
-async function drawTaskFromJar() {
-    const q = query(collection(db, 'tasks'), where('userId', '==', MOCK_USER_ID), where('completed', '==', false));
+async function drawTaskFromJar(zenJarUserId: string) {
+    const q = query(collection(db, 'tasks'), where('userId', '==', zenJarUserId), where('completed', '==', false));
     const querySnapshot = await getDocs(q);
     const pendingTasks: any[] = [];
     querySnapshot.forEach((doc) => {
@@ -64,11 +79,17 @@ async function drawTaskFromJar() {
 
 
 export async function handleDiscordCommand(input: HandleDiscordCommandInput): Promise<HandleDiscordCommandOutput> {
-    const { command, options, user_id } = input;
+    const { command, options, discordUserId, discordUserName } = input;
+    
+    // Check if the Discord user has linked their ZenJar account.
+    const zenJarUserId = await getZenJarUserIdFromDiscordId(discordUserId);
+    if (!zenJarUserId) {
+        return { content: `Hey @${discordUserName}! To use ZenJar, you first need to link your Discord account from the settings page in the ZenJar app.`};
+    }
 
     switch (command.toLowerCase()) {
         case 'zenjar':
-            const subCommand = options?.subcommand; // Assuming subcommand is passed in options
+            const subCommand = options?.subcommand;
             const taskContent = options?.task;
 
             if (subCommand === 'add' && taskContent) {
@@ -76,18 +97,18 @@ export async function handleDiscordCommand(input: HandleDiscordCommandInput): Pr
                 const task = taskResult[0];
                 await addDoc(collection(db, 'tasks'), {
                     ...task,
-                    userId: MOCK_USER_ID,
+                    userId: zenJarUserId,
                     createdAt: Timestamp.now(),
                     completed: false
                 });
-                return { content: `Task added by <@${user_id}>: **${task.task}** (Category: ${task.category}, Priority: ${task.priority})` };
+                return { content: `Task added for <@${discordUserId}>: **${task.task}** (Category: ${task.category}, Priority: ${task.priority})` };
             }
              if (subCommand === 'pick') {
-                const drawnTask = await drawTaskFromJar();
+                const drawnTask = await drawTaskFromJar(zenJarUserId);
                 return { content: drawnTask };
             }
             if (subCommand === 'motivate') {
-                const quote = await getMotivation();
+                const quote = await getMotivation(zenJarUserId);
                 return { content: `Here's a little motivation for you:\n> ${quote}` };
             }
             

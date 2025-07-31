@@ -12,17 +12,29 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { categorizeAndPrioritizeTasks } from './categorize-and-prioritize-tasks';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, query, where, getDocs, onSnapshot, limit } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query, where, getDocs, limit } from 'firebase/firestore';
 
-// Note: In a real-world app, you'd have a mapping between Slack user IDs and ZenJar user IDs.
-// For this prototype, we'll use a hardcoded user ID for simplicity.
-const MOCK_USER_ID = "slack-user-prototype";
 
+// In a real app, you would look up the ZenJar user ID associated with the Slack user ID.
+// This requires an OAuth flow where the user links their accounts, typically in the app's settings.
+async function getZenJarUserIdFromSlackId(slackUserId: string): Promise<string | null> {
+    const userMappingQuery = query(
+        collection(db, 'userMappings'), 
+        where('slackId', '==', slackUserId),
+        limit(1)
+    );
+    const snapshot = await getDocs(userMappingQuery);
+    if (snapshot.empty) {
+        return null; // User has not linked their account
+    }
+    return snapshot.docs[0].data().zenJarUserId;
+}
 
 export const HandleSlackCommandInputSchema = z.object({
   command: z.string().describe("The main command from Slack (e.g., /zenjar)."),
   text: z.string().describe("The text that follows the command, detailing the action."),
   user_id: z.string().describe("The Slack user ID of the person who invoked the command."),
+  user_name: z.string().describe("The Slack user's display name.")
 });
 export type HandleSlackCommandInput = z.infer<typeof HandleSlackCommandInputSchema>;
 
@@ -41,13 +53,14 @@ const quotes = [
     "Success is not final, failure is not fatal: it is the courage to continue that counts.",
 ];
 
-async function getMotivation() {
+async function getMotivation(zenJarUserId: string) {
+    // In a production app, this could also pull from user's custom affirmations.
     const randomIndex = Math.floor(Math.random() * quotes.length);
     return quotes[randomIndex];
 }
 
-async function drawTaskFromJar() {
-    const q = query(collection(db, 'tasks'), where('userId', '==', MOCK_USER_ID), where('completed', '==', false));
+async function drawTaskFromJar(zenJarUserId: string) {
+    const q = query(collection(db, 'tasks'), where('userId', '==', zenJarUserId), where('completed', '==', false));
     const querySnapshot = await getDocs(q);
     const pendingTasks: any[] = [];
     querySnapshot.forEach((doc) => {
@@ -66,8 +79,19 @@ async function drawTaskFromJar() {
 
 
 export async function handleSlackCommand(input: HandleSlackCommandInput): Promise<HandleSlackCommandOutput> {
-    const [action, ...rest] = input.text.split(' ');
+    const { text, user_id, user_name } = input;
+    const [action, ...rest] = text.split(' ');
     const content = rest.join(' ');
+    
+    // Check if the Slack user has linked their ZenJar account.
+    const zenJarUserId = await getZenJarUserIdFromSlackId(user_id);
+    if (!zenJarUserId) {
+        return { 
+            response_type: 'ephemeral', 
+            text: `Hey @${user_name}! To use ZenJar, you first need to link your Slack account from the settings page in the ZenJar app.` 
+        };
+    }
+
 
     switch (action.toLowerCase()) {
         case 'add':
@@ -79,20 +103,20 @@ export async function handleSlackCommand(input: HandleSlackCommandInput): Promis
             const task = taskResult[0];
             await addDoc(collection(db, 'tasks'), {
                 ...task,
-                userId: MOCK_USER_ID, // Using mock user for prototype
+                userId: zenJarUserId,
                 createdAt: Timestamp.now(),
                 completed: false
             });
-            return { response_type: 'in_channel', text: `Task added by <@${input.user_id}>: *${task.task}* (Category: ${task.category}, Priority: ${task.priority})` };
+            return { response_type: 'in_channel', text: `Task added by <@${user_id}>: *${task.task}* (Category: ${task.category}, Priority: ${task.priority})` };
 
         case 'pick':
         case 'draw':
-            const drawnTask = await drawTaskFromJar();
+            const drawnTask = await drawTaskFromJar(zenJarUserId);
             return { response_type: 'ephemeral', text: drawnTask };
 
         case 'motivate':
         case 'motivation':
-            const quote = await getMotivation();
+            const quote = await getMotivation(zenJarUserId);
             return { response_type: 'ephemeral', text: `Here's a little motivation for you:\n>"${quote}"` };
 
         case 'help':

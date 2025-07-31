@@ -23,18 +23,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    // In a production app, you would also verify the Slack signing secret here
+    // to ensure requests are genuinely from Slack.
+    // https://api.slack.com/authentication/verifying-requests-from-slack
+
     try {
         // Slack sends data as x-www-form-urlencoded, so we need to parse it.
         await runMiddleware(req, res, urlencodedParser);
         
-        const { command, text, user_id } = req.body as HandleSlackCommandInput;
+        const { command, text, user_id, user_name } = req.body;
 
-        if (!command || !text || !user_id) {
+        if (!command || !text || !user_id || !user_name) {
             return res.status(400).json({ error: 'Missing required Slack fields.' });
         }
         
         // Call the Genkit flow to handle the command logic
-        const result = await handleSlackCommand({ command, text, user_id });
+        const result = await handleSlackCommand({ command, text, user_id, user_name });
 
         // Send the response back to Slack
         res.status(200).json(result);

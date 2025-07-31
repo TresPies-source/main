@@ -105,7 +105,7 @@ export function ZenSpeak() {
     };
 
     setRecognition(rec);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     if (finalTranscript) {

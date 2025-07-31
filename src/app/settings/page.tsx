@@ -180,7 +180,7 @@ function DataManagementCard() {
                 title: "Export Successful",
                 description: result.message,
                 action: (
-                    <a href={result.fileLink} target="_blank" rel="noopener noreferrer">
+                    <a href={result.fileLink!} target="_blank" rel="noopener noreferrer">
                        <Button variant="outline">View File</Button>
                     </a>
                 )

@@ -1,19 +1,27 @@
 // src/pages/api/delete-user.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as admin from 'firebase-admin';
-import { db } from '@/lib/firebase'; // This is client-side db, we need admin
-import { collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 // Initialize Firebase Admin SDK
+// This should be set as an environment variable in your hosting environment.
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : undefined;
+  : null;
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount!),
-    projectId: 'zen-jar',
-  });
+    if (serviceAccount) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            projectId: 'zen-jar',
+        });
+    } else {
+        // Initialize for local development or environments without service account JSON
+        // Note: This will have limited privileges.
+        console.warn("Firebase Admin SDK initialized without credentials. For production, set FIREBASE_SERVICE_ACCOUNT_KEY.");
+        admin.initializeApp({
+            projectId: 'zen-jar',
+        });
+    }
 }
 
 const adminDb = admin.firestore();
@@ -27,9 +35,11 @@ async function deleteUserCollections(userId: string) {
     for (const collectionName of collectionsToDelete) {
         const q = adminDb.collection(collectionName).where('userId', '==', userId);
         const snapshot = await q.get();
-        snapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
-        });
+        if (!snapshot.empty) {
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+        }
     }
 
     await batch.commit();
@@ -39,6 +49,12 @@ async function deleteUserCollections(userId: string) {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // Gracefully handle missing service account key
+  if (!serviceAccount) {
+    console.error("FIREBASE_SERVICE_ACCOUNT_KEY is not set. Cannot perform admin operations.");
+    return res.status(500).json({ error: 'Server is not configured for user deletion. Please contact support.' });
   }
 
   try {

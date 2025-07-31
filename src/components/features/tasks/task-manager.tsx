@@ -14,6 +14,7 @@ import {
   Timestamp,
   deleteDoc,
   updateDoc,
+  addDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -489,3 +490,5 @@ export function TaskManager() {
     </>
   );
 }
+
+    

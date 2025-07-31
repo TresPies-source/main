@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -375,230 +375,230 @@ export function TaskManager() {
         )}
     </AlertDialog>
 
-    <div className="grid gap-8 md:grid-cols-2 relative h-[70vh]">
-        <div className="md:col-span-2 md:absolute md:inset-0 z-0 h-full w-full">
-            <Canvas camera={{ position: [0, 2, 5], fov: 60 }}>
+     <div className="relative h-[calc(100vh-10rem)] w-full">
+        <div className="absolute inset-0 z-10 grid md:grid-cols-2 gap-8 p-4">
+            <div className="relative space-y-4">
+                <Card className="bg-background/80 backdrop-blur-sm">
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle className="font-headline flex items-center gap-2">
+                                <Wand2 className="text-accent" />
+                                Brain Dump
+                            </CardTitle>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" disabled={!user}>
+                                <ChevronsDown className="mr-2 h-4 w-4" /> Import
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>Import From</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Google Doc
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <CardDescription>
+                    Enter your tasks below. They will appear in the list on the right.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleProcessTasks();
+                    }}
+                    >
+                    <Textarea
+                        placeholder="e.g., Finish project report, Buy groceries, Call mom"
+                        className="min-h-[150px]"
+                        value={taskInput}
+                        onChange={(e) => setTaskInput(e.target.value)}
+                        disabled={!user || isLoading}
+                    />
+                    <Button type="submit" className="mt-4 w-full" disabled={!user || isLoading}>
+                        {isLoading ? (
+                        <Loader2 className="animate-spin" />
+                        ) : (
+                        'Process with AI'
+                        )}
+                    </Button>
+                    </form>
+                    {!user && (
+                        <p className="text-sm text-center text-muted-foreground mt-4">Please sign in to add and manage tasks.</p>
+                    )}
+                </CardContent>
+                </Card>
+            </div>
+            <div className="relative">
+                <Card className="h-full bg-background/80 backdrop-blur-sm flex flex-col">
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="font-headline">Your Tasks</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <TooltipProvider>
+                            <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
+                                                <Dices className="h-4 w-4" />
+                                                <span className="sr-only">Draw a task</span>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Draw a Task</TooltipContent>
+                                </Tooltip>
+                                {drawnTask && (
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle className="font-headline">Your Next Task!</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Based on priority, the universe has selected this for you. What would you like to do with it?
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <div className="p-4 bg-secondary rounded-lg my-4">
+                                            <p className="font-bold text-lg">{drawnTask.task}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <Badge>{drawnTask.category}</Badge>
+                                                <Badge variant="secondary">Priority: {drawnTask.priority}</Badge>
+                                            </div>
+                                        </div>
+                                        <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
+                                        <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
+                                            {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
+                                            Add to Google Calendar
+                                        </Button>
+                                        <AlertDialogAction onClick={() => setDrawnTask(null)}>Let's do it!</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                )}
+                            </AlertDialog>
+                            <AlertDialog>
+                                <Tooltip>
+                                <TooltipTrigger asChild>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Empty Jar</span>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Empty Jar</TooltipContent>
+                                </Tooltip>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                        This will permanently delete all {tasks.length} tasks from your jar. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleEmptyJar}>Yes, empty the jar</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            </TooltipProvider>
+                            <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon" disabled={tasks.length === 0 || !user}>
+                                <RefreshCw className="h-4 w-4" />
+                                <span className="sr-only">Export or Sync</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>Export / Sync</DropdownMenuLabel>
+                                <DropdownMenuSeparator/>
+                                <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing}>
+                                {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
+                                Sync to Google Tasks
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </div>
+                    <CardDescription>
+                        {user ? (tasks.length > 0 ? `You have ${pendingTasks.length} pending task(s).` : "Your task jar is empty. Add some tasks!") : "Sign in to see your tasks."}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto">
+                    <div className="space-y-3 pr-2">
+                    {user ? (
+                        tasks.length > 0 ? (
+                        <>
+                        {pendingTasks.map((item) => (
+                            <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                            <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
+                            <div className={`w-2 h-10 rounded-full ${getPriorityColor(item.priority)}`}></div>
+                            <div className="flex-1">
+                                <p className="font-medium">{item.task}</p>
+                                <Badge variant="outline" className="mt-1">{item.category}</Badge>
+                            </div>
+                            <div className="text-sm font-bold mr-2">{item.priority}</div>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSubtasks(item)}>
+                                            <Wand2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Break down with AI</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                            </div>
+                        ))}
+                        {completedTasks.length > 0 && (
+                            <div className="pt-4">
+                                <h4 className="text-sm font-medium text-muted-foreground mb-2">Completed</h4>
+                                {completedTasks.map((item) => (
+                                    <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg text-muted-foreground">
+                                        <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
+                                        <div className="flex-1">
+                                            <p className="font-medium line-through">{item.task}</p>
+                                            <Badge variant="outline" className="mt-1">{item.category}</Badge>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        </>
+                        ) : (
+                        <div className="text-center text-muted-foreground h-full flex flex-col justify-center items-center">
+                            <p>Tasks will appear here once processed.</p>
+                        </div>
+                        )
+                    ) : (
+                        <div className="text-center text-muted-foreground h-full flex flex-col justify-center items-center">
+                            <p>Please sign in to manage your tasks.</p>
+                        </div>
+                    )}
+                    </div>
+                </CardContent>
+                </Card>
+            </div>
+        </div>
+        <Canvas className="absolute inset-0 z-0">
+            <Suspense fallback={null}>
                 <Stage environment="city" intensity={0.6}>
                     <PlaceholderJar />
                 </Stage>
-                <OrbitControls makeDefault autoRotate />
-            </Canvas>
-        </div>
-
-      <div className="z-10 relative space-y-4">
-        <Card className="bg-background/80 backdrop-blur-sm">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-                <div>
-                    <CardTitle className="font-headline flex items-center gap-2">
-                        <Wand2 className="text-accent" />
-                        Brain Dump
-                    </CardTitle>
-                </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" disabled={!user}>
-                           <ChevronsDown className="mr-2 h-4 w-4" /> Import
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuLabel>Import From</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Google Doc
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            <CardDescription>
-              Enter your tasks below. They will appear in the list on the right.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleProcessTasks();
-              }}
-            >
-              <Textarea
-                placeholder="e.g., Finish project report, Buy groceries, Call mom"
-                className="min-h-[150px]"
-                value={taskInput}
-                onChange={(e) => setTaskInput(e.target.value)}
-                disabled={!user || isLoading}
-              />
-              <Button type="submit" className="mt-4 w-full" disabled={!user || isLoading}>
-                {isLoading ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  'Process with AI'
-                )}
-              </Button>
-            </form>
-             {!user && (
-                <p className="text-sm text-center text-muted-foreground mt-4">Please sign in to add and manage tasks.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="z-10 relative">
-        <Card className="min-h-[365px] bg-background/80 backdrop-blur-sm">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-                <CardTitle className="font-headline">Your Tasks</CardTitle>
-                <div className="flex items-center gap-2">
-                    <TooltipProvider>
-                    <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                               <AlertDialogTrigger asChild>
-                                   <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
-                                        <Dices className="h-4 w-4" />
-                                        <span className="sr-only">Draw a task</span>
-                                    </Button>
-                                </AlertDialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>Draw a Task</TooltipContent>
-                        </Tooltip>
-                         {drawnTask && (
-                             <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle className="font-headline">Your Next Task!</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Based on priority, the universe has selected this for you. What would you like to do with it?
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <div className="p-4 bg-secondary rounded-lg my-4">
-                                    <p className="font-bold text-lg">{drawnTask.task}</p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <Badge>{drawnTask.category}</Badge>
-                                        <Badge variant="secondary">Priority: {drawnTask.priority}</Badge>
-                                    </div>
-                                </div>
-                                <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
-                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
-                                    {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
-                                    Add to Google Calendar
-                                  </Button>
-                                  <AlertDialogAction onClick={() => setDrawnTask(null)}>Let's do it!</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                         )}
-                    </AlertDialog>
-                     <AlertDialog>
-                        <Tooltip>
-                           <TooltipTrigger asChild>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="icon" disabled={tasks.length === 0} onClick={handleEmptyJar}>
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Empty Jar</span>
-                                    </Button>
-                                </AlertDialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>Empty Jar</TooltipContent>
-                        </Tooltip>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                This will permanently delete all {tasks.length} tasks from your jar. This action cannot be undone.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleEmptyJar}>Yes, empty the jar</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    </TooltipProvider>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" disabled={tasks.length === 0 || !user}>
-                           <RefreshCw className="h-4 w-4" />
-                           <span className="sr-only">Export or Sync</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuLabel>Export / Sync</DropdownMenuLabel>
-                        <DropdownMenuSeparator/>
-                        <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing}>
-                          {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
-                          Sync to Google Tasks
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </div>
-            <CardDescription>
-                {user ? (tasks.length > 0 ? `You have ${pendingTasks.length} pending task(s).` : "Your task jar is empty. Add some tasks!") : "Sign in to see your tasks."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 h-[200px] overflow-y-auto pr-2">
-              {user ? (
-                tasks.length > 0 ? (
-                  <>
-                  {pendingTasks.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-                      <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
-                      <div className={`w-2 h-10 rounded-full ${getPriorityColor(item.priority)}`}></div>
-                      <div className="flex-1">
-                        <p className="font-medium">{item.task}</p>
-                        <Badge variant="outline" className="mt-1">{item.category}</Badge>
-                      </div>
-                      <div className="text-sm font-bold mr-2">{item.priority}</div>
-                       <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSubtasks(item)}>
-                                    <Wand2 className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Break down with AI</p>
-                            </TooltipContent>
-                        </Tooltip>
-                       </TooltipProvider>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
-                          <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  {completedTasks.length > 0 && (
-                      <div className="pt-4">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Completed</h4>
-                          {completedTasks.map((item) => (
-                              <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg text-muted-foreground">
-                                  <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
-                                  <div className="flex-1">
-                                      <p className="font-medium line-through">{item.task}</p>
-                                      <Badge variant="outline" className="mt-1">{item.category}</Badge>
-                                  </div>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
-                                      <X className="h-4 w-4" />
-                                  </Button>
-                              </div>
-                          ))}
-                      </div>
-                  )}
-                  </>
-                ) : (
-                  <div className="text-center text-muted-foreground pt-12">
-                    <p>Tasks will appear here once processed.</p>
-                  </div>
-                )
-              ) : (
-                <div className="text-center text-muted-foreground pt-12">
-                  <p>Please sign in to manage your tasks.</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </Suspense>
+            <OrbitControls makeDefault autoRotate />
+        </Canvas>
     </div>
     </>
   );

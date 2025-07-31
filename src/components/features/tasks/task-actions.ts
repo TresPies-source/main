@@ -12,7 +12,7 @@ import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
 import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
 import { importFromGoogleDoc } from '@/ai/flows/import-from-google-doc';
 
-type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
+export type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
     id: string;
     completed: boolean;
     createdAt: Timestamp;

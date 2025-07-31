@@ -2,79 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
-    --background: 43 27% 93%;
-    --foreground: 203 9% 18%;
-    --card: 43 27% 98%;
-    --card-foreground: 203 9% 18%;
-    --popover: 43 27% 98%;
-    --popover-foreground: 203 9% 18%;
-    --primary: 200 7% 38%;
-    --primary-foreground: 43 27% 93%;
-    --secondary: 43 10% 88%;
-    --secondary-foreground: 203 9% 18%;
-    --muted: 43 10% 88%;
-    --muted-foreground: 200 7% 45%;
-    --accent: 100 16% 57%;
-    --accent-foreground: 203 9% 18%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 48 33% 94%; /* Parchment */
+    --foreground: 210 10% 23%; /* Deep Charcoal */
+
+    --card: 48 33% 99%;
+    --card-foreground: 210 10% 23%;
+
+    --popover: 48 33% 99%;
+    --popover-foreground: 210 10% 23%;
+
+    --primary: 90 20% 57%; /* Zen Teal */
+    --primary-foreground: 210 10% 98%;
+
+    --secondary: 48 20% 90%;
+    --secondary-foreground: 210 10% 23%;
+
+    --muted: 48 20% 90%;
+    --muted-foreground: 210 7% 45%;
+
+    --accent: 90 20% 57%; /* Zen Teal */
+    --accent-foreground: 210 10% 23%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 43 10% 80%;
-    --input: 43 10% 80%;
-    --ring: 100 16% 57%;
+
+    --border: 48 10% 80%;
+    --input: 48 10% 80%;
+    --ring: 90 20% 57%;
+
+    --radius: 0.5rem;
+
+    /* Jar Specific Colors */
+    --task-jar-color: 212 35% 65%; /* Focus Blue */
+    --motivation-jar-color: 356 72% 80%; /* Inspire Coral */
+    --gratitude-jar-color: 82 23% 64%; /* Gratitude Green */
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 43 27% 95%;
-    --sidebar-foreground: 203 9% 18%;
-    --sidebar-primary: 200 7% 38%;
-    --sidebar-primary-foreground: 43 27% 93%;
-    --sidebar-accent: 100 16% 57%;
-    --sidebar-accent-foreground: 203 9% 18%;
-    --sidebar-border: 43 10% 80%;
-    --sidebar-ring: 100 16% 57%;
   }
+
   .dark {
-    --background: 203 9% 18%;
-    --foreground: 43 27% 93%;
-    --card: 203 9% 22%;
-    --card-foreground: 43 27% 93%;
-    --popover: 203 9% 22%;
-    --popover-foreground: 43 27% 93%;
-    --primary: 43 27% 93%;
-    --primary-foreground: 203 9% 18%;
-    --secondary: 200 7% 25%;
-    --secondary-foreground: 43 27% 93%;
-    --muted: 200 7% 25%;
-    --muted-foreground: 200 7% 60%;
-    --accent: 100 16% 30%;
-    --accent-foreground: 43 27% 93%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 210 10% 23%; /* Deep Charcoal */
+    --foreground: 48 33% 94%; /* Parchment */
+
+    --card: 210 10% 18%;
+    --card-foreground: 48 33% 94%;
+
+    --popover: 210 10% 18%;
+    --popover-foreground: 48 33% 94%;
+
+    --primary: 90 20% 67%; /* Lighter Zen Teal */
+    --primary-foreground: 210 10% 15%;
+
+    --secondary: 210 7% 25%;
+    --secondary-foreground: 48 33% 94%;
+
+    --muted: 210 7% 25%;
+    --muted-foreground: 210 7% 60%;
+
+    --accent: 90 20% 67%; /* Lighter Zen Teal */
+    --accent-foreground: 48 33% 94%;
+
+    --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
-    --border: 200 7% 25%;
-    --input: 200 7% 25%;
-    --ring: 100 16% 57%;
+
+    --border: 210 7% 25%;
+    --input: 210 7% 25%;
+    --ring: 90 20% 67%;
+    
+    /* Jar Specific Colors */
+    --task-jar-color: 212 35% 75%;
+    --motivation-jar-color: 356 72% 85%;
+    --gratitude-jar-color: 82 23% 74%;
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 203 9% 15%;
-    --sidebar-foreground: 43 27% 93%;
-    --sidebar-primary: 43 27% 93%;
-    --sidebar-primary-foreground: 203 9% 18%;
-    --sidebar-accent: 100 16% 30%;
-    --sidebar-accent-foreground: 43 27% 93%;
-    --sidebar-border: 200 7% 25%;
-    --sidebar-ring: 100 16% 57%;
   }
 }
 
@@ -83,6 +93,9 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
   }
 }

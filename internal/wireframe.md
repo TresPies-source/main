@@ -30,6 +30,8 @@ Motivation Jar: Provides motivational quotes and affirmations.
 
 Gratitude Jar: A journal for logging moments of gratitude.
 
+Win Jar: A dedicated page for logging and viewing accomplishments.
+
 Intention Setter: Helps users set a daily focus with AI support.
 
 Settings: Access to account management, integrations, and public site links.
@@ -41,21 +43,20 @@ File: src/app/page.tsx
 
 Title: "Growth Dashboard"
 
-Layout: A responsive grid of cards, adapting for mobile and desktop.
+Layout: A responsive grid of cards, adapting for mobile and desktop. This is an overview page.
 
 Components (Cards stacked in single column):
 
-Focus Card:
-
-Focus Timer (src/components/features/dashboard/focus-timer.tsx): A card with a start/stop button for a count-up timer to track focused work sessions (displays HH:MM:SS).
-
-Link Task to Focus Session: Option to associate a completed task with a focus session.
+Focus Timer Card:
+A dedicated card for the Focus Timer (src/components/features/dashboard/focus-timer.tsx) to track focused work sessions.
 
 Daily Streak Card: Displays the number of consecutive days the user has completed at least one Focus Session and/or logged a Win.
 
 Personal Records Card: Shows user records like "Longest Single Focus Session" and "Most Wins in a Day/Week."
 
-Growth Insights Card: Visualizations (charts) of total focus time over periods, win patterns, and gratitude themes. Includes a button to "View Full Growth Dashboard."
+Growth Insights Card: Visualizations (charts) of total focus time over periods, win patterns, and gratitude themes.
+
+Win Jar Teaser: A card or button that links to the dedicated "Win Jar" page, encouraging users to log their accomplishments.
 
 2.3. Task Jar
 Route: /tasks

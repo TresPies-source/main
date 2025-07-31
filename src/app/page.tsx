@@ -8,18 +8,16 @@ import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firest
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy } from "lucide-react";
+import { Focus, Trophy } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { startOfToday } from 'date-fns';
 import { StreakCard } from '@/components/features/dashboard/streak-card';
 import { RecordsCard } from '@/components/features/dashboard/records-card';
 import type { FocusSession } from '@/components/features/dashboard/types';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const FocusTimer = dynamic(() => import('@/components/features/dashboard/focus-timer').then(mod => mod.FocusTimer), {
-  ssr: false,
-  loading: () => <Skeleton className="h-[250px] w-full" />,
-});
-const WinJar = dynamic(() => import('@/components/features/dashboard/win-jar').then(mod => mod.WinJar), {
   ssr: false,
   loading: () => <Skeleton className="h-[250px] w-full" />,
 });
@@ -113,23 +111,9 @@ export default function DashboardPage() {
   return (
     <MainLayout title="Growth Dashboard">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <Trophy className="text-accent"/>
-              Focus & Win
-            </CardTitle>
-            <CardDescription>
-              Start a focus session or log a new win. Your journey to growth starts here.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <FocusTimer />
-            <WinJar />
-          </CardContent>
-        </Card>
+        <FocusTimer />
         
-        <div className="space-y-6">
+        <div className="space-y-6 lg:col-start-3">
           <StreakCard streak={streak} />
           <RecordsCard longestSession={longestSession} totalWins={totalWins} />
         </div>
@@ -137,6 +121,23 @@ export default function DashboardPage() {
         <div className="lg:col-span-3">
             <GrowthInsights />
         </div>
+
+         <Card className="lg:col-span-3">
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center gap-2">
+                    <Trophy className="text-accent"/>
+                    Log Your Accomplishments
+                </CardTitle>
+                <CardDescription>
+                    Visit the Win Jar to log your daily accomplishments and build momentum.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button asChild>
+                    <Link href="/wins">Go to Win Jar</Link>
+                </Button>
+            </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

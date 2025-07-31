@@ -193,7 +193,7 @@ export function GratitudeJar() {
         </AlertDialogContent>
     </AlertDialog>
 
-    <div className="relative h-[calc(100vh-10rem)] w-full">
+    <div className="relative h-full w-full">
         <div className="absolute inset-0 z-10 grid md:grid-cols-3 gap-8 p-4">
             <div className="md:col-span-1">
                 <Card className="bg-background/80 backdrop-blur-sm">

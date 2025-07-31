@@ -102,7 +102,7 @@ export function WinJar() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-12rem)] w-full max-w-4xl mx-auto">
+    <div className="relative h-full w-full max-w-4xl mx-auto">
         <div className="absolute inset-0 z-10 grid gap-8 p-4">
             <Card className="shadow-lg bg-background/80 backdrop-blur-sm">
                 <CardHeader>

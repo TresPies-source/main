@@ -16,9 +16,7 @@ const MotivationJar = dynamic(
 export default function MotivationPage() {
   return (
     <MainLayout title="Motivation Jar">
-      <div className="flex justify-center items-center h-full">
-        <MotivationJar />
-      </div>
+      <MotivationJar />
     </MainLayout>
   );
 }

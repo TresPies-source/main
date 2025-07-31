@@ -18,7 +18,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/*
+
 if (typeof window !== 'undefined') {
   // Pass your reCAPTCHA v3 site key (public) to activate(). Make sure this
   // key is the counterpart to the secret key you set in the Firebase console.
@@ -27,6 +27,6 @@ if (typeof window !== 'undefined') {
     isTokenAutoRefreshEnabled: true
   });
 }
-*/
+
 
 export { app, auth, db };

@@ -1,4 +1,5 @@
 
-// This is a placeholder for the background service worker.
-// It could be used for handling alarms, notifications, or other background tasks.
-console.log('ZenJar background service worker started.');
+// This is the service worker for the ZenJar Chrome Extension.
+// It will handle background tasks, such as listening for events.
+
+console.log("ZenJar Service Worker loaded.");

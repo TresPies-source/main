@@ -29,10 +29,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("antialiased", inter.variable, lora.variable)}>
+      <body className={cn("antialiased font-sans", inter.variable, lora.variable)}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="kyoto-garden-light"
+          defaultTheme="kyoto-garden"
+          enableSystem
+          disableTransitionOnChange
         >
           <AuthProvider>
             {children}

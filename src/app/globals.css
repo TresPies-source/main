@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  .kyoto-garden-light {
+  :root {
+    /* Default theme: Kyoto Garden Light */
     --background: 48 33% 94%; /* Parchment */
     --foreground: 210 10% 23%; /* Deep Charcoal */
     --card: 48 33% 99%;
@@ -23,6 +24,7 @@
     --border: 48 10% 80%;
     --input: 48 10% 80%;
     --ring: 90 20% 57%;
+    --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -30,7 +32,8 @@
     --chart-5: 27 87% 67%;
   }
 
-  .kyoto-garden-dark {
+  .dark {
+    /* Default theme: Kyoto Garden Dark */
     --background: 210 10% 18%; /* Deep Charcoal */
     --foreground: 48 33% 94%; /* Parchment */
     --card: 210 10% 23%;
@@ -57,7 +60,7 @@
     --chart-5: 340 75% 55%;
   }
 
-  .twilight-gradient-light {
+  .twilight-gradient {
     --background: 220 23% 95%; /* Cloud White */
     --foreground: 226 55% 21%; /* Midnight Blue */
     --card: 220 23% 100%;
@@ -79,7 +82,7 @@
     --ring: 234 96% 85%;
   }
 
-  .twilight-gradient-dark {
+  .dark .twilight-gradient {
     --background: 226 55% 11%; /* Midnight Blue */
     --foreground: 0 0% 100%;
     --card: 226 55% 16%;
@@ -101,7 +104,7 @@
     --ring: 4 82% 78%;
   }
 
-  .fresh-mint-light {
+  .fresh-mint {
     --background: 0 0% 100%;
     --foreground: 215 28% 17%; /* Dark Slate */
     --card: 0 0% 98%;
@@ -123,7 +126,7 @@
     --ring: 165 67% 76%;
   }
 
-  .fresh-mint-dark {
+  .dark .fresh-mint {
     --background: 215 28% 17%; /* Dark Slate */
     --foreground: 220 14% 96%;
     --card: 215 28% 22%;

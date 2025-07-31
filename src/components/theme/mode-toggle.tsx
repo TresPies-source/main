@@ -7,12 +7,10 @@ import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 
 export function ModeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [currentBaseTheme, currentMode] = theme?.split('-') || ["kyoto-garden", "light"]
+  const { setTheme, resolvedTheme } = useTheme()
 
   const toggleMode = () => {
-    const newMode = resolvedTheme?.endsWith('dark') ? 'light' : 'dark';
-    setTheme(`${currentBaseTheme}-${newMode}`);
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   }
 
   return (

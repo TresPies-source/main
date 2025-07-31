@@ -1,6 +1,6 @@
 import type {Config} from 'tailwindcss';
 
-export default {
+const config: Config = {
   darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -19,6 +19,7 @@ export default {
       fontFamily: {
         sans: ['var(--font-inter)'],
         serif: ['var(--font-lora)'],
+        headline: ['var(--font-lora)'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -54,9 +55,6 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        'task-jar': 'hsl(var(--task-jar-color))',
-        'motivation-jar': 'hsl(var(--motivation-jar-color))',
-        'gratitude-jar': 'hsl(var(--gratitude-jar-color))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -95,4 +93,6 @@ export default {
     },
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
-} satisfies Config;
+};
+
+export default config;

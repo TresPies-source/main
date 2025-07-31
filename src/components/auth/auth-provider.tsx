@@ -5,6 +5,10 @@ import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup,
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
+if (typeof window !== 'undefined') {
+  (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = "9038D925-1D42-4053-823E-DAE8C4715CC8";
+}
+
 const auth = getAuth(app);
 
 interface AuthContextType {

@@ -42,9 +42,8 @@ function AccountCard() {
 }
 
 function IntegrationsCard() {
-  const { user, connectGoogle } = useAuth();
-  // This is a placeholder. In a real app, you'd check if the user has granted the necessary scopes.
-  const isConnected = false; 
+  const { user, connectGoogle, googleAccessToken } = useAuth();
+  const isConnected = !!googleAccessToken;
 
   return (
     <Card>
@@ -58,11 +57,11 @@ function IntegrationsCard() {
             <h3 className="font-semibold">Google Suite</h3>
             <p className="text-sm text-muted-foreground">Sync with Calendar, Tasks, Keep, and Drive.</p>
           </div>
-          <Button variant={isConnected ? 'destructive' : 'outline'} onClick={connectGoogle} disabled={!user}>
+          <Button variant={isConnected ? 'secondary' : 'outline'} onClick={connectGoogle} disabled={!user}>
             {isConnected ? (
               <>
                 <PowerOff className="mr-2 h-4 w-4"/>
-                Disconnect
+                Connected
               </>
             ) : (
               <>

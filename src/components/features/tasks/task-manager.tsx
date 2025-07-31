@@ -44,6 +44,7 @@ import {
   categorizeAndPrioritizeTasks,
   type CategorizeAndPrioritizeTasksOutput,
 } from '@/ai/flows/categorize-and-prioritize-tasks';
+import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -54,10 +55,11 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
 };
 
 export function TaskManager() {
-  const { user } = useAuth();
+  const { user, googleAccessToken, connectGoogle } = useAuth();
   const [taskInput, setTaskInput] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [drawnTask, setDrawnTask] = useState<Task | null>(null);
   const { toast } = useToast();
 
@@ -162,6 +164,43 @@ export function TaskManager() {
     await updateDoc(taskRef, { completed: !task.completed });
   }
 
+  const handleExportToGoogleTasks = async () => {
+    setIsSyncing(true);
+    let token = googleAccessToken;
+    if (!token) {
+        token = await connectGoogle();
+    }
+
+    if (!token) {
+        toast({ title: 'Authentication Failed', description: 'Could not get Google access token. Please try connecting your account again from Settings.', variant: 'destructive' });
+        setIsSyncing(false);
+        return;
+    }
+
+    const tasksToSync = tasks.map(t => ({...t, task: t.task}));
+
+    try {
+        const result = await syncWithGoogleTasks({ accessToken: token, tasks: tasksToSync });
+        if (result.success) {
+            toast({
+                title: 'Sync Successful!',
+                description: result.message,
+                action: (
+                    <a href={result.tasklistLink} target="_blank" rel="noopener noreferrer">
+                       <Button variant="outline">View Tasks</Button>
+                    </a>
+                )
+            });
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('Error syncing with Google Tasks:', error);
+        toast({ title: 'Sync Error', description: 'Failed to sync tasks with Google. Please try again.', variant: 'destructive' });
+    }
+    setIsSyncing(false);
+  }
+
   const getPriorityColor = (priority: number) => {
     if (priority >= 8) return 'bg-red-500';
     if (priority >= 5) return 'bg-yellow-500';
@@ -237,15 +276,17 @@ export function TaskManager() {
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" disabled={tasks.length === 0}>
-                              <Download className="h-4 w-4" />
+                          <Button variant="outline" size="icon" disabled={tasks.length === 0 || isSyncing} onClick={handleExportToGoogleTasks}>
+                              {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4" />}
                               <span className="sr-only">Export Tasks</span>
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                           <DropdownMenuLabel>Export To</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem disabled>Google Tasks</DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleExportToGoogleTasks} disabled={isSyncing}>
+                            {isSyncing ? 'Syncing...' : 'Google Tasks'}
+                          </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <AlertDialog>

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut, addScope } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,7 +16,8 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  connectGoogle: () => Promise<void>;
+  connectGoogle: () => Promise<string | null>;
+  googleAccessToken: string | null;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +25,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -37,6 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/tasks');
+    provider.addScope('https://www.googleapis.com/auth/calendar.events');
     try {
       await signInWithPopup(auth, provider);
       toast({
@@ -53,34 +57,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const connectGoogle = async () => {
+  const connectGoogle = async (): Promise<string | null> => {
     if (!auth.currentUser) {
       toast({ title: 'Not Signed In', description: 'Please sign in first to connect your Google account.', variant: 'destructive' });
-      return;
+      return null;
     }
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/tasks');
     provider.addScope('https://www.googleapis.com/auth/calendar.events');
 
     try {
-      await signInWithPopup(auth.currentUser, provider);
-      toast({
-        title: 'Google Account Connected',
-        description: 'You can now use Google integrations.',
-      });
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      if (token) {
+        setGoogleAccessToken(token);
+        toast({
+          title: 'Google Account Connected',
+          description: 'You can now use Google integrations.',
+        });
+        return token;
+      }
+      throw new Error("Could not retrieve access token.");
     } catch (error) {
       console.error("Error connecting Google account: ", error);
+      setGoogleAccessToken(null);
       toast({
         title: 'Connection Error',
         description: 'Could not connect your Google account. Please try again.',
         variant: 'destructive',
       });
+      return null;
     }
   }
 
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      setGoogleAccessToken(null);
       toast({
         title: 'Signed Out',
         description: 'You have been successfully signed out.',
@@ -101,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     signOut: handleSignOut,
     connectGoogle,
+    googleAccessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

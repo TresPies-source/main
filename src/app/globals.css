@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root, .theme-kyoto-garden {
     --background: 48 33% 94%; /* Parchment */
     --foreground: 210 10% 23%; /* Deep Charcoal */
 
@@ -13,8 +13,8 @@
     --popover: 48 33% 99%;
     --popover-foreground: 210 10% 23%;
 
-    --primary: 90 20% 57%; /* Zen Teal */
-    --primary-foreground: 210 10% 98%;
+    --primary: 210 10% 40%; /* Slate Gray */
+    --primary-foreground: 48 33% 96%;
 
     --secondary: 48 20% 90%;
     --secondary-foreground: 210 10% 23%;
@@ -22,7 +22,7 @@
     --muted: 48 20% 90%;
     --muted-foreground: 210 7% 45%;
 
-    --accent: 90 20% 57%; /* Zen Teal */
+    --accent: 90 20% 57%; /* Matcha Green */
     --accent-foreground: 210 10% 23%;
 
     --destructive: 0 84% 60%;
@@ -46,17 +46,17 @@
     --chart-5: 27 87% 67%;
   }
 
-  .dark {
-    --background: 210 10% 23%; /* Deep Charcoal */
+  .dark:root, .dark .theme-kyoto-garden {
+    --background: 210 10% 18%; /* Deep Charcoal */
     --foreground: 48 33% 94%; /* Parchment */
 
-    --card: 210 10% 18%;
+    --card: 210 10% 23%; /* Slightly lighter charcoal */
     --card-foreground: 48 33% 94%;
 
     --popover: 210 10% 18%;
     --popover-foreground: 48 33% 94%;
 
-    --primary: 90 20% 67%; /* Lighter Zen Teal */
+    --primary: 210 10% 60%; /* Lighter Slate Gray */
     --primary-foreground: 210 10% 15%;
 
     --secondary: 210 7% 25%;
@@ -65,7 +65,7 @@
     --muted: 210 7% 25%;
     --muted-foreground: 210 7% 60%;
 
-    --accent: 90 20% 67%; /* Lighter Zen Teal */
+    --accent: 90 20% 67%; /* Lighter Matcha Green */
     --accent-foreground: 48 33% 94%;
 
     --destructive: 0 63% 31%;
@@ -85,6 +85,94 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+  }
+
+  .theme-twilight-gradient {
+    --background: 220 23% 95%; /* Cloud White */
+    --foreground: 226 55% 21%; /* Midnight Blue */
+    --card: 220 23% 100%;
+    --card-foreground: 226 55% 21%;
+    --popover: 220 23% 100%;
+    --popover-foreground: 226 55% 21%;
+    --primary: 226 55% 21%; /* Midnight Blue */
+    --primary-foreground: 234 96% 85%; /* Soft Periwinkle */
+    --secondary: 220 23% 92%;
+    --secondary-foreground: 226 55% 21%;
+    --muted: 220 23% 92%;
+    --muted-foreground: 226 55% 41%;
+    --accent: 234 96% 85%; /* Soft Periwinkle */
+    --accent-foreground: 226 55% 21%;
+    --destructive: 4 82% 78%; /* Faded Coral */
+    --destructive-foreground: 226 55% 11%;
+    --border: 220 23% 88%;
+    --input: 220 23% 88%;
+    --ring: 234 96% 85%;
+  }
+
+  .dark .theme-twilight-gradient {
+    --background: 226 55% 21%; /* Midnight Blue */
+    --foreground: 0 0% 100%;
+    --card: 226 55% 26%;
+    --card-foreground: 0 0% 100%;
+    --popover: 226 55% 21%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 234 96% 85%; /* Soft Periwinkle */
+    --primary-foreground: 226 55% 21%;
+    --secondary: 226 55% 31%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 226 55% 31%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 4 82% 78%; /* Faded Coral */
+    --accent-foreground: 226 55% 11%;
+    --destructive: 4 82% 78%;
+    --destructive-foreground: 226 55% 11%;
+    --border: 226 55% 31%;
+    --input: 226 55% 31%;
+    --ring: 4 82% 78%;
+  }
+
+  .theme-fresh-mint {
+    --background: 0 0% 100%;
+    --foreground: 215 28% 17%; /* Dark Slate */
+    --card: 0 0% 98%;
+    --card-foreground: 215 28% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+    --primary: 170 50% 74%; /* Mint Green */
+    --primary-foreground: 215 28% 17%;
+    --secondary: 220 13% 91%; /* Cool Gray */
+    --secondary-foreground: 215 28% 17%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 215 28% 47%;
+    --accent: 170 50% 74%; /* Mint Green */
+    --accent-foreground: 215 28% 17%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 84%; /* Cool Gray */
+    --input: 220 13% 84%;
+    --ring: 170 50% 74%;
+  }
+
+  .dark .theme-fresh-mint {
+    --background: 215 28% 17%; /* Dark Slate */
+    --foreground: 220 14% 96%;
+    --card: 215 28% 22%;
+    --card-foreground: 220 14% 96%;
+    --popover: 215 28% 17%;
+    --popover-foreground: 220 14% 96%;
+    --primary: 170 50% 74%; /* Mint Green */
+    --primary-foreground: 215 28% 17%;
+    --secondary: 215 28% 27%;
+    --secondary-foreground: 220 14% 96%;
+    --muted: 215 28% 27%;
+    --muted-foreground: 220 14% 76%;
+    --accent: 170 50% 74%; /* Mint Green */
+    --accent-foreground: 215 28% 17%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 28% 27%;
+    --input: 215 28% 27%;
+    --ring: 170 50% 74%;
   }
 }
 

@@ -1,21 +1,47 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenJar</title>
-    <link rel="stylesheet" href="popup.css">
+  <title>ZenJar</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>ZenJar</h1>
-        <p>Quick access to your jars.</p>
-        <div id="content">
-            <!-- Dynamic content will be loaded here -->
-            <p>Loading...</p>
-        </div>
+
+  <div id="loading-view" class="view">
+    <p>Loading ZenJar...</p>
+  </div>
+  
+  <div id="login-view" class="view" style="display: none;">
+    <div class="header">
+      <img src="/icon48.png" alt="ZenJar Logo">
+      <h1>ZenJar</h1>
     </div>
-    <script src="popup.js"></script>
+    <p>Sign in to sync your tasks and jars.</p>
+    <button id="login-btn">Sign In with Google</button>
+  </div>
+
+  <div id="main-view" class="view" style="display: none;">
+    <div class="header main-header">
+      <h2>Welcome, <span id="user-name">User</span>!</h2>
+      <button id="logout-btn">Logout</button>
+    </div>
+    
+    <div id="content">
+      <h3>Brain Dump</h3>
+      <p class="description">Add tasks to your jar. The AI will categorize and prioritize them for you.</p>
+      <form id="task-form">
+        <textarea id="task-input" placeholder="e.g., Finish report, call mom, buy groceries" required></textarea>
+        <button type="submit" id="add-task-btn">Process with AI</button>
+      </form>
+    </div>
+
+    <div class="footer">
+      <a href="https://zen-jar.web.app" target="_blank">Open Full App</a>
+    </div>
+  </div>
+
+  <script src="/firebase/firebase-app.js"></script>
+  <script src="/firebase/firebase-auth.js"></script>
+  <script src="/firebase/firebase-firestore.js"></script>
+  <script src="popup.js"></script>
 </body>
 </html>

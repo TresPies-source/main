@@ -8,6 +8,7 @@ import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FocusTimer } from "@/components/features/dashboard/focus-timer";
 import { WinJar } from "@/components/features/dashboard/win-jar";
+import { GrowthInsights } from '@/components/features/dashboard/growth-insights';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Flame, Trophy, TrendingUp } from "lucide-react";
 
@@ -182,6 +183,10 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <StreakCard streak={streak} />
           <RecordsCard longestSession={longestSession} totalWins={totalWins} />
+        </div>
+
+        <div className="lg:col-span-3">
+            <GrowthInsights />
         </div>
       </div>
     </MainLayout>

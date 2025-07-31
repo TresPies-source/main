@@ -65,13 +65,15 @@ File: src/app/tasks/page.tsx
 
 Title: "Task Jar"
 
-Layout: A central, 3D WebGL scene with a task jar model. UI elements for input are overlaid.
+Layout: A central, 3D WebGL scene with a task jar model, created using an imperative `three.js` approach. UI elements for input are overlaid.
 
 Functionality: Users interact with a 3D jar. They can input tasks via a form or voice. The task appears as a 3D object to be dragged into the jar.
 
 Components:
 
 3D Scene Canvas:
+
+A canvas element where the `three.js` scene is mounted via a `useEffect` hook.
 
 Task Jar 3D Model: A rotatable, openable jar that glows.
 
@@ -104,13 +106,15 @@ File: src/app/motivation/page.tsx
 
 Title: "Motivation Jar"
 
-Layout: A central, 3D WebGL scene with a motivation jar model. UI elements for interaction are overlaid.
+Layout: A central, 3D WebGL scene with a motivation jar model, created using an imperative `three.js` approach. UI elements for interaction are overlaid.
 
 Functionality: Users can interact with the 3D jar to get a random motivational quote.
 
 Components:
 
 3D Scene Canvas:
+
+A canvas element where the `three.js` scene is mounted.
 
 Motivation Jar 3D Model: A unique, glowing jar model.
 
@@ -131,13 +135,15 @@ File: src/app/gratitude/page.tsx
 
 Title: "Gratitude Jar"
 
-Layout: A central, 3D WebGL scene with a gratitude jar model. UI elements for input and display are overlaid.
+Layout: A central, 3D WebGL scene with a gratitude jar model, created using an imperative `three.js` approach. UI elements for input and display are overlaid.
 
 Functionality: Users write down and rate things they are grateful for. Entries appear as glowing objects inside the 3D jar.
 
 Components:
 
 3D Scene Canvas:
+
+A canvas element where the `three.js` scene is mounted.
 
 Gratitude Jar 3D Model: A unique, transparent jar model that visually "fills up."
 
@@ -166,13 +172,15 @@ File: src/app/intention/page.tsx
 
 Title: "Intention Setter"
 
-Layout: A central, 3D WebGL scene.
+Layout: A central, 3D WebGL scene, created using an imperative `three.js` approach.
 
 Functionality: A user writes their intention. An AI flow provides a supportive message.
 
 Components:
 
 3D Scene Canvas:
+
+A canvas element where the `three.js` scene is mounted.
 
 A stylized, floating scroll or object where the intention text is displayed.
 
@@ -268,13 +276,15 @@ File: src/app/wins/page.tsx
 
 Title: "Win Jar"
 
-Layout: A central, 3D WebGL scene with a win jar model. Overlaid UI for input and display.
+Layout: A central, 3D WebGL scene with a win jar model, created using an imperative `three.js` approach. Overlaid UI for input and display.
 
 Functionality: Users log accomplishments, which are added to the 3D jar with a celebratory animation.
 
 Components:
 
 3D Scene Canvas:
+
+A canvas element where the `three.js` scene is mounted.
 
 Win Jar 3D Model: A unique, solid 3D jar model (e.g., a trophy-like jar).
 
@@ -426,4 +436,3 @@ Microphone Icon: A prominent microphone icon/button will be present in the main 
 Visual Feedback during Listening:
 
 The microphone icon will change state (e.g., color, pulsating animation)
-```

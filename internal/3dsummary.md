@@ -11,9 +11,9 @@ Behavior: Rotate, open lid, glow gently, and animate on item drop.
 Fillable: Each added item becomes a visible object inside the jar (scrolls, light orbs, affirmations).
 
 ✨ Drag & Drop Interactions
-Use @react-three/drei for pointer detection and drag controls.
+Use raycasting within `three.js` for pointer detection.
 
-use-gesture or rapier physics for natural item movement.
+Simple animation loops or a lightweight physics library for natural item movement.
 
 Dropped objects trigger:
 
@@ -61,10 +61,10 @@ Visual feedback from mic icon, and optional “whispering guide” response
 
 🛠️ Technical Layers
 Layer	Tools
-WebGL Rendering	three.js
-React Integration	@react-three/fiber
-Helpers & UI	@react-three/drei, leva (debug), Tailwind CSS
-Physics (optional)	@react-three/rapier or simple hit tests
+WebGL Rendering	three.js (Imperative Approach)
+React Integration	Mounted in a React component's `useEffect` hook.
+UI	Tailwind CSS for overlays
+Physics (optional)	Simple animation loops or a small physics library.
 Audio	tone.js or howler.js
 Voice	Web Speech API + Firebase Functions
 AI	Firebase Genkit + Gemini

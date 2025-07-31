@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import {
   collection,
   query,
@@ -18,13 +18,27 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import { addWin, deleteWin } from './win-actions';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
+import type { Mesh } from 'three';
 
 
-function PlaceholderJar() {
+function PlaceholderJar({ playAnimation }: { playAnimation: boolean }) {
+  const meshRef = useRef<Mesh>(null!);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    if (playAnimation) {
+      const time = state.clock.getElapsedTime();
+      const scale = 1 + Math.sin(time * 20) * 0.1;
+      meshRef.current.scale.set(scale, scale, scale);
+       if (state.clock.elapsedTime > 0.5) {
+          meshRef.current.scale.set(1, 1, 1);
+       }
+    }
+  });
   return (
-    <mesh>
+    <mesh ref={meshRef}>
       <coneGeometry args={[1, 2, 32]} />
       <meshStandardMaterial color="orange" />
     </mesh>
@@ -42,7 +56,15 @@ export function WinJar() {
   const [wins, setWins] = useState<Win[]>([]);
   const [newWin, setNewWin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
+
+   useEffect(() => {
+    if (playAddAnimation) {
+        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
+        return () => clearTimeout(timer);
+    }
+  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -78,6 +100,7 @@ export function WinJar() {
       try {
         await addWin(user.uid, newWin);
         setNewWin('');
+        setPlayAddAnimation(true);
         toast({
             title: 'Win Logged!',
             description: 'Another accomplishment in the jar.',
@@ -150,7 +173,7 @@ export function WinJar() {
         <Canvas className="absolute inset-0 z-0">
             <Suspense fallback={null}>
                 <Stage environment="city" intensity={0.6}>
-                    <PlaceholderJar />
+                    <PlaceholderJar playAnimation={playAddAnimation} />
                 </Stage>
             </Suspense>
             <OrbitControls makeDefault autoRotate />

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Sparkles, Plus, Trash2, Wand2, Loader2 } from 'lucide-react';
@@ -18,12 +18,27 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { addCustomAffirmation, deleteCustomAffirmation } from './motivation-actions';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
+import type { Mesh } from 'three';
 
-function PlaceholderJar() {
+function PlaceholderJar({ playAnimation }: { playAnimation: boolean }) {
+  const meshRef = useRef<Mesh>(null!);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    if (playAnimation) {
+      const time = state.clock.getElapsedTime();
+      const scale = 1 + Math.sin(time * 20) * 0.1;
+      meshRef.current.scale.set(scale, scale, scale);
+       if (state.clock.elapsedTime > 0.5) {
+          meshRef.current.scale.set(1, 1, 1);
+       }
+    }
+  });
+
   return (
-    <mesh>
+    <mesh ref={meshRef}>
       <torusGeometry args={[1, 0.4, 16, 100]} />
       <meshStandardMaterial color="gold" />
     </mesh>
@@ -97,7 +112,15 @@ export function MotivationJar() {
   const [customAffirmations, setCustomAffirmations] = useState<Affirmation[]>([]);
   const [newAffirmation, setNewAffirmation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (playAddAnimation) {
+        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
+        return () => clearTimeout(timer);
+    }
+  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -125,12 +148,13 @@ export function MotivationJar() {
     }
     const randomIndex = Math.floor(Math.random() * allQuotes.length);
     setCurrentQuote(allQuotes[randomIndex]);
+    setPlayAddAnimation(true);
   };
   
   useEffect(() => {
     drawQuote();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customAffirmations, user]); // Rerun when custom affirmations or user change
+  }, []);
 
   const handleAddAffirmation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,7 +266,7 @@ export function MotivationJar() {
         <Canvas className="absolute inset-0 z-0">
             <Suspense fallback={null}>
                 <Stage environment="city" intensity={0.6}>
-                    <PlaceholderJar />
+                    <PlaceholderJar playAnimation={playAddAnimation}/>
                 </Stage>
             </Suspense>
             <OrbitControls makeDefault autoRotate />

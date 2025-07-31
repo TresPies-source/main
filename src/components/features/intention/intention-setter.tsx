@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -18,12 +18,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sunrise, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { setIntention as setIntentionAction } from './intention-actions';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
+import type { Mesh } from 'three';
 
-function PlaceholderJar() {
+function PlaceholderJar({ playAnimation }: { playAnimation: boolean }) {
+  const meshRef = useRef<Mesh>(null!);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    if (playAnimation) {
+      const time = state.clock.getElapsedTime();
+      const scale = 1 + Math.sin(time * 20) * 0.1;
+      meshRef.current.scale.set(scale, scale, scale);
+       if (state.clock.elapsedTime > 0.5) {
+          meshRef.current.scale.set(1, 1, 1);
+       }
+    }
+  });
+  
   return (
-    <mesh>
+    <mesh ref={meshRef}>
       <capsuleGeometry args={[0.8, 1, 4, 8]} />
       <meshStandardMaterial color="skyblue" />
     </mesh>
@@ -36,7 +51,15 @@ export function IntentionSetter() {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [previousIntentions, setPreviousIntentions] = useState<string[]>([]);
+  const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (playAddAnimation) {
+        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
+        return () => clearTimeout(timer);
+    }
+  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -79,6 +102,7 @@ export function IntentionSetter() {
       const result = await setIntentionAction(user.uid, intention, previousIntentions);
       setResponse(result.response);
       setIntention('');
+      setPlayAddAnimation(true);
 
     } catch (error) {
       console.error('Error generating response:', error);
@@ -147,7 +171,7 @@ export function IntentionSetter() {
         <Canvas className="absolute inset-0 z-0">
             <Suspense fallback={null}>
                 <Stage environment="city" intensity={0.6}>
-                    <PlaceholderJar />
+                    <PlaceholderJar playAnimation={playAddAnimation} />
                 </Stage>
             </Suspense>
             <OrbitControls makeDefault autoRotate />

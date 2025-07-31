@@ -24,6 +24,7 @@ import {
   Info,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
 
 const menuItems = [
   { href: "/", label: "Growth", icon: LayoutDashboard },
@@ -39,6 +40,7 @@ const bottomMenuItems = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   return (
     <Sidebar>
@@ -96,10 +98,12 @@ export default function AppSidebar() {
             </SidebarMenuItem>
         </SidebarMenu>
         <SidebarSeparator className="my-1"/>
-        <Button variant="ghost" className="justify-start gap-2">
-          <LogOut />
-           <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-        </Button>
+        {user && (
+          <Button variant="ghost" className="justify-start gap-2" onClick={signOut}>
+            <LogOut />
+            <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+          </Button>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

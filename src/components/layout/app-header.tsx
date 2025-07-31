@@ -8,7 +8,7 @@ type AppHeaderProps = {
 
 export default function AppHeader({ title }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 bg-background/80 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
       <SidebarTrigger className="md:hidden" />
       <h1 className="text-xl font-semibold tracking-tight text-foreground/90 font-headline">
         {title}

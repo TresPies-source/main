@@ -5,7 +5,7 @@ import { CheckCircle, CircleDashed, Rocket, Target, Bot } from "lucide-react";
 
 const Feature = ({ icon, title, description, completed = false }: { icon: React.ReactNode, title: string, description: string, completed?: boolean }) => (
     <div className="flex items-start gap-4">
-        <div className={`mt-1 ${completed ? "text-green-500" : "text-muted-foreground"}`}>
+        <div className={`mt-1 ${completed ? "text-primary" : "text-muted-foreground"}`}>
             {completed ? <CheckCircle className="h-5 w-5" /> : <CircleDashed className="h-5 w-5" />}
         </div>
         <div>
@@ -20,9 +20,9 @@ export function RoadmapContent() {
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Our Development Journey</CardTitle>
-                    <CardDescription>We believe in building in the open. Here's a look at what we've accomplished and where we're headed.</CardDescription>
+                <CardHeader className="text-center">
+                    <CardTitle className="font-headline text-4xl">Our Development Journey</CardTitle>
+                    <CardDescription className="text-lg">We believe in building in the open. Here's a look at what we've accomplished and where we're headed.</CardDescription>
                 </CardHeader>
             </Card>
 
@@ -30,9 +30,9 @@ export function RoadmapContent() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-headline text-xl">
                         <Rocket className="text-primary"/>
-                        Phase 1-5: Completed
+                        Phase 1-6: Completed
                     </CardTitle>
-                    <CardDescription>Core features and cross-platform MVP.</CardDescription>
+                    <CardDescription>Core features, cross-platform MVP, public presence, and core integrations.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Feature 
@@ -43,14 +43,20 @@ export function RoadmapContent() {
                     />
                      <Feature 
                         icon={<CheckCircle />}
-                        title="Growth Ecosystem"
-                        description="The Focus Timer, Win Jar, and streak tracking are live to help you build momentum."
+                        title="Growth Ecosystem & Performance"
+                        description="The Focus Timer, Win Jar, and streak tracking are live. The app has been optimized for snappy page loads."
                         completed
                     />
-                    <Feature 
+                     <Feature 
                         icon={<CheckCircle />}
-                        title="Cross-Platform Integration"
-                        description="A lightweight Google Chrome Extension and a backend for Slack slash commands have been built."
+                        title="Security & Reliability"
+                        description="Implemented Firestore security rules, environment variable management for secrets, and robust error handling."
+                        completed
+                    />
+                     <Feature 
+                        icon={<CheckCircle />}
+                        title="Google Suite Integration"
+                        description="Enabled syncing with Google Tasks, creating Google Calendar events, and importing from Google Docs."
                         completed
                     />
                      <Feature 
@@ -66,34 +72,12 @@ export function RoadmapContent() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-headline text-xl">
                         <Target className="text-primary"/>
-                        Phase 6: In Progress
+                        Phase 7: In Progress
                     </CardTitle>
-                     <CardDescription>Public presence and core integrations.</CardDescription>
+                     <CardDescription>Advanced features and deeper integrations.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Feature 
-                        icon={<CircleDashed />}
-                        title="Google Suite Integration"
-                        description="Enable syncing with Google Calendar and Google Tasks, plus importing from Google Keep/Docs."
-                    />
-                     <Feature 
-                        icon={<CircleDashed />}
-                        title="Public-Facing Website"
-                        description="Building out the About, Roadmap, and Blog sections to share our story and progress."
-                    />
-                </CardContent>
-            </Card>
-
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 font-headline text-xl">
-                        <Bot className="text-primary"/>
-                        Phase 7: Future Enhancements
-                    </CardTitle>
-                    <CardDescription>Advanced features and deeper integrations.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                     <Feature 
                         icon={<CircleDashed />}
                         title="Pro Tier Feature Rollout"
                         description="Implementing the Growth Dashboard, custom affirmations, and AI-powered sub-task generation."
@@ -107,6 +91,28 @@ export function RoadmapContent() {
                         icon={<CircleDashed />}
                         title="Shared Jars & Collaboration"
                         description="Allow users to share specific jars with others for collaborative task management or shared motivation."
+                    />
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-headline text-xl">
+                        <Bot className="text-primary"/>
+                        Future Vision
+                    </CardTitle>
+                    <CardDescription>Our long-term goal is to make ZenJar a true AI companion for well-being.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                     <Feature 
+                        icon={<CircleDashed />}
+                        title="Proactive AI Agent"
+                        description="Enabling ZenJar to proactively suggest tasks based on calendar events or generate personalized gratitude summaries."
+                    />
+                     <Feature 
+                        icon={<CircleDashed />}
+                        title="Deeper Personalization"
+                        description="Training the AI to learn from user habits to provide even more tailored motivation and insights."
                     />
                 </CardContent>
             </Card>

@@ -8,9 +8,12 @@ import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firest
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Flame, Trophy, TrendingUp } from "lucide-react";
+import { Trophy } from "lucide-react";
 import dynamic from 'next/dynamic';
-import { differenceInCalendarDays, startOfToday } from 'date-fns';
+import { startOfToday } from 'date-fns';
+import { StreakCard } from '@/components/features/dashboard/streak-card';
+import { RecordsCard } from '@/components/features/dashboard/records-card';
+import type { FocusSession } from '@/components/features/dashboard/types';
 
 const FocusTimer = dynamic(() => import('@/components/features/dashboard/focus-timer').then(mod => mod.FocusTimer), {
   ssr: false,
@@ -25,82 +28,6 @@ const GrowthInsights = dynamic(() => import('@/components/features/dashboard/gro
   loading: () => <Skeleton className="h-[300px] w-full" />,
 });
 
-type FocusSession = {
-  id: string;
-  duration: number;
-  createdAt: Timestamp;
-};
-
-type Win = {
-  id: string;
-  text: string;
-  createdAt: Timestamp;
-};
-
-function StreakCard({ streak }: { streak: number | null }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline flex items-center gap-2 text-base">
-          <Flame className="text-accent"/>
-          Daily Streak
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {streak === null ? (
-          <Skeleton className="h-10 w-1/2" />
-        ) : (
-          <>
-            <p className="text-4xl font-bold">{streak} <span className="text-lg font-normal text-muted-foreground">days</span></p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {streak > 0 ? "Keep up the great work!" : "Start a session or log a win to build a streak!"}
-            </p>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function RecordsCard({ longestSession, totalWins }: { longestSession: number | null, totalWins: number | null }) {
-    const formatDuration = (seconds: number) => {
-        if (seconds === 0) return 'N/A';
-        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        return `${h}:${m}:${s}`;
-    }
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2 text-base">
-              <TrendingUp className="text-accent"/>
-            Personal Records
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm pt-2">
-            {longestSession === null || totalWins === null ? (
-                <>
-                    <Skeleton className="h-6 w-full" />
-                    <Skeleton className="h-6 w-full" />
-                </>
-            ) : (
-                <>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Longest Focus Session:</span>
-                        <span className="font-bold">{formatDuration(longestSession)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Wins Logged:</span>
-                        <span className="font-bold">{totalWins}</span>
-                    </div>
-                </>
-            )}
-        </CardContent>
-      </Card>
-    );
-};
 
 // This function calculates the streak based on a set of unique activity dates.
 const calculateStreak = (uniqueActivityDays: Set<number>): number => {
@@ -108,21 +35,28 @@ const calculateStreak = (uniqueActivityDays: Set<number>): number => {
         return 0;
     }
 
-    const today = startOfToday().getTime();
-    let mostRecentActivity = 0;
-    uniqueActivityDays.forEach(day => {
-        if (day > mostRecentActivity) {
-            mostRecentActivity = day;
+    const today = startOfToday();
+    let mostRecentActivityDate = new Date(0);
+    uniqueActivityDays.forEach(dayTimestamp => {
+        const d = new Date(dayTimestamp);
+        if (d > mostRecentActivityDate) {
+            mostRecentActivityDate = d;
         }
     });
 
+    const diffInDays = (d1: Date, d2: Date) => {
+        const t2 = d2.getTime();
+        const t1 = d1.getTime();
+        return Math.floor((t2-t1)/(24*3600*1000));
+    }
+
     // If the most recent activity was before yesterday, streak is broken.
-    if (differenceInCalendarDays(today, mostRecentActivity) > 1) {
+    if (diffInDays(mostRecentActivityDate, today) > 1) {
         return 0;
     }
 
     let currentStreak = 0;
-    let dateToCheck = new Date(mostRecentActivity);
+    let dateToCheck = mostRecentActivityDate;
 
     // Check backwards from the most recent activity day.
     while (uniqueActivityDays.has(dateToCheck.getTime())) {
@@ -148,42 +82,31 @@ export default function DashboardPage() {
       return;
     }
 
-    // Listener for focus sessions to calculate longest session
-    const focusQuery = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
-    const unsubFocus = onSnapshot(focusQuery, (snapshot) => {
-      const sessions: FocusSession[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FocusSession));
-      const maxDuration = sessions.reduce((max, s) => Math.max(max, s.duration), 0);
-      setLongestSession(maxDuration);
-    });
+    const q = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
+    
+    // Combined listener for all stats
+    const unsub = onSnapshot(q, (focusSnapshot) => {
+        const unsubWins = onSnapshot(query(collection(db, 'wins'), where('userId', '==', user.uid)), (winsSnapshot) => {
+            // Longest Session Calculation
+            const sessions: FocusSession[] = focusSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FocusSession));
+            const maxDuration = sessions.reduce((max, s) => Math.max(max, s.duration), 0);
+            setLongestSession(maxDuration);
+            
+            // Total Wins Calculation
+            setTotalWins(winsSnapshot.docs.length);
 
-    // Listener for wins to get total count
-    const winsQuery = query(collection(db, 'wins'), where('userId', '==', user.uid));
-    const unsubWins = onSnapshot(winsQuery, (snapshot) => {
-        setTotalWins(snapshot.docs.length);
-    });
+            // Streak Calculation
+            const focusDates = focusSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
+            const winDates = winsSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
+            const uniqueActivityDays = new Set([...focusDates, ...winDates]);
+            setStreak(calculateStreak(uniqueActivityDays));
+        });
 
-    // Combined listener for streak calculation
-    const unsubStreak = onSnapshot(
-        query(collection(db, 'focusSessions'), where('userId', '==', user.uid)),
-        (focusSnapshot) => {
-            const unsubInner = onSnapshot(
-                query(collection(db, 'wins'), where('userId', '==', user.uid)),
-                (winsSnapshot) => {
-                    const focusDates = focusSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
-                    const winDates = winsSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
-                    
-                    const uniqueActivityDays = new Set([...focusDates, ...winDates]);
-                    setStreak(calculateStreak(uniqueActivityDays));
-                }
-            );
-            return () => unsubInner();
-        }
-    );
+        return () => unsubWins();
+    });
 
     return () => {
-      unsubFocus();
-      unsubWins();
-      unsubStreak();
+      unsub();
     };
   }, [user]);
 

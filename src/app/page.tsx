@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Flame, Trophy, TrendingUp } from "lucide-react";
 import dynamic from 'next/dynamic';
+import { differenceInCalendarDays, startOfToday } from 'date-fns';
 
 const FocusTimer = dynamic(() => import('@/components/features/dashboard/focus-timer').then(mod => mod.FocusTimer), {
   ssr: false,
@@ -22,7 +24,6 @@ const GrowthInsights = dynamic(() => import('@/components/features/dashboard/gro
   ssr: false,
   loading: () => <Skeleton className="h-[300px] w-full" />,
 });
-
 
 type FocusSession = {
   id: string;
@@ -101,6 +102,37 @@ function RecordsCard({ longestSession, totalWins }: { longestSession: number | n
     );
 };
 
+// This function calculates the streak based on a set of unique activity dates.
+const calculateStreak = (uniqueActivityDays: Set<number>): number => {
+    if (uniqueActivityDays.size === 0) {
+        return 0;
+    }
+
+    const today = startOfToday().getTime();
+    let mostRecentActivity = 0;
+    uniqueActivityDays.forEach(day => {
+        if (day > mostRecentActivity) {
+            mostRecentActivity = day;
+        }
+    });
+
+    // If the most recent activity was before yesterday, streak is broken.
+    if (differenceInCalendarDays(today, mostRecentActivity) > 1) {
+        return 0;
+    }
+
+    let currentStreak = 0;
+    let dateToCheck = new Date(mostRecentActivity);
+
+    // Check backwards from the most recent activity day.
+    while (uniqueActivityDays.has(dateToCheck.getTime())) {
+        currentStreak++;
+        dateToCheck.setDate(dateToCheck.getDate() - 1);
+    }
+    
+    return currentStreak;
+};
+
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -116,76 +148,32 @@ export default function DashboardPage() {
       return;
     }
 
+    // Listener for focus sessions to calculate longest session
     const focusQuery = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
-    const winsQuery = query(collection(db, 'wins'), where('userId', '==', user.uid));
-
     const unsubFocus = onSnapshot(focusQuery, (snapshot) => {
       const sessions: FocusSession[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FocusSession));
       const maxDuration = sessions.reduce((max, s) => Math.max(max, s.duration), 0);
       setLongestSession(maxDuration);
     });
 
+    // Listener for wins to get total count
+    const winsQuery = query(collection(db, 'wins'), where('userId', '==', user.uid));
     const unsubWins = onSnapshot(winsQuery, (snapshot) => {
         setTotalWins(snapshot.docs.length);
     });
 
+    // Combined listener for streak calculation
     const unsubStreak = onSnapshot(
         query(collection(db, 'focusSessions'), where('userId', '==', user.uid)),
         (focusSnapshot) => {
             const unsubInner = onSnapshot(
                 query(collection(db, 'wins'), where('userId', '==', user.uid)),
                 (winsSnapshot) => {
-                    const focusDates = focusSnapshot.docs.map(d => d.data().createdAt.toDate());
-                    const winDates = winsSnapshot.docs.map(d => d.data().createdAt.toDate());
-
-                    const activityDates = [...focusDates, ...winDates].map(d => {
-                        const date = new Date(d);
-                        date.setHours(0, 0, 0, 0);
-                        return date.getTime();
-                    });
-                    const uniqueActivityDays = new Set(activityDates);
-
-                    if (uniqueActivityDays.size === 0) {
-                        setStreak(0);
-                        return;
-                    }
-
-                    let currentStreak = 0;
-                    let dateToCheck = new Date();
-                    dateToCheck.setHours(0, 0, 0, 0);
-
-                    // Check for today's activity
-                    if (uniqueActivityDays.has(dateToCheck.getTime())) {
-                        currentStreak++;
-                        dateToCheck.setDate(dateToCheck.getDate() - 1);
-                    } else {
-                        // If no activity today, check if yesterday was the last activity
-                        const yesterday = new Date();
-                        yesterday.setDate(yesterday.getDate() - 1);
-                        yesterday.setHours(0,0,0,0);
-                        if (!uniqueActivityDays.has(yesterday.getTime())) {
-                             // check if today is in the set
-                            if(!uniqueActivityDays.has(new Date().setHours(0,0,0,0))) {
-                               // there was no activity today or yesterday, so streak is 0
-                               // unless today is the day of the last activity
-                               const mostRecentActivity = Math.max(...Array.from(uniqueActivityDays));
-                               const today = new Date();
-                               today.setHours(0,0,0,0);
-                               if(mostRecentActivity < today.getTime()){
-                                   setStreak(0);
-                                   return;
-                               }
-                            }
-                        }
-                    }
-
-                    // Check for consecutive days backwards
-                    while (uniqueActivityDays.has(dateToCheck.getTime())) {
-                        currentStreak++;
-                        dateToCheck.setDate(dateToCheck.getDate() - 1);
-                    }
+                    const focusDates = focusSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
+                    const winDates = winsSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
                     
-                    setStreak(currentStreak);
+                    const uniqueActivityDays = new Set([...focusDates, ...winDates]);
+                    setStreak(calculateStreak(uniqueActivityDays));
                 }
             );
             return () => unsubInner();

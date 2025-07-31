@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -7,11 +8,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-    { href: "/about", label: "About" },
-    { href: "/roadmap", label: "Roadmap" },
+    { href: "/public/about", label: "About" },
+    { href: "/public/roadmap", label: "Roadmap" },
     { href: "/public/blog", label: "Blog" },
-    { href: "/public/privacy", label: "Privacy" },
-    { href: "/public/terms", label: "Terms" },
 ]
 
 export function PublicHeader() {

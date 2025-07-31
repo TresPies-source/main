@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -37,8 +38,8 @@ const menuItems = [
 ];
 
 const publicMenuItems = [
-    { href: "/about", label: "About", icon: Info },
-    { href: "/roadmap", label: "Roadmap", icon: Compass },
+    { href: "/public/about", label: "About", icon: Info },
+    { href: "/public/roadmap", label: "Roadmap", icon: Compass },
     { href: "/public/blog", label: "Blog", icon: Rss },
 ]
 

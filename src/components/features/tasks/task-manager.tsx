@@ -342,9 +342,7 @@ export function TaskManager() {
             <AlertDialogHeader>
                 <AlertDialogTitle>Import from Google Docs</AlertDialogTitle>
                 <AlertDialogDescription>
-                    To import, open your Google Doc, copy the ID from the URL, and paste it below.
-                    <br />
-                    For example, if your URL is `.../document/d/THIS_IS_THE_ID/edit`, paste "THIS_IS_THE_ID".
+                    Paste the ID from your Google Doc's URL to import its content. For example, if your URL is `.../d/DOCUMENT_ID/edit`, paste "DOCUMENT_ID". Ensure sharing settings allow access.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <Input 
@@ -499,7 +497,7 @@ export function TaskManager() {
                                     </div>
                                 </div>
                                 <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
-                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent}>
+                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
                                     {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
                                     Add to Google Calendar
                                   </Button>
@@ -570,9 +568,18 @@ export function TaskManager() {
                         <Badge variant="outline" className="mt-1">{item.category}</Badge>
                       </div>
                       <div className="text-sm font-bold mr-2">{item.priority}</div>
-                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSubtasks(item)} title="Break down with AI (Pro)">
-                          <Wand2 className="h-4 w-4" />
-                      </Button>
+                       <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSubtasks(item)} disabled={!isPro}>
+                                    <Wand2 className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Break down with AI {isPro ? "" : "(Pro)"}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                       </TooltipProvider>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
                           <X className="h-4 w-4" />
                       </Button>

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, Zap } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, Zap, ChevronsDown, ChevronsUp, FileText, StickyNote } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -282,6 +282,13 @@ export function TaskManager() {
       })
   }
 
+  const handleGoogleKeepImport = () => {
+      toast({
+          title: "Feature in development",
+          description: "Importing from Google Keep is planned for a future update."
+      })
+  }
+
 
   const getPriorityColor = (priority: number) => {
     if (priority >= 8) return 'bg-red-500';
@@ -331,23 +338,31 @@ export function TaskManager() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-start">
-              <CardTitle className="font-headline flex items-center gap-2">
-                <Wand2 className="text-accent" />
-                Brain Dump
-              </CardTitle>
-              <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={!user} onClick={handleGoogleDocImport}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import Doc
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Import tasks from a Google Doc</p>
-                </TooltipContent>
-              </Tooltip>
-              </TooltipProvider>
+                <div>
+                    <CardTitle className="font-headline flex items-center gap-2">
+                        <Wand2 className="text-accent" />
+                        Brain Dump
+                    </CardTitle>
+                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" disabled={!user}>
+                           <ChevronsDown className="mr-2 h-4 w-4" /> Import
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuLabel>Import From</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleGoogleDocImport}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Google Doc
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleGoogleKeepImport}>
+                             <StickyNote className="mr-2 h-4 w-4" />
+                            Google Keep
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
             <CardDescription>
               Enter your tasks below, separated by commas or new lines. Our AI will do the rest.
@@ -398,16 +413,6 @@ export function TaskManager() {
                 <CardTitle className="font-headline">Your Tasks</CardTitle>
                 <div className="flex items-center gap-2">
                     <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" disabled={tasks.length === 0 || isSyncing} onClick={handleSyncToGoogleTasks}>
-                          {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="h-4 w-4" />}
-                          <span className="sr-only">Sync Tasks</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Sync with Google Tasks</TooltipContent>
-                    </Tooltip>
-                    
                     <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -471,6 +476,22 @@ export function TaskManager() {
                         </AlertDialogContent>
                     </AlertDialog>
                     </TooltipProvider>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" disabled={tasks.length === 0 || !user}>
+                           <ChevronsUp className="h-4 w-4" />
+                           <span className="sr-only">Export or Sync</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>Export / Sync</DropdownMenuLabel>
+                        <DropdownMenuSeparator/>
+                        <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing}>
+                          {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
+                          Sync to Google Tasks
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
             <CardDescription>

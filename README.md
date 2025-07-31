@@ -4,6 +4,8 @@ ZenJar is a minimalist, multi-platform wellness and productivity tool that uses 
 
 In a world of overwhelming to-do lists and constant distractions, ZenJar was conceived to combat digital fatigue and foster mindfulness. It embraces a "count-up" philosophy, turning focus and achievements into tangible, growing assets.
 
+This version is the ungated, free with google sign in, stable 2d web app open beta, proprietary property of TresPies Design. 
+
 ## Core Features
 
 - **AI-Powered Task Jar**: "Brain dump" your unstructured tasks, and let the AI automatically categorize and prioritize them for you.

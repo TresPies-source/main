@@ -29,15 +29,12 @@ export function IntentionSetter() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const modelRef = useRef<THREE.Mesh | null>(null);
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
+    
     const scene = new THREE.Scene();
-    sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 4;
 
@@ -53,9 +50,8 @@ export function IntentionSetter() {
     scene.add(directionalLight);
 
     const geometry = new THREE.CapsuleGeometry(1, 1, 4, 8);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
     const model = new THREE.Mesh(geometry, material);
-    modelRef.current = model;
     scene.add(model);
     
     const raycaster = new THREE.Raycaster();
@@ -67,9 +63,10 @@ export function IntentionSetter() {
     let animatedObjects: { mesh: THREE.Mesh; progress: number; }[] = [];
     const animationDuration = 0.3;
     const taskAnimationDuration = 1.0;
+    let animationState = { isAnimating: false, progress: 0, type: '' };
 
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0, type: 'addTask' };
+      animationState = { isAnimating: true, progress: 0, type: 'addTask' };
       setPlayAddAnimation(false);
     }
     
@@ -80,11 +77,10 @@ export function IntentionSetter() {
         mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-
         const intersects = raycaster.intersectObjects(scene.children);
         
-        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
-            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        if (intersects.length > 0 && intersects[0].object === model) {
+            animationState = { isAnimating: true, progress: 0, type: 'click' };
         }
     };
     
@@ -102,37 +98,39 @@ export function IntentionSetter() {
         model.rotation.x += 0.005;
       }
       
-      if (animationState.current.isAnimating && model) {
-        animationState.current.progress += deltaTime;
-        const phase = animationState.current.progress / animationDuration;
+      if (animationState.isAnimating && model) {
+        animationState.progress += deltaTime;
+        const phase = animationState.progress / animationDuration;
         
-        if (animationState.current.type === 'click') {
+        if (animationState.type === 'click') {
             if (phase < 1) {
                 (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
             } else {
                 (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
-                animationState.current.isAnimating = false;
+                animationState.isAnimating = false;
             }
-        } else if (animationState.current.type === 'addTask') {
+        } else if (animationState.type === 'addTask') {
             const taskGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
             const taskMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
             const taskCube = new THREE.Mesh(taskGeometry, taskMaterial);
             taskCube.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, 2);
             scene.add(taskCube);
             animatedObjects.push({ mesh: taskCube, progress: 0 });
-            animationState.current.isAnimating = false; // Reset for next trigger
+            animationState.isAnimating = false; // Reset for next trigger
         }
       }
       
-      animatedObjects.forEach((obj) => {
+      animatedObjects.forEach((obj, index) => {
         obj.progress += deltaTime / taskAnimationDuration;
         if (obj.progress < 1) {
             obj.mesh.position.lerp(new THREE.Vector3(0, 0, 0), deltaTime * 2);
         } else {
             scene.remove(obj.mesh);
+            obj.mesh.geometry.dispose();
+            (obj.mesh.material as THREE.Material).dispose();
+            animatedObjects.splice(index, 1);
         }
       });
-      animatedObjects = animatedObjects.filter(obj => obj.progress < 1);
 
       renderer.render(scene, camera);
     };
@@ -153,9 +151,19 @@ export function IntentionSetter() {
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
-      if (currentMount) {
+      if (currentMount && renderer.domElement) {
         currentMount.removeChild(renderer.domElement);
       }
+      scene.traverse(object => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
       scene.clear();
       renderer.dispose();
     };
@@ -216,7 +224,7 @@ export function IntentionSetter() {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+      <div className="w-full h-[300px] bg-background rounded-lg mb-8">
         <div ref={mountRef} className="w-full h-full" />
       </div>
       <div className="w-full max-w-lg space-y-8 mx-auto">

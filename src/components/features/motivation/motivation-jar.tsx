@@ -57,14 +57,14 @@ export function MotivationJar() {
   const [newAffirmation, setNewAffirmation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
+  const [playRemoveAnimation, setPlayRemoveAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
-  const modelRef = useRef<THREE.Mesh | null>(null);
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
+    
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 4;
@@ -81,21 +81,35 @@ export function MotivationJar() {
     scene.add(directionalLight);
 
     const geometry = new THREE.TorusGeometry(1.5, 0.5, 16, 100);
-    const material = new THREE.MeshStandardMaterial({ color: 0xE5989B });
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
     const model = new THREE.Mesh(geometry, material);
-    modelRef.current = model;
     scene.add(model);
     
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-
-    const originalColor = new THREE.Color(0xE5989B);
-    const clickColor = new THREE.Color(0x6B83A3);
+    const originalColor = new THREE.Color(0x8BAA7A);
+    const clickColor = new THREE.Color(0xE5989B);
     
     const animationDuration = 0.3;
+    let animatedObjects: { mesh: THREE.Mesh; progress: number; type: 'add' | 'remove', targetPosition: THREE.Vector3, startPosition: THREE.Vector3 }[] = [];
+    let animationState = { isAnimating: false, progress: 0, type: '' };
+    
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0, type: 'pop' };
+      animationState = { isAnimating: true, progress: 0, type: 'pop' };
       setPlayAddAnimation(false);
+    }
+
+    if (playRemoveAnimation) {
+        animatedObjects.push({ 
+            mesh: new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), new THREE.MeshStandardMaterial({ color: 0xff0000 })), 
+            progress: 0, 
+            type: 'remove',
+            startPosition: new THREE.Vector3(0,0,0),
+            targetPosition: new THREE.Vector3(Math.random() * 6 - 3, Math.random() * 6 - 3, 3)
+        });
+        animatedObjects[animatedObjects.length-1].mesh.position.copy(animatedObjects[animatedObjects.length-1].startPosition);
+        scene.add(animatedObjects[animatedObjects.length-1].mesh);
+        setPlayRemoveAnimation(false);
     }
     
     const handleMouseDown = (event: MouseEvent) => {
@@ -105,11 +119,10 @@ export function MotivationJar() {
         mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-
         const intersects = raycaster.intersectObjects(scene.children);
         
-        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
-            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        if (intersects.length > 0 && intersects[0].object === model) {
+            animationState = { isAnimating: true, progress: 0, type: 'click' };
         }
     };
     
@@ -127,27 +140,40 @@ export function MotivationJar() {
         model.rotation.x += 0.005;
       }
 
-      if (animationState.current.isAnimating && model) {
-        animationState.current.progress += deltaTime;
-        const phase = animationState.current.progress / animationDuration;
+      if (animationState.isAnimating && model) {
+        animationState.progress += deltaTime;
+        const phase = animationState.progress / animationDuration;
         
-        if (animationState.current.type === 'pop') {
+        if (animationState.type === 'pop') {
             if (phase < 1) {
               const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
               model.scale.set(scale, scale, scale);
             } else {
               model.scale.set(1, 1, 1);
-              animationState.current.isAnimating = false;
+              animationState.isAnimating = false;
             }
-        } else if (animationState.current.type === 'click') {
+        } else if (animationState.type === 'click') {
             if (phase < 1) {
                 (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
             } else {
                 (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
-                animationState.current.isAnimating = false;
+                animationState.isAnimating = false;
             }
         }
       }
+
+      animatedObjects.forEach((obj, index) => {
+        obj.progress += deltaTime / 1.0; // taskAnimationDuration
+        if (obj.progress < 1) {
+            obj.mesh.position.lerp(obj.targetPosition, deltaTime * 2);
+        } else {
+            scene.remove(obj.mesh);
+            obj.mesh.geometry.dispose();
+            (obj.mesh.material as THREE.Material).dispose();
+            animatedObjects.splice(index, 1);
+        }
+      });
+
       renderer.render(scene, camera);
     };
     animate();
@@ -167,13 +193,23 @@ export function MotivationJar() {
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
-      if (currentMount) {
+      if (currentMount && renderer.domElement) {
         currentMount.removeChild(renderer.domElement);
       }
+      scene.traverse(object => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
       scene.clear();
       renderer.dispose();
     };
-  }, [playAddAnimation]);
+  }, [playAddAnimation, playRemoveAnimation]);
 
   const drawQuote = () => {
     const allQuotes = [...defaultQuotes, ...customAffirmations.map(a => a.text)];
@@ -231,6 +267,7 @@ export function MotivationJar() {
   const handleDeleteAffirmation = async (id: string) => {
     try {
         await deleteCustomAffirmation(id);
+        setPlayRemoveAnimation(true);
         toast({ title: 'Affirmation removed.' });
     } catch (error) {
         console.error("Error deleting affirmation: ", error);
@@ -240,7 +277,7 @@ export function MotivationJar() {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+      <div className="w-full h-[300px] bg-background rounded-lg mb-8">
         <div ref={mountRef} className="w-full h-full" />
       </div>
       <div className="grid md:grid-cols-2 gap-8">

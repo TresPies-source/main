@@ -26,7 +26,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, ChevronsDown, FileText } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, ChevronsDown, FileText, MoreHorizontal } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
@@ -87,8 +86,6 @@ export function TaskManager() {
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const modelRef = useRef<THREE.Mesh | null>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
@@ -111,9 +108,8 @@ export function TaskManager() {
     scene.add(directionalLight);
 
     const geometry = new THREE.BoxGeometry(2, 2, 2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x6B83A3 });
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
     const model = new THREE.Mesh(geometry, material);
-    modelRef.current = model;
     scene.add(model);
     
     const raycaster = new THREE.Raycaster();
@@ -122,13 +118,14 @@ export function TaskManager() {
     const dragPlane = new THREE.Plane();
     const dragOffset = new THREE.Vector3();
 
-    const originalColor = new THREE.Color(0x6B83A3);
+    const originalColor = new THREE.Color(0x8BAA7A);
     const clickColor = new THREE.Color(0xE5989B);
     
     let animatedObjects: { mesh: THREE.Mesh; progress: number; type: 'add' | 'remove', targetPosition: THREE.Vector3, startPosition: THREE.Vector3 }[] = [];
     
     const animationDuration = 0.3; 
     const taskAnimationDuration = 1.0;
+    let animationState = { isAnimating: false, progress: 0, type: '' };
 
     if (playAddAnimation) {
         animatedObjects.push({ 
@@ -157,7 +154,7 @@ export function TaskManager() {
     }
     
     const onMouseDown = (event: MouseEvent) => {
-        if (!currentMount || !modelRef.current) return;
+        if (!currentMount || !model) return;
         const rect = currentMount.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
@@ -174,8 +171,8 @@ export function TaskManager() {
                 const intersectionPoint = new THREE.Vector3();
                 raycaster.ray.intersectPlane(dragPlane, intersectionPoint);
                 dragOffset.copy(intersectionPoint).sub(draggedObject.position);
-            } else if (intersectedObject === modelRef.current) {
-                animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+            } else if (intersectedObject === model) {
+                animationState = { isAnimating: true, progress: 0, type: 'click' };
             }
         }
     };
@@ -193,12 +190,11 @@ export function TaskManager() {
     };
 
     const onMouseUp = async () => {
-        if (draggedObject && modelRef.current) {
-            const jarBox = new THREE.Box3().setFromObject(modelRef.current);
+        if (draggedObject && model) {
+            const jarBox = new THREE.Box3().setFromObject(model);
             const taskBox = new THREE.Box3().setFromObject(draggedObject);
 
             if (jarBox.intersectsBox(taskBox)) {
-                // Find the task data associated with the dragged object
                 const taskData = pending3DTasks.find(t => t.task === draggedObject?.userData.taskName);
                 if (taskData && user) {
                     try {
@@ -209,8 +205,6 @@ export function TaskManager() {
                             completed: false 
                         });
                          setPlayAddAnimation({ ...taskData, id: docRef.id, completed: false, createdAt: Timestamp.now() });
-
-                        // Remove from pending list
                         setPending3DTasks(prev => prev.filter(t => t.task !== taskData.task));
                     } catch (error) {
                          console.error("Error adding task from drop:", error);
@@ -232,19 +226,19 @@ export function TaskManager() {
       animationFrameId = requestAnimationFrame(animate);
       const deltaTime = clock.getDelta();
 
-      if(modelRef.current) {
-        modelRef.current.rotation.y += 0.005;
+      if(model) {
+        model.rotation.y += 0.005;
       }
       
-      if (animationState.current.isAnimating && model) {
-        animationState.current.progress += deltaTime;
-        const phase = animationState.current.progress / animationDuration;
-        if (animationState.current.type === 'click') {
+      if (animationState.isAnimating && model) {
+        animationState.progress += deltaTime;
+        const phase = animationState.progress / animationDuration;
+        if (animationState.type === 'click') {
             if (phase < 1) {
                 (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
             } else {
                 (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
-                animationState.current.isAnimating = false;
+                animationState.isAnimating = false;
             }
         }
       }
@@ -255,6 +249,8 @@ export function TaskManager() {
             obj.mesh.position.lerp(obj.targetPosition, deltaTime * 2);
         } else {
             scene.remove(obj.mesh);
+            obj.mesh.geometry.dispose();
+            (obj.mesh.material as THREE.Material).dispose();
             animatedObjects.splice(index, 1);
         }
       });
@@ -283,14 +279,14 @@ export function TaskManager() {
       if (currentMount && renderer.domElement) {
         currentMount.removeChild(renderer.domElement);
       }
-      scene.children.forEach(child => {
-        if (child instanceof THREE.Mesh) {
-            child.geometry.dispose();
-            if (Array.isArray(child.material)) {
-                child.material.forEach(m => m.dispose());
-            } else {
-                child.material.dispose();
-            }
+      scene.traverse(object => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            object.material.dispose();
+          }
         }
       });
       scene.clear();
@@ -301,14 +297,12 @@ export function TaskManager() {
   useEffect(() => {
     if (!sceneRef.current) return;
 
-    // Clear old pending tasks
-    sceneRef.current.children.forEach(child => {
+    sceneRef.current.children.slice().forEach(child => {
         if (child.userData.isPendingTask) {
             sceneRef.current?.remove(child);
         }
     });
 
-    // Add new pending tasks
     pending3DTasks.forEach((task, index) => {
         const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
         const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
@@ -328,8 +322,8 @@ export function TaskManager() {
 
     const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        if (querySnapshot.empty && !user) {
-            setTasks(initialTasks);
+        if (querySnapshot.empty && user) {
+            setTasks([]);
             return;
         }
       const fetchedTasks: Task[] = [];
@@ -506,7 +500,7 @@ export function TaskManager() {
         toast({ title: 'Calendar Error', description: error.message || 'Failed to create event in Google Calendar.', variant: 'destructive' });
     }
     setIsCreatingEvent(false);
-    setDrawnTask(null); // Close the dialog
+    setDrawnTask(null);
   }
 
   const handleGenerateSubtasks = async (task: Task) => {
@@ -624,10 +618,10 @@ export function TaskManager() {
         )}
     </AlertDialog>
 
-     <div className="w-full h-[300px] bg-card rounded-lg">
+     <div className="w-full h-[300px] bg-background rounded-lg mb-8">
         <div ref={mountRef} className="w-full h-full" />
     </div>
-    <div className="grid md:grid-cols-2 gap-8 mt-8">
+    <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-4">
             <Card>
             <CardHeader>
@@ -638,18 +632,22 @@ export function TaskManager() {
                             Brain Dump
                         </CardTitle>
                     </div>
-                    <DropdownMenu>
+                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" disabled={!user}>
-                            <ChevronsDown className="mr-2 h-4 w-4" /> Import
+                            <MoreHorizontal className="h-4 w-4" /> <span className='ml-2'>More Actions</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuLabel>Import From</DropdownMenuLabel>
+                            <DropdownMenuLabel>Data Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)}>
                                 <FileText className="mr-2 h-4 w-4" />
-                                Google Doc
+                                Import from Google Doc
+                            </DropdownMenuItem>
+                             <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing}>
+                            {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
+                            Sync to Google Tasks
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -756,22 +754,6 @@ export function TaskManager() {
                             </AlertDialogContent>
                         </AlertDialog>
                         </TooltipProvider>
-                        <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" disabled={tasks.length === 0 || !user}>
-                            <RefreshCw className="h-4 w-4" />
-                            <span className="sr-only">Export or Sync</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuLabel>Export / Sync</DropdownMenuLabel>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing}>
-                            {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
-                            Sync to Google Tasks
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </div>
                 <CardDescription>

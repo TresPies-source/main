@@ -65,17 +65,14 @@ export function GratitudeJar() {
   const [insightsState, setInsightsState] = useState<{ loading: boolean; data: AnalyzeGratitudePatternsOutput | null; open: boolean }>({ loading: false, data: null, open: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
-  const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const modelRef = useRef<THREE.Mesh | null>(null);
+  const { toast } = useToast();
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
+    
     const scene = new THREE.Scene();
-    sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 4;
 
@@ -91,23 +88,22 @@ export function GratitudeJar() {
     scene.add(directionalLight);
 
     const geometry = new THREE.IcosahedronGeometry(1.5, 0);
-    const material = new THREE.MeshStandardMaterial({ color: 0xA3B18A });
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
     const model = new THREE.Mesh(geometry, material);
-    modelRef.current = model;
     scene.add(model);
     
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-
-    const originalColor = new THREE.Color(0xA3B18A);
+    const originalColor = new THREE.Color(0x8BAA7A);
     const clickColor = new THREE.Color(0xE5989B);
     
     let animatedObjects: { mesh: THREE.Mesh; progress: number; }[] = [];
     const animationDuration = 0.3;
     const taskAnimationDuration = 1.0;
+    let animationState = { isAnimating: false, progress: 0, type: '' };
 
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0, type: 'addTask' };
+      animationState = { isAnimating: true, progress: 0, type: 'addTask' };
       setPlayAddAnimation(false);
     }
     
@@ -118,11 +114,10 @@ export function GratitudeJar() {
         mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-
         const intersects = raycaster.intersectObjects(scene.children);
         
-        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
-            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        if (intersects.length > 0 && intersects[0].object === model) {
+            animationState = { isAnimating: true, progress: 0, type: 'click' };
         }
     };
     
@@ -140,36 +135,38 @@ export function GratitudeJar() {
         model.rotation.x += 0.005;
       }
       
-      if (animationState.current.isAnimating && model) {
-        animationState.current.progress += deltaTime;
-        const phase = animationState.current.progress / animationDuration;
-        if (animationState.current.type === 'click') {
+      if (animationState.isAnimating && model) {
+        animationState.progress += deltaTime;
+        const phase = animationState.progress / animationDuration;
+        if (animationState.type === 'click') {
             if (phase < 1) {
                 (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
             } else {
                 (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
-                animationState.current.isAnimating = false;
+                animationState.isAnimating = false;
             }
-        } else if (animationState.current.type === 'addTask') {
+        } else if (animationState.type === 'addTask') {
             const taskGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
             const taskMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
             const taskCube = new THREE.Mesh(taskGeometry, taskMaterial);
             taskCube.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, 2);
             scene.add(taskCube);
             animatedObjects.push({ mesh: taskCube, progress: 0 });
-            animationState.current.isAnimating = false; // Reset for next trigger
+            animationState.isAnimating = false; // Reset for next trigger
         }
       }
       
-      animatedObjects.forEach((obj) => {
+      animatedObjects.forEach((obj, index) => {
         obj.progress += deltaTime / taskAnimationDuration;
         if (obj.progress < 1) {
             obj.mesh.position.lerp(new THREE.Vector3(0, 0, 0), deltaTime * 2);
         } else {
             scene.remove(obj.mesh);
+            obj.mesh.geometry.dispose();
+            (obj.mesh.material as THREE.Material).dispose();
+            animatedObjects.splice(index, 1);
         }
       });
-      animatedObjects = animatedObjects.filter(obj => obj.progress < 1);
 
       renderer.render(scene, camera);
     };
@@ -190,9 +187,19 @@ export function GratitudeJar() {
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
-      if (currentMount) {
+      if (currentMount && renderer.domElement) {
         currentMount.removeChild(renderer.domElement);
       }
+      scene.traverse(object => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
       scene.clear();
       renderer.dispose();
     };
@@ -206,8 +213,8 @@ export function GratitudeJar() {
 
     const q = query(collection(db, 'gratitude'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (querySnapshot.empty) {
-        setEntries(initialGratitudeEntries);
+      if (querySnapshot.empty && user) {
+        setEntries([]);
         return;
       }
       const fetchedEntries: GratitudeEntry[] = [];
@@ -259,13 +266,14 @@ export function GratitudeJar() {
         toast({ title: 'Not signed in', description: 'Please sign in to analyze your gratitude.', variant: 'destructive' });
         return;
     }
-    if (entries.length < 5) {
-        toast({ title: 'Not enough entries', description: 'You need at least 5 gratitude entries for a meaningful analysis.', variant: 'destructive' });
+    const userEntries = entries.filter(e => initialGratitudeEntries.findIndex(ig => ig.id === e.id) === -1);
+    if (userEntries.length < 5) {
+        toast({ title: 'Not enough entries', description: 'You need at least 5 of your own gratitude entries for a meaningful analysis.', variant: 'destructive' });
         return;
     }
     setInsightsState({ loading: true, data: null, open: true });
     try {
-        const entryTexts = entries.map(e => e.text);
+        const entryTexts = userEntries.map(e => e.text);
         const result = await callAnalyzeGratitudePatterns({ gratitudeEntries: entryTexts });
         setInsightsState({ loading: false, data: result, open: true });
     } catch (error) {
@@ -326,9 +334,11 @@ export function GratitudeJar() {
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
-    <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+
+    <div className="w-full h-[300px] bg-background rounded-lg mb-8">
       <div ref={mountRef} className="w-full h-full" />
     </div>
+
     <div className="grid md:grid-cols-2 gap-8">
       <div className="md:col-span-1">
         <Card>
@@ -389,7 +399,7 @@ export function GratitudeJar() {
                   Moments of thankfulness you've collected.
                 </CardDescription>
               </div>
-              <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length < 5}>
+              <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.filter(e => initialGratitudeEntries.findIndex(ig => ig.id === e.id) === -1).length < 5}>
                 <Wand2 className="mr-2 h-4 w-4" />
                 AI Insights
               </Button>

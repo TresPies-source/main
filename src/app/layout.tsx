@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("antialiased font-sans", inter.variable, lora.variable)}>
         <ThemeProvider
-          attribute="class"
+          attribute="data-theme"
           defaultTheme="kyoto-garden-light"
           enableSystem={false}
           disableTransitionOnChange

@@ -10,18 +10,30 @@ import {
   onSnapshot,
   addDoc,
   Timestamp,
+  getDocs,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Heart, Plus, Wand2 } from 'lucide-react';
+import { Heart, Plus, Wand2, Loader2, Sparkles, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/tooltip";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { analyzeGratitudePatterns, type AnalyzeGratitudePatternsOutput } from '@/ai/flows/analyze-gratitude-patterns';
+
 
 type GratitudeEntry = {
   id: string;
@@ -43,6 +55,7 @@ export function GratitudeJar() {
   const [entries, setEntries] = useState<GratitudeEntry[]>([]);
   const [newEntry, setNewEntry] = useState('');
   const [currentRating, setCurrentRating] = useState(3);
+  const [insightsState, setInsightsState] = useState<{ loading: boolean; data: AnalyzeGratitudePatternsOutput | null; open: boolean }>({ loading: false, data: null, open: false });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,6 +105,27 @@ export function GratitudeJar() {
         description: 'Your moment has been saved in the jar.',
     })
   };
+  
+  const handleAnalyzeGratitude = async () => {
+    if (!user) {
+        toast({ title: 'Not signed in', description: 'Please sign in to analyze your gratitude.', variant: 'destructive' });
+        return;
+    }
+    if (entries.length < 5) {
+        toast({ title: 'Not enough entries', description: 'You need at least 5 gratitude entries for a meaningful analysis.', variant: 'destructive' });
+        return;
+    }
+    setInsightsState({ loading: true, data: null, open: true });
+    try {
+        const entryTexts = entries.map(e => e.text);
+        const result = await analyzeGratitudePatterns({ gratitudeEntries: entryTexts });
+        setInsightsState({ loading: false, data: result, open: true });
+    } catch (error) {
+        console.error('Error analyzing gratitude:', error);
+        toast({ title: 'AI Error', description: 'Could not analyze your gratitude entries. Please try again.', variant: 'destructive' });
+        setInsightsState({ loading: false, data: null, open: false });
+    }
+  }
 
   const getFontSizeClass = (rating: number) => {
     switch (rating) {
@@ -105,6 +139,46 @@ export function GratitudeJar() {
   };
 
   return (
+    <>
+    <AlertDialog open={insightsState.open} onOpenChange={(open) => setInsightsState(prev => ({...prev, open}))}>
+        <AlertDialogContent>
+             <AlertDialogHeader>
+                <AlertDialogTitle className="font-headline flex items-center gap-2">
+                    <Wand2 /> AI Gratitude Insights
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                    Here's what the AI has learned from your gratitude entries.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            {insightsState.loading ? (
+                <div className="flex items-center justify-center h-40">
+                    <Loader2 className="animate-spin text-accent" />
+                </div>
+            ) : insightsState.data ? (
+                <div className='space-y-4'>
+                    <div>
+                        <h3 className='font-semibold flex items-center gap-2'><Sparkles className='h-4 w-4 text-accent'/> Recurring Themes</h3>
+                        <div className='mt-2 space-y-2'>
+                            {insightsState.data.recurringThemes.map((theme, i) => (
+                                <div key={i} className="flex items-start gap-3 text-sm p-3 bg-secondary/50 rounded-md">
+                                    <BrainCircuit className="h-4 w-4 mt-1 text-accent flex-shrink-0" />
+                                    <span className='flex-1'>{theme}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                     <div>
+                        <h3 className='font-semibold flex items-center gap-2'><Heart className='h-4 w-4 text-accent'/> Overall Sentiment</h3>
+                        <p className='text-sm text-muted-foreground mt-1'>{insightsState.data.overallSentiment}</p>
+                    </div>
+                </div>
+            ) : null}
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setInsightsState({ loading: false, data: null, open: false })}>Close</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
     <div className="grid gap-8 md:grid-cols-3">
       <div className="md:col-span-1">
         <Card>
@@ -165,7 +239,7 @@ export function GratitudeJar() {
                     Moments of thankfulness you've collected.
                     </CardDescription>
                 </div>
-                <Button variant="outline" disabled>
+                <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length === 0}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     AI Insights (Pro)
                 </Button>
@@ -174,7 +248,7 @@ export function GratitudeJar() {
           <CardContent>
             {user ? (
                 entries.length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                         {entries.map(entry => (
                             <div key={entry.id} className="p-3 bg-secondary/50 rounded-lg">
                                 <p className={`${getFontSizeClass(entry.rating)} transition-all`}>
@@ -198,5 +272,6 @@ export function GratitudeJar() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

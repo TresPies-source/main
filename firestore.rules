@@ -1,37 +1,44 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    
     // Helper function to check ownership
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    // Rules for user-specific collections
-    match /tasks/{documentId} {
-      allow read, write: if isOwner(resource.data.userId);
-    }
-    match /wins/{documentId} {
-      allow read, write: if isOwner(resource.data.userId);
-    }
-    match /focusSessions/{documentId} {
-      allow read, write: if isOwner(resource.data.userId);
-    }
-    match /gratitude/{documentId} {
-      allow read, write: if isOwner(resource.data.userId);
-    }
-    match /intentions/{documentId} {
-      allow read, write: if isOwner(resource.data.userId);
-    }
-    match /affirmations/{documentId} {
+    // Rules for each collection
+    match /tasks/{taskId} {
       allow read, write: if isOwner(resource.data.userId);
     }
     
-    // This collection is for linking Slack/Discord IDs to ZenJar user IDs
-    match /userMappings/{documentId} {
-        allow read, write: if isOwner(resource.data.zenJarUserId);
+    match /wins/{winId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+    
+    match /focusSessions/{sessionId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+    
+    match /gratitude/{gratitudeId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+    
+    match /intentions/{intentionId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+    
+    match /affirmations/{affirmationId} {
+      allow read, write: if isOwner(resource.data.userId);
+    }
+
+    // Rules for user mappings for Slack/Discord integrations
+    match /userMappings/{mappingId} {
+      // Allow creation by authenticated users for their own mapping
+      allow create: if isOwner(request.resource.data.zenJarUserId);
+      // Only allow reading/updating by the owner
+      allow read, update: if isOwner(resource.data.zenJarUserId);
     }
   }
 }

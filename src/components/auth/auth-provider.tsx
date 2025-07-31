@@ -1,12 +1,13 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut, linkWithPopup, reauthenticateWithPopup } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 if (typeof window !== 'undefined') {
-  (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = "9038D925-1D42-4053-823E-DAE8C4715CC8";
+  // IMPORTANT: Do not enable this in production.
+  // (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 }
 
 const auth = getAuth(app);
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
+    setLoading(true);
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/tasks');
     provider.addScope('https://www.googleapis.com/auth/calendar.events');
@@ -51,13 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: 'Signed In',
         description: 'Welcome to Zen Jar!',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in with Google: ", error);
+      let description = 'Could not sign in with Google. Please try again.';
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        description = "An account already exists with the same email address but different sign-in credentials. Please sign in using the original method."
+      }
       toast({
         title: 'Sign In Error',
-        description: 'Could not sign in with Google. Please try again.',
+        description,
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,9 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     provider.addScope('https://www.googleapis.com/auth/calendar.events');
 
     try {
-      const result = await signInWithPopup(auth.currentUser, provider);
+      // linkWithPopup is for linking a new provider to an existing anonymous account
+      // reauthenticateWithPopup is for an existing user to re-provide credentials
+      const result = user?.isAnonymous 
+        ? await linkWithPopup(auth.currentUser, provider)
+        : await reauthenticateWithPopup(auth.currentUser, provider);
+        
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential?.accessToken;
+
       if (token) {
         setGoogleAccessToken(token);
         toast({
@@ -83,12 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return token;
       }
       throw new Error("Could not retrieve access token.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error connecting Google account: ", error);
       setGoogleAccessToken(null);
+      let description = 'Could not connect your Google account. Please try again.';
+      if (error.code === 'auth/credential-already-in-use') {
+        description = 'This Google account is already associated with another user.'
+      }
       toast({
         title: 'Connection Error',
-        description: 'Could not connect your Google account. Please try again.',
+        description,
         variant: 'destructive',
       });
       return null;

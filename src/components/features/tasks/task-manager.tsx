@@ -14,7 +14,6 @@ import {
   Timestamp,
   deleteDoc,
   updateDoc,
-  addDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -397,7 +396,7 @@ export function TaskManager() {
                                     </div>
                                 </div>
                                 <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
-                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent}>
+                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
                                     {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
                                     Add to Google Calendar
                                   </Button>

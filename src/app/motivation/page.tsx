@@ -1,5 +1,17 @@
+
+'use client';
+
 import MainLayout from "@/components/layout/main-layout";
-import { MotivationJar } from "@/components/features/motivation/motivation-jar";
+import dynamic from 'next/dynamic';
+import { Skeleton } from "@/components/ui/skeleton";
+
+const MotivationJar = dynamic(
+  () => import('@/components/features/motivation/motivation-jar').then(mod => mod.MotivationJar),
+  { 
+    ssr: false,
+    loading: () => <Skeleton className="h-[400px] w-full max-w-4xl mx-auto" />
+  }
+);
 
 export default function MotivationPage() {
   return (

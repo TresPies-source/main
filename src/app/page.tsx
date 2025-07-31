@@ -6,11 +6,23 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FocusTimer } from "@/components/features/dashboard/focus-timer";
-import { WinJar } from "@/components/features/dashboard/win-jar";
-import { GrowthInsights } from '@/components/features/dashboard/growth-insights';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Flame, Trophy, TrendingUp } from "lucide-react";
+import dynamic from 'next/dynamic';
+
+const FocusTimer = dynamic(() => import('@/components/features/dashboard/focus-timer').then(mod => mod.FocusTimer), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[250px] w-full" />,
+});
+const WinJar = dynamic(() => import('@/components/features/dashboard/win-jar').then(mod => mod.WinJar), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[250px] w-full" />,
+});
+const GrowthInsights = dynamic(() => import('@/components/features/dashboard/growth-insights').then(mod => mod.GrowthInsights), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+});
+
 
 type FocusSession = {
   id: string;

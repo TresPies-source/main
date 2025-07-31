@@ -8,7 +8,9 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
@@ -18,9 +20,12 @@ import {
 } from "@/components/ui/tooltip"
 
 const themes = [
-    { name: 'Kyoto Garden', value: 'kyoto-garden' },
-    { name: 'Twilight Gradient', value: 'twilight-gradient' },
-    { name: 'Fresh Mint', value: 'fresh-mint' },
+    { name: 'Kyoto Garden - Light', value: 'kyoto-garden-light' },
+    { name: 'Kyoto Garden - Dark', value: 'kyoto-garden-dark' },
+    { name: 'Twilight Gradient - Light', value: 'twilight-gradient-light' },
+    { name: 'Twilight Gradient - Dark', value: 'twilight-gradient-dark' },
+    { name: 'Fresh Mint - Light', value: 'fresh-mint-light' },
+    { name: 'Fresh Mint - Dark', value: 'fresh-mint-dark' },
 ];
 
 export function ThemeSwitcher() {
@@ -32,9 +37,9 @@ export function ThemeSwitcher() {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" className="group-data-[collapsible=icon]:w-full">
+                            <Button variant="outline" className="w-full justify-start gap-2 group-data-[collapsible=expanded]:w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:aspect-square group-data-[collapsible=icon]:p-2">
                                 <Palette />
-                                <span className="sr-only">Switch Theme</span>
+                                <span className="group-data-[collapsible=icon]:hidden">Switch Theme</span>
                             </Button>
                         </DropdownMenuTrigger>
                     </TooltipTrigger>
@@ -44,6 +49,8 @@ export function ThemeSwitcher() {
                 </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {themes.map((t) => (
                      <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
                         <div className="flex items-center justify-between w-full">

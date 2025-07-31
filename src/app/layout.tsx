@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className={cn("antialiased font-sans", inter.variable, lora.variable)}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="kyoto-garden"
+          defaultTheme="kyoto-garden-light"
           enableSystem={false}
           disableTransitionOnChange
         >

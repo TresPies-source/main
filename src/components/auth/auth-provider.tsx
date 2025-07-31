@@ -36,12 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
       // In a real app, you would fetch the user's subscription status here
       // from Firestore or via custom claims after they sign in.
-      // For this prototype, we'll keep it simple.
-      // e.g., checkUserProStatus(user).then(setIsPro);
-      // For demonstration, let's assume the user is Pro if they are logged in.
-      // You would replace this with actual subscription logic.
+      // For this prototype, we will default all users to the Free tier.
+      // To test Pro features, you can temporarily set this to true.
       if (user) {
-        setIsPro(true);
+        // To test pro features, uncomment the line below
+        // setIsPro(true); 
       } else {
         setIsPro(false);
       }

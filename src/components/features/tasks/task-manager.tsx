@@ -1,10 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  writeBatch,
+  getDocs,
+  Timestamp,
+  deleteDoc,
+} from 'firebase/firestore';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2 } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, Check, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,15 +36,45 @@ import {
   type CategorizeAndPrioritizeTasksOutput,
 } from '@/ai/flows/categorize-and-prioritize-tasks';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+
+type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
+    id: string;
+    completed: boolean;
+    createdAt: Timestamp;
+};
 
 export function TaskManager() {
+  const { user } = useAuth();
   const [taskInput, setTaskInput] = useState('');
-  const [processedTasks, setProcessedTasks] = useState<CategorizeAndPrioritizeTasksOutput>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [drawnTask, setDrawnTask] = useState<CategorizeAndPrioritizeTasksOutput[0] | null>(null);
+  const [drawnTask, setDrawnTask] = useState<Task | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!user) {
+      setTasks([]);
+      return;
+    }
+
+    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedTasks: Task[] = [];
+      querySnapshot.forEach((doc) => {
+        fetchedTasks.push({ ...doc.data(), id: doc.id } as Task);
+      });
+      setTasks(fetchedTasks.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()));
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
   const handleProcessTasks = async () => {
+    if (!user) {
+        toast({ title: 'Not signed in', description: 'You must be signed in to add tasks.', variant: 'destructive' });
+        return;
+    }
     if (!taskInput.trim()) {
       toast({
         title: 'No tasks entered',
@@ -42,13 +86,24 @@ export function TaskManager() {
     setIsLoading(true);
     try {
       const result = await categorizeAndPrioritizeTasks({ tasks: taskInput });
-      setProcessedTasks(prevTasks => [...prevTasks, ...result]);
+      
+      const batch = writeBatch(db);
+      result.forEach((task) => {
+        const docRef = doc(collection(db, 'tasks'));
+        batch.set(docRef, { ...task, userId: user.uid, createdAt: Timestamp.now(), completed: false });
+      });
+      await batch.commit();
+
       setTaskInput('');
+      toast({
+        title: 'Tasks Added',
+        description: `${result.length} new task(s) have been saved to your jar.`
+      })
     } catch (error) {
       console.error('Error processing tasks:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process tasks. Please try again.',
+        description: 'Failed to process and save tasks. Please try again.',
         variant: 'destructive',
       });
     }
@@ -56,20 +111,48 @@ export function TaskManager() {
   };
   
   const handleDrawTask = () => {
-    if (processedTasks.length === 0) return;
+    const pendingTasks = tasks.filter(t => !t.completed);
+    if (pendingTasks.length === 0) {
+        toast({ title: "All tasks completed!", description: "Add new tasks to draw one."});
+        return;
+    };
 
-    const weightedList = processedTasks.flatMap(task => Array(task.priority).fill(task));
+    const weightedList = pendingTasks.flatMap(task => Array(task.priority).fill(task));
     const randomIndex = Math.floor(Math.random() * weightedList.length);
     const selectedTask = weightedList[randomIndex];
     setDrawnTask(selectedTask);
   };
   
-  const handleEmptyJar = () => {
-    setProcessedTasks([]);
+  const handleEmptyJar = async () => {
+    if (!user) return;
+    
+    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
+    const querySnapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    querySnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+
     toast({
         title: 'Jar Emptied',
-        description: 'All tasks have been cleared.',
+        description: 'All tasks have been cleared from your account.',
     })
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteDoc(doc(db, "tasks", taskId));
+    toast({
+        title: "Task Deleted",
+        description: "The task has been removed from your jar."
+    })
+  }
+
+  const handleToggleTask = async (task: Task) => {
+    const taskRef = doc(db, 'tasks', task.id);
+    const batch = writeBatch(db);
+    batch.update(taskRef, { completed: !task.completed });
+    await batch.commit();
   }
 
   const getPriorityColor = (priority: number) => {
@@ -77,6 +160,9 @@ export function TaskManager() {
     if (priority >= 5) return 'bg-yellow-500';
     return 'bg-green-500';
   };
+  
+  const pendingTasks = tasks.filter(t => !t.completed);
+  const completedTasks = tasks.filter(t => t.completed);
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
@@ -103,8 +189,9 @@ export function TaskManager() {
                 className="min-h-[150px]"
                 value={taskInput}
                 onChange={(e) => setTaskInput(e.target.value)}
+                disabled={!user || isLoading}
               />
-              <Button type="submit" className="mt-4 w-full" disabled={isLoading}>
+              <Button type="submit" className="mt-4 w-full" disabled={!user || isLoading}>
                 {isLoading ? (
                   <Loader2 className="animate-spin" />
                 ) : (
@@ -112,6 +199,9 @@ export function TaskManager() {
                 )}
               </Button>
             </form>
+             {!user && (
+                <p className="text-sm text-center text-muted-foreground mt-4">Please sign in to add and manage tasks.</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -124,7 +214,7 @@ export function TaskManager() {
                 <div className="flex items-center gap-2">
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                           <Button variant="outline" size="icon" disabled={processedTasks.length === 0} onClick={handleDrawTask}>
+                           <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
                                 <Dices className="h-4 w-4" />
                                 <span className="sr-only">Draw a task</span>
                             </Button>
@@ -150,32 +240,71 @@ export function TaskManager() {
                             </AlertDialogContent>
                          )}
                     </AlertDialog>
-                     <Button variant="destructive" size="icon" onClick={handleEmptyJar} disabled={processedTasks.length === 0}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Empty Jar</span>
-                    </Button>
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Empty Jar</span>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                This will permanently delete all {tasks.length} tasks from your jar. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleEmptyJar}>Yes, empty the jar</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
             <CardDescription>
-                {processedTasks.length > 0 ? `You have ${processedTasks.length} task(s).` : "Your task jar is empty. Add some tasks!"}
+                {user ? (tasks.length > 0 ? `You have ${pendingTasks.length} pending task(s).` : "Your task jar is empty. Add some tasks!") : "Sign in to see your tasks."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 h-[200px] overflow-y-auto pr-2">
-              {processedTasks.length > 0 ? (
-                processedTasks.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+              {tasks.length > 0 ? (
+                <>
+                {pendingTasks.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                    <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
                     <div className={`w-2 h-10 rounded-full ${getPriorityColor(item.priority)}`}></div>
                     <div className="flex-1">
                       <p className="font-medium">{item.task}</p>
                       <Badge variant="outline" className="mt-1">{item.category}</Badge>
                     </div>
                     <div className="text-sm font-bold">{item.priority}</div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
+                        <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                ))
+                ))}
+                {completedTasks.length > 0 && (
+                    <div className="pt-4">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Completed</h4>
+                        {completedTasks.map((item) => (
+                            <div key={item.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg text-muted-foreground">
+                                <Checkbox id={`task-${item.id}`} checked={item.completed} onCheckedChange={() => handleToggleTask(item)} />
+                                <div className="flex-1">
+                                    <p className="font-medium line-through">{item.task}</p>
+                                    <Badge variant="outline" className="mt-1">{item.category}</Badge>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                </>
               ) : (
                 <div className="text-center text-muted-foreground pt-12">
-                    <p>Tasks will appear here once processed.</p>
+                    {user ? <p>Tasks will appear here once processed.</p> : <p>Please sign in to manage your tasks.</p>}
                 </div>
               )}
             </div>

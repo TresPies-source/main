@@ -1,4 +1,3 @@
-
 // src/pages/api/discord.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { handleDiscordCommand } from '@/ai/flows/handle-discord-command';
@@ -90,6 +89,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } catch (error: any) {
         console.error('Error in Discord API handler:', error);
-        return res.status(500).json({ error: 'An internal error occurred while processing the command.' });
+        return res.status(500).json({ data: { content: 'An internal error occurred while processing the command.'} });
     }
 }

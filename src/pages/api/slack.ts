@@ -1,4 +1,3 @@
-
 // src/pages/api/slack.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { handleSlackCommand, HandleSlackCommandOutput } from '@/ai/flows/handle-slack-command';
@@ -52,6 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     } catch (error: any) {
         console.error('Error in Slack API handler:', error);
-        res.status(500).json({ error: 'An internal error occurred while processing the command.' });
+        res.status(500).json({ text: 'An internal error occurred while processing the command.', response_type: 'ephemeral' });
     }
 }

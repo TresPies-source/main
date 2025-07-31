@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -26,14 +25,14 @@ const CreateCalendarEventInputSchema = z.object({
   accessToken: z.string().describe('The OAuth access token for the user.'),
   task: TaskSchema.describe('The task to create an event for.'),
 });
-type CreateCalendarEventInput = z.infer<typeof CreateCalendarEventInputSchema>;
+export type CreateCalendarEventInput = z.infer<typeof CreateCalendarEventInputSchema>;
 
 const CreateCalendarEventOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   eventLink: z.string().optional(),
 });
-type CreateCalendarEventOutput = z.infer<typeof CreateCalendarEventOutputSchema>;
+export type CreateCalendarEventOutput = z.infer<typeof CreateCalendarEventOutputSchema>;
 
 export async function createCalendarEvent(input: CreateCalendarEventInput): Promise<CreateCalendarEventOutput> {
   return createCalendarEventFlow(input);

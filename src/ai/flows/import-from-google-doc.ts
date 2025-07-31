@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -17,14 +16,14 @@ const ImportFromGoogleDocInputSchema = z.object({
   accessToken: z.string().describe('The OAuth access token for the user.'),
   documentId: z.string().describe('The ID of the Google Doc to import.'),
 });
-type ImportFromGoogleDocInput = z.infer<typeof ImportFromGoogleDocInputSchema>;
+export type ImportFromGoogleDocInput = z.infer<typeof ImportFromGoogleDocInputSchema>;
 
 const ImportFromGoogleDocOutputSchema = z.object({
   success: z.boolean(),
   content: z.string().optional(),
   message: z.string(),
 });
-type ImportFromGoogleDocOutput = z.infer<typeof ImportFromGoogleDocOutputSchema>;
+export type ImportFromGoogleDocOutput = z.infer<typeof ImportFromGoogleDocOutputSchema>;
 
 export async function importFromGoogleDoc(input: ImportFromGoogleDocInput): Promise<ImportFromGoogleDocOutput> {
   return importFromGoogleDocFlow(input);

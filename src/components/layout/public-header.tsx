@@ -17,10 +17,10 @@ export function PublicHeader() {
           <span className="font-bold font-headline">ZenJar</span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            <Link href="/public/about" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/about" ? "text-foreground" : "text-foreground/60")}>
+            <Link href="/about" className={cn("transition-colors hover:text-foreground/80", pathname === "/about" ? "text-foreground" : "text-foreground/60")}>
                 About
             </Link>
-            <Link href="/public/roadmap" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/roadmap" ? "text-foreground" : "text-foreground/60")}>
+            <Link href="/roadmap" className={cn("transition-colors hover:text-foreground/80", pathname === "/roadmap" ? "text-foreground" : "text-foreground/60")}>
                 Roadmap
             </Link>
             <Link href="/public/blog" className={cn("transition-colors hover:text-foreground/80", pathname.startsWith("/public/blog") ? "text-foreground" : "text-foreground/60")}>

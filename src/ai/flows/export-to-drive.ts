@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -17,14 +16,14 @@ const ExportToDriveInputSchema = z.object({
   accessToken: z.string().describe('The OAuth access token for the user.'),
   userData: z.any().describe('A JSON object containing all the user data to be exported.'),
 });
-type ExportToDriveInput = z.infer<typeof ExportToDriveInputSchema>;
+export type ExportToDriveInput = z.infer<typeof ExportToDriveInputSchema>;
 
 const ExportToDriveOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   fileLink: z.string().optional(),
 });
-type ExportToDriveOutput = z.infer<typeof ExportToDriveOutputSchema>;
+export type ExportToDriveOutput = z.infer<typeof ExportToDriveOutputSchema>;
 
 export async function exportToDrive(input: ExportToDriveInput): Promise<ExportToDriveOutput> {
   return exportToDriveFlow(input);

@@ -13,6 +13,7 @@ import { z } from 'genkit';
 import { categorizeAndPrioritizeTasks } from './categorize-and-prioritize-tasks';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, Timestamp, query, where, getDocs, limit } from 'firebase/firestore';
+import { drawTaskFromJar, getMotivation } from '@/services/jar-logic';
 
 
 // In a real app, you would look up the ZenJar user ID associated with the Slack user ID.
@@ -45,39 +46,6 @@ export const HandleSlackCommandOutputSchema = z.object({
 export type HandleSlackCommandOutput = z.infer<typeof HandleSlackCommandOutputSchema>;
 
 
-const quotes = [
-    "The secret of getting ahead is getting started.",
-    "The only way to do great work is to love what you do.",
-    "Believe you can and you're halfway there.",
-    "Act as if what you do makes a difference. It does.",
-    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-];
-
-async function getMotivation(zenJarUserId: string) {
-    // In a production app, this could also pull from user's custom affirmations.
-    const randomIndex = Math.floor(Math.random() * quotes.length);
-    return quotes[randomIndex];
-}
-
-async function drawTaskFromJar(zenJarUserId: string) {
-    const q = query(collection(db, 'tasks'), where('userId', '==', zenJarUserId), where('completed', '==', false));
-    const querySnapshot = await getDocs(q);
-    const pendingTasks: any[] = [];
-    querySnapshot.forEach((doc) => {
-        pendingTasks.push({ ...doc.data(), id: doc.id });
-    });
-
-    if (pendingTasks.length === 0) {
-        return "Your Task Jar is empty! Add some tasks with `/zenjar add [your task]`."
-    }
-
-    const weightedList = pendingTasks.flatMap(task => Array(task.priority).fill(task));
-    const randomIndex = Math.floor(Math.random() * weightedList.length);
-    const selectedTask = weightedList[randomIndex];
-    return `Your next task is: *${selectedTask.task}* (Priority: ${selectedTask.priority})`;
-}
-
-
 export async function handleSlackCommand(input: HandleSlackCommandInput): Promise<HandleSlackCommandOutput> {
     const { text, user_id, user_name } = input;
     const [action, ...rest] = text.split(' ');
@@ -92,42 +60,46 @@ export async function handleSlackCommand(input: HandleSlackCommandInput): Promis
         };
     }
 
+    try {
+        switch (action.toLowerCase()) {
+            case 'add':
+            case 'task':
+                if (!content) {
+                    return { response_type: 'ephemeral', text: "Please provide a task to add. Usage: `/zenjar add [your task description]`" };
+                }
+                const taskResult = await categorizeAndPrioritizeTasks({ tasks: content });
+                const task = taskResult[0];
+                await addDoc(collection(db, 'tasks'), {
+                    ...task,
+                    userId: zenJarUserId,
+                    createdAt: Timestamp.now(),
+                    completed: false
+                });
+                return { response_type: 'in_channel', text: `Task added by <@${user_id}>: *${task.task}* (Category: ${task.category}, Priority: ${task.priority})` };
 
-    switch (action.toLowerCase()) {
-        case 'add':
-        case 'task':
-            if (!content) {
-                return { response_type: 'ephemeral', text: "Please provide a task to add. Usage: `/zenjar add [your task description]`" };
-            }
-            const taskResult = await categorizeAndPrioritizeTasks({ tasks: content });
-            const task = taskResult[0];
-            await addDoc(collection(db, 'tasks'), {
-                ...task,
-                userId: zenJarUserId,
-                createdAt: Timestamp.now(),
-                completed: false
-            });
-            return { response_type: 'in_channel', text: `Task added by <@${user_id}>: *${task.task}* (Category: ${task.category}, Priority: ${task.priority})` };
+            case 'pick':
+            case 'draw':
+                const drawnTask = await drawTaskFromJar(zenJarUserId);
+                return { response_type: 'ephemeral', text: drawnTask };
 
-        case 'pick':
-        case 'draw':
-            const drawnTask = await drawTaskFromJar(zenJarUserId);
-            return { response_type: 'ephemeral', text: drawnTask };
+            case 'motivate':
+            case 'motivation':
+                const quote = await getMotivation(zenJarUserId);
+                return { response_type: 'ephemeral', text: `Here's a little motivation for you:\n>"${quote}"` };
 
-        case 'motivate':
-        case 'motivation':
-            const quote = await getMotivation(zenJarUserId);
-            return { response_type: 'ephemeral', text: `Here's a little motivation for you:\n>"${quote}"` };
+            case 'help':
+                const helpText = "Here are the commands you can use with `/zenjar`:\n" +
+                                "`add [task]`: Adds a new task to your jar.\n" +
+                                "`pick`: Randomly draws a task from your jar.\n" +
+                                "`motivate`: Gives you a dose of motivation.\n" +
+                                "`help`: Shows this help message.";
+                return { response_type: 'ephemeral', text: helpText };
 
-        case 'help':
-            const helpText = "Here are the commands you can use with `/zenjar`:\n" +
-                             "`add [task]`: Adds a new task to your jar.\n" +
-                             "`pick`: Randomly draws a task from your jar.\n" +
-                             "`motivate`: Gives you a dose of motivation.\n" +
-                             "`help`: Shows this help message.";
-            return { response_type: 'ephemeral', text: helpText };
-
-        default:
-            return { response_type: 'ephemeral', text: "Sorry, I didn't recognize that command. Try `/zenjar help` to see what I can do." };
+            default:
+                return { response_type: 'ephemeral', text: "Sorry, I didn't recognize that command. Try `/zenjar help` to see what I can do." };
+        }
+    } catch(error: any) {
+        console.error("Error processing Slack command: ", error);
+        return { response_type: 'ephemeral', text: "Sorry, there was an error trying to process your command. Please try again later." };
     }
 }

@@ -22,6 +22,7 @@ import {
   Sunrise,
   Info,
   Compass,
+  Rss,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
@@ -90,10 +91,10 @@ export default function AppSidebar() {
              <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={pathname.startsWith('/public/about')}
+                    isActive={pathname.startsWith('/about')}
                     tooltip={{ children: 'About' }}
                 >
-                    <Link href="/public/about">
+                    <Link href="/about">
                     <Info />
                     <span>About</span>
                     </Link>
@@ -102,12 +103,24 @@ export default function AppSidebar() {
             <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={pathname.startsWith('/public/roadmap')}
+                    isActive={pathname.startsWith('/roadmap')}
                     tooltip={{ children: 'Roadmap' }}
                 >
-                    <Link href="/public/roadmap">
+                    <Link href="/roadmap">
                     <Compass />
                     <span>Roadmap</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith('/public/blog')}
+                    tooltip={{ children: 'Blog' }}
+                >
+                    <Link href="/public/blog">
+                    <Rss />
+                    <span>Blog</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

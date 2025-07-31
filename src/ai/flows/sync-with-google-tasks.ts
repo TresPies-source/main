@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -24,14 +23,14 @@ const SyncWithGoogleTasksInputSchema = z.object({
     })
   ).describe('The list of tasks to sync.'),
 });
-type SyncWithGoogleTasksInput = z.infer<typeof SyncWithGoogleTasksInputSchema>;
+export type SyncWithGoogleTasksInput = z.infer<typeof SyncWithGoogleTasksInputSchema>;
 
 const SyncWithGoogleTasksOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   tasklistLink: z.string().optional(),
 });
-type SyncWithGoogleTasksOutput = z.infer<typeof SyncWithGoogleTasksOutputSchema>;
+export type SyncWithGoogleTasksOutput = z.infer<typeof SyncWithGoogleTasksOutputSchema>;
 
 export async function syncWithGoogleTasks(input: SyncWithGoogleTasksInput): Promise<SyncWithGoogleTasksOutput> {
   return syncWithGoogleTasksFlow(input);

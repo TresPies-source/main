@@ -1,7 +1,7 @@
-
 // src/pages/api/delete-user.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as admin from 'firebase-admin';
+import { verifyFirebaseToken } from '@/lib/api-auth';
 
 // Initialize Firebase Admin SDK
 // This should be set as an environment variable in your hosting environment.
@@ -68,26 +68,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { authorization } = req.headers;
-
-    if (!authorization?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    const decodedToken = await verifyFirebaseToken(req, adminAuth, serviceAccount);
+    if (!decodedToken) {
+        return res.status(401).json({ error: 'Unauthorized' });
     }
-    
-    const idToken = authorization.split('Bearer ')[1];
-    
-    // For local dev where admin SDK might not have full auth powers
-    if(!serviceAccount) {
-        console.warn("Skipping token verification in local environment without service account.");
-        // In a real local setup with emulators, you might have a different logic.
-        // For this prototype, we'll allow it to proceed but this is not secure for production.
-        // A better approach would be to use the emulators and dummy service accounts.
-    } else {
-        await adminAuth.verifyIdToken(idToken);
-    }
-    const decodedToken = admin.auth.decodeJwt(idToken)
     const uid = decodedToken.uid;
-
 
     // 1. Delete all user data from Firestore
     await deleteUserCollections(uid);

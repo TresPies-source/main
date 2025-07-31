@@ -13,6 +13,8 @@ import { z } from 'genkit';
 import { categorizeAndPrioritizeTasks } from './categorize-and-prioritize-tasks';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, Timestamp, query, where, getDocs, limit } from 'firebase/firestore';
+import { drawTaskFromJar, getMotivation } from '@/services/jar-logic';
+
 
 // In a real app, you would look up the ZenJar user ID associated with the Discord user ID.
 // This requires an OAuth flow where the user links their accounts, typically in the app's settings.
@@ -44,39 +46,6 @@ export const HandleDiscordCommandOutputSchema = z.object({
 });
 export type HandleDiscordCommandOutput = z.infer<typeof HandleDiscordCommandOutputSchema>;
 
-// This can be moved to a shared utility file.
-const quotes = [
-    "The secret of getting ahead is getting started.",
-    "The only way to do great work is to love what you do.",
-    "Believe you can and you're halfway there.",
-    "Act as if what you do makes a difference. It does.",
-    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-];
-
-async function getMotivation(zenJarUserId: string) {
-    // In a production app, this could also pull from user's custom affirmations.
-    const randomIndex = Math.floor(Math.random() * quotes.length);
-    return quotes[randomIndex];
-}
-
-async function drawTaskFromJar(zenJarUserId: string) {
-    const q = query(collection(db, 'tasks'), where('userId', '==', zenJarUserId), where('completed', '==', false));
-    const querySnapshot = await getDocs(q);
-    const pendingTasks: any[] = [];
-    querySnapshot.forEach((doc) => {
-        pendingTasks.push({ ...doc.data(), id: doc.id });
-    });
-
-    if (pendingTasks.length === 0) {
-        return "Your Task Jar is empty! Add some tasks with `/zenjar add [your task]`."
-    }
-
-    const weightedList = pendingTasks.flatMap(task => Array(task.priority).fill(task));
-    const randomIndex = Math.floor(Math.random() * weightedList.length);
-    const selectedTask = weightedList[randomIndex];
-    return `Your next task is: **${selectedTask.task}** (Priority: ${selectedTask.priority})`;
-}
-
 
 export async function handleDiscordCommand(input: HandleDiscordCommandInput): Promise<HandleDiscordCommandOutput> {
     const { command, options, discordUserId, discordUserName } = input;
@@ -87,39 +56,44 @@ export async function handleDiscordCommand(input: HandleDiscordCommandInput): Pr
         return { content: `Hey @${discordUserName}! To use ZenJar, you first need to link your Discord account from the settings page in the ZenJar app.`};
     }
 
-    switch (command.toLowerCase()) {
-        case 'zenjar':
-            const subCommand = options?.subcommand;
-            const taskContent = options?.task;
+    try {
+        switch (command.toLowerCase()) {
+            case 'zenjar':
+                const subCommand = options?.subcommand;
+                const taskContent = options?.task;
 
-            if (subCommand === 'add' && taskContent) {
-                 const taskResult = await categorizeAndPrioritizeTasks({ tasks: taskContent });
-                const task = taskResult[0];
-                await addDoc(collection(db, 'tasks'), {
-                    ...task,
-                    userId: zenJarUserId,
-                    createdAt: Timestamp.now(),
-                    completed: false
-                });
-                return { content: `Task added for <@${discordUserId}>: **${task.task}** (Category: ${task.category}, Priority: ${task.priority})` };
-            }
-             if (subCommand === 'pick') {
-                const drawnTask = await drawTaskFromJar(zenJarUserId);
-                return { content: drawnTask };
-            }
-            if (subCommand === 'motivate') {
-                const quote = await getMotivation(zenJarUserId);
-                return { content: `Here's a little motivation for you:\n> ${quote}` };
-            }
-            
-            const helpText = "Here are the commands you can use with `/zenjar`:\n" +
-                             "`add [task]`: Adds a new task to your jar.\n" +
-                             "`pick`: Randomly draws a task from your jar.\n" +
-                             "`motivate`: Gives you a dose of motivation.\n" +
-                             "`help`: Shows this help message.";
-            return { content: helpText };
+                if (subCommand === 'add' && taskContent) {
+                    const taskResult = await categorizeAndPrioritizeTasks({ tasks: taskContent });
+                    const task = taskResult[0];
+                    await addDoc(collection(db, 'tasks'), {
+                        ...task,
+                        userId: zenJarUserId,
+                        createdAt: Timestamp.now(),
+                        completed: false
+                    });
+                    return { content: `Task added for <@${discordUserId}>: **${task.task}** (Category: ${task.category}, Priority: ${task.priority})` };
+                }
+                if (subCommand === 'pick') {
+                    const drawnTask = await drawTaskFromJar(zenJarUserId);
+                    return { content: drawnTask };
+                }
+                if (subCommand === 'motivate') {
+                    const quote = await getMotivation(zenJarUserId);
+                    return { content: `Here's a little motivation for you:\n> ${quote}` };
+                }
+                
+                const helpText = "Here are the commands you can use with `/zenjar`:\n" +
+                                "`add [task]`: Adds a new task to your jar.\n" +
+                                "`pick`: Randomly draws a task from your jar.\n" +
+                                "`motivate`: Gives you a dose of motivation.\n" +
+                                "`help`: Shows this help message.";
+                return { content: helpText };
 
-        default:
-            return { content: "Sorry, I didn't recognize that command. Try `/zenjar help`." };
+            default:
+                return { content: "Sorry, I didn't recognize that command. Try `/zenjar help`." };
+        }
+    } catch (error: any) {
+        console.error("Error processing Discord command: ", error);
+        return { content: "Sorry, there was an error trying to process your command. Please try again later." };
     }
 }

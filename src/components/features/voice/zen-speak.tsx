@@ -22,6 +22,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { interpretVoiceCommand } from '@/ai/flows/interpret-voice-command';
 import { categorizeAndPrioritizeTasks } from '@/ai/flows/categorize-and-prioritize-tasks';
 import { generateEncouragingResponse } from '@/ai/flows/generate-encouraging-response';
+import { getMotivation } from '@/services/jar-logic';
 
 
 // Web Speech API interfaces might not be in default TS lib
@@ -31,19 +32,6 @@ declare global {
         webkitSpeechRecognition: any;
     }
 }
-
-const quotes = [
-  "The secret of getting ahead is getting started.",
-  "The only way to do great work is to love what you do.",
-  "Believe you can and you're halfway there.",
-  "Act as if what you do makes a difference. It does.",
-  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-  "It does not matter how slowly you go as long as you do not stop.",
-  "Everything you’ve ever wanted is on the other side of fear.",
-  "The journey of a thousand miles begins with a single step.",
-  "What you get by achieving your goals is not as important as what you become by achieving your goals.",
-  "The future belongs to those who believe in the beauty of their dreams."
-];
 
 export function ZenSpeak() {
   const { user } = useAuth();
@@ -73,7 +61,9 @@ export function ZenSpeak() {
     };
 
     rec.onend = () => {
-        setIsListening(false);
+        if(isListening) {
+            setIsListening(false);
+        }
     };
 
     rec.onerror = (event: any) => {
@@ -101,10 +91,18 @@ export function ZenSpeak() {
         setTranscript(interimTranscript);
         if (final) {
             setFinalTranscript(final);
+            rec.stop(); // Stop listening once we have a final result
         }
     };
 
     setRecognition(rec);
+    
+    return () => {
+        if (rec) {
+            rec.abort();
+        }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
 
   useEffect(() => {
@@ -112,7 +110,7 @@ export function ZenSpeak() {
       handleProcessCommand(finalTranscript);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalTranscript]);
+  }, [finalTranscript, user]);
 
   const handleProcessCommand = async (command: string) => {
     if (!user) {
@@ -140,8 +138,7 @@ export function ZenSpeak() {
                 }
                 break;
             case 'getMotivation':
-                const randomIndex = Math.floor(Math.random() * quotes.length);
-                const quote = quotes[randomIndex];
+                const quote = await getMotivation(user.uid);
                 toast({ title: 'A dose of motivation for you', description: `"${quote}"`});
                 break;
             case 'addGratitude':

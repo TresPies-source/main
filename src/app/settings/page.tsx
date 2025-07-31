@@ -260,13 +260,13 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="outline">
-                    <Link href="/public/about">
+                    <Link href="/about">
                         <Info className="mr-2 h-4 w-4" />
                         Our Philosophy
                     </Link>
                 </Button>
                  <Button asChild variant="outline">
-                    <Link href="/public/roadmap">
+                    <Link href="/roadmap">
                         <Compass className="mr-2 h-4 w-4" />
                         Development Roadmap
                     </Link>
@@ -278,3 +278,5 @@ export default function SettingsPage() {
     </MainLayout>
   );
 }
+
+    

@@ -50,11 +50,11 @@ const ratingDescriptions: { [key: number]: string } = {
 };
 
 const initialGratitudeEntries: GratitudeEntry[] = [
-    { id: 'g1', text: 'A beautiful sunny day', rating: 4, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } },
-    { id: 'g2', text: 'A surprise call from an old friend', rating: 5, createdAt: { seconds: Date.now() / 1000 - 1, nanoseconds: 0 } },
-    { id: 'g3', text: 'The first sip of coffee in the morning', rating: 3, createdAt: { seconds: Date.now() / 1000 - 2, nanoseconds: 0 } },
-    { id: 'g4', text: 'Finishing a challenging task at work', rating: 4, createdAt: { seconds: Date.now() / 1000 - 3, nanoseconds: 0 } },
-    { id: 'g5', text: 'A quiet moment of reflection', rating: 3, createdAt: { seconds: Date.now() / 1000 - 4, nanoseconds: 0 } },
+    { id: 'g1', text: 'A beautiful sunny day', rating: 4, createdAt: { seconds: 1722379964, nanoseconds: 0 } },
+    { id: 'g2', text: 'A surprise call from an old friend', rating: 5, createdAt: { seconds: 1722379963, nanoseconds: 0 } },
+    { id: 'g3', text: 'The first sip of coffee in the morning', rating: 3, createdAt: { seconds: 1722379962, nanoseconds: 0 } },
+    { id: 'g4', text: 'Finishing a challenging task at work', rating: 4, createdAt: { seconds: 1722379961, nanoseconds: 0 } },
+    { id: 'g5', text: 'A quiet moment of reflection', rating: 3, createdAt: { seconds: 1722379960, nanoseconds: 0 } },
 ];
 
 export function GratitudeJar() {
@@ -87,8 +87,8 @@ export function GratitudeJar() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const geometry = new THREE.IcosahedronGeometry(1.5, 0);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
+    const geometry = new THREE.CylinderGeometry(1.5, 1.5, 2, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
     scene.add(model);
     
@@ -266,6 +266,7 @@ export function GratitudeJar() {
         toast({ title: 'Not signed in', description: 'Please sign in to analyze your gratitude.', variant: 'destructive' });
         return;
     }
+    // Only analyze entries created by the user, not the initial sample ones.
     const userEntries = entries.filter(e => initialGratitudeEntries.findIndex(ig => ig.id === e.id) === -1);
     if (userEntries.length < 5) {
         toast({ title: 'Not enough entries', description: 'You need at least 5 of your own gratitude entries for a meaningful analysis.', variant: 'destructive' });
@@ -293,6 +294,8 @@ export function GratitudeJar() {
       default: return 'text-base';
     }
   };
+  
+  const canAnalyze = user && entries.filter(e => initialGratitudeEntries.findIndex(ig => ig.id === e.id) === -1).length >= 5;
 
   return (
     <>
@@ -399,7 +402,7 @@ export function GratitudeJar() {
                   Moments of thankfulness you've collected.
                 </CardDescription>
               </div>
-              <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.filter(e => initialGratitudeEntries.findIndex(ig => ig.id === e.id) === -1).length < 5}>
+              <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!canAnalyze}>
                 <Wand2 className="mr-2 h-4 w-4" />
                 AI Insights
               </Button>
@@ -431,3 +434,5 @@ export function GratitudeJar() {
     </>
   );
 }
+
+    

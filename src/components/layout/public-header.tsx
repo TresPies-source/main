@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-    { href: "/public/about", label: "About" },
-    { href: "/public/roadmap", label: "Roadmap" },
-    { href: "/public/blog", label: "Blog" },
+    { href: "/about", label: "About" },
+    { href: "/roadmap", label: "Roadmap" },
+    { href: "/blog", label: "Blog" },
 ]
 
 export function PublicHeader() {
@@ -39,3 +39,5 @@ export function PublicHeader() {
     </header>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 import { PublicHeader } from "@/components/layout/public-header";
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -19,12 +20,14 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         Built with ZenJar. The source code is available on GitHub.
                     </p>
                     <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <Link href="/public/terms" className="hover:text-foreground">Terms</Link>
-                        <Link href="/public/privacy" className="hover:text-foreground">Privacy</Link>
-                        <Link href="/public/license" className="hover:text-foreground">License</Link>
+                        <Link href="/terms" className="hover:text-foreground">Terms</Link>
+                        <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+                        <Link href="/license" className="hover:text-foreground">License</Link>
                     </nav>
                 </div>
             </footer>
         </div>
     );
 }
+
+    

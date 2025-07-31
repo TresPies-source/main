@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
@@ -61,11 +60,11 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
 };
 
 const initialTasks: Task[] = [
-    { id: 't1', task: 'Develop the new feature for the main project', category: 'Work', priority: 9, completed: false, createdAt: Timestamp.now() },
-    { id: 't2', task: 'Schedule a dentist appointment', category: 'Health', priority: 7, completed: false, createdAt: Timestamp.now() },
-    { id: 't3', task: 'Buy groceries for the week', category: 'Errand', priority: 5, completed: true, createdAt: Timestamp.now() },
-    { id: 't4', task: 'Call mom for her birthday', category: 'Personal', priority: 10, completed: false, createdAt: Timestamp.now() },
-    { id: 't5', task: 'Read one chapter of the new book', category: 'Learning', priority: 4, completed: false, createdAt: Timestamp.now() },
+    { id: 't1', task: 'Develop the new feature for the main project', category: 'Work', priority: 9, completed: false, createdAt: new Timestamp(1722379964, 0) },
+    { id: 't2', task: 'Schedule a dentist appointment', category: 'Health', priority: 7, completed: false, createdAt: new Timestamp(1722379963, 0) },
+    { id: 't3', task: 'Buy groceries for the week', category: 'Errand', priority: 5, completed: true, createdAt: new Timestamp(1722379962, 0) },
+    { id: 't4', task: 'Call mom for her birthday', category: 'Personal', priority: 10, completed: false, createdAt: new Timestamp(1722379961, 0) },
+    { id: 't5', task: 'Read one chapter of the new book', category: 'Learning', priority: 4, completed: false, createdAt: new Timestamp(1722379960, 0) },
 ];
 
 export function TaskManager() {
@@ -83,6 +82,7 @@ export function TaskManager() {
   const [playAddAnimation, setPlayAddAnimation] = useState<Task | null>(null);
   const [playRemoveAnimation, setPlayRemoveAnimation] = useState(false);
   const [pending3DTasks, setPending3DTasks] = useState<CategorizeAndPrioritizeTasksOutput>([]);
+  const [textAreaKey, setTextAreaKey] = useState(0);
 
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
@@ -537,6 +537,7 @@ export function TaskManager() {
         const result = await callImportFromGoogleDoc(token, googleDocId);
         if (result.success && result.content) {
             setTaskInput(prev => prev ? `${prev}\n${result.content}` : result.content);
+            setTextAreaKey(k => k + 1); // Force re-render of textarea
             toast({ title: 'Import Successful', description: 'Your Google Doc content has been added to the text area.'});
             setIsDocImportOpen(false);
             setGoogleDocId('');
@@ -665,6 +666,7 @@ export function TaskManager() {
                 }}
                 >
                 <Textarea
+                    key={textAreaKey}
                     placeholder="e.g., Finish project report, Buy groceries, Call mom"
                     className="min-h-[150px]"
                     value={taskInput}
@@ -691,8 +693,8 @@ export function TaskManager() {
                 <div className="flex justify-between items-center">
                     <CardTitle className="font-headline">Your Tasks</CardTitle>
                     <div className="flex items-center gap-2">
-                        <TooltipProvider>
-                        <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
+                        <AlertDialog>
+                            <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <AlertDialogTrigger asChild>
@@ -704,6 +706,7 @@ export function TaskManager() {
                                 </TooltipTrigger>
                                 <TooltipContent>Draw a Task</TooltipContent>
                             </Tooltip>
+                            </TooltipProvider>
                             {drawnTask && (
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
@@ -730,6 +733,7 @@ export function TaskManager() {
                             )}
                         </AlertDialog>
                         <AlertDialog>
+                             <TooltipProvider>
                             <Tooltip>
                             <TooltipTrigger asChild>
                                     <AlertDialogTrigger asChild>
@@ -741,6 +745,7 @@ export function TaskManager() {
                                 </TooltipTrigger>
                                 <TooltipContent>Empty Jar</TooltipContent>
                             </Tooltip>
+                             </TooltipProvider>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -754,7 +759,6 @@ export function TaskManager() {
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
-                        </TooltipProvider>
                     </div>
                 </div>
                 <CardDescription>
@@ -824,3 +828,5 @@ export function TaskManager() {
     </>
   );
 }
+
+    

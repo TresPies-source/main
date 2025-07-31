@@ -49,8 +49,8 @@ export function IntentionSetter() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const geometry = new THREE.CapsuleGeometry(1, 1, 4, 8);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
+    const geometry = new THREE.CylinderGeometry(1.5, 1.5, 2, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
     scene.add(model);
     
@@ -281,3 +281,5 @@ export function IntentionSetter() {
     </div>
   );
 }
+
+    

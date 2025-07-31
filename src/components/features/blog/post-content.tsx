@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from "next/image";
@@ -48,7 +49,7 @@ export function PostContent({ post }: PostContentProps) {
   return (
     <article className="max-w-3xl mx-auto">
         <div className="mb-8">
-            <Link href="/public/blog" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/blog" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Blog
             </Link>
@@ -80,3 +81,5 @@ export function PostContent({ post }: PostContentProps) {
     </article>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +35,7 @@ export function BlogContent() {
       <div className="space-y-12">
         {posts.map((post) => (
           <Card key={post.slug} className="group overflow-hidden">
-            <Link href={`/public/blog/${post.slug}`}>
+            <Link href={`/blog/${post.slug}`}>
               <div className="overflow-hidden rounded-t-lg">
                 <Image 
                   src={post.image.src} 
@@ -64,3 +65,5 @@ export function BlogContent() {
     </div>
   );
 }
+
+    

@@ -27,11 +27,11 @@ type Win = {
 };
 
 const initialWins: Win[] = [
-    { id: 'w1', text: 'Finished the presentation ahead of schedule', createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } },
-    { id: 'w2', text: 'Went for a 30-minute run', createdAt: { seconds: Date.now() / 1000 - 1, nanoseconds: 0 } },
-    { id: 'w3', text: 'Cooked a healthy meal instead of ordering out', createdAt: { seconds: Date.now() / 1000 - 2, nanoseconds: 0 } },
-    { id: 'w4', text: 'Cleaned out the garage', createdAt: { seconds: Date.now() / 1000 - 3, nanoseconds: 0 } },
-    { id: 'w5', text: 'Read 50 pages of a book', createdAt: { seconds: Date.now() / 1000 - 4, nanoseconds: 0 } },
+    { id: 'w1', text: 'Finished the presentation ahead of schedule', createdAt: { seconds: 1722379964, nanoseconds: 0 } },
+    { id: 'w2', text: 'Went for a 30-minute run', createdAt: { seconds: 1722379963, nanoseconds: 0 } },
+    { id: 'w3', text: 'Cooked a healthy meal instead of ordering out', createdAt: { seconds: 1722379962, nanoseconds: 0 } },
+    { id: 'w4', text: 'Cleaned out the garage', createdAt: { seconds: 1722379961, nanoseconds: 0 } },
+    { id: 'w5', text: 'Read 50 pages of a book', createdAt: { seconds: 1722379960, nanoseconds: 0 } },
 ];
 
 export function WinJar() {
@@ -63,8 +63,8 @@ export function WinJar() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
     
-    const geometry = new THREE.ConeGeometry(1.5, 3, 32);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
+    const geometry = new THREE.CylinderGeometry(1.5, 1.5, 2, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
     scene.add(model);
     
@@ -328,3 +328,5 @@ export function WinJar() {
     </div>
   );
 }
+
+    

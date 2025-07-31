@@ -40,9 +40,9 @@ const menuItems = [
 ];
 
 const publicMenuItems = [
-    { href: "/public/about", label: "About", icon: Info },
-    { href: "/public/roadmap", label: "Roadmap", icon: Compass },
-    { href: "/public/blog", label: "Blog", icon: Rss },
+    { href: "/about", label: "About", icon: Info },
+    { href: "/roadmap", label: "Roadmap", icon: Compass },
+    { href: "/blog", label: "Blog", icon: Rss },
 ]
 
 export default function AppSidebar() {
@@ -117,3 +117,5 @@ export default function AppSidebar() {
     </Sidebar>
   );
 }
+
+    

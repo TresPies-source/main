@@ -6,11 +6,6 @@ import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup,
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
-if (typeof window !== 'undefined') {
-  // IMPORTANT: Do not enable this in production.
-  // (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-}
-
 const auth = getAuth(app);
 
 interface AuthContextType {

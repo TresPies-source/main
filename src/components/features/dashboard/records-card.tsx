@@ -27,7 +27,7 @@ export function RecordsCard({ longestSession, totalWins }: RecordsCardProps) {
           Personal Records
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 text-sm pt-2">
+      <CardContent className="space-y-4 text-sm">
         {longestSession === null || totalWins === null ? (
           <>
             <Skeleton className="h-6 w-full" />

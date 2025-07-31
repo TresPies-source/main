@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -292,7 +292,7 @@ export function MotivationJar() {
               <div className="min-h-[100px] flex items-center justify-center p-4">
                 {currentQuote ? (
                   <blockquote className="text-xl italic font-medium text-center">
-                    "\"{currentQuote}\""
+                    {currentQuote}
                   </blockquote>
                 ) : (
                   <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />

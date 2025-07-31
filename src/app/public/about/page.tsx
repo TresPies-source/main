@@ -1,5 +1,5 @@
-import PublicLayout from "@/components/layout/public-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PublicLayout from '@/components/layout/public-layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AboutPage() {
   return (
@@ -7,40 +7,42 @@ export default function AboutPage() {
       <div className="container max-w-4xl py-12">
         <div className="space-y-8">
           <header className="text-center">
-            <h1 className="text-4xl font-bold tracking-tighter font-headline sm:text-5xl">About ZenJar</h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              An AI-powered sanctuary for focus, gratitude, and motivation.
+            <h1 className="text-4xl font-bold font-headline tracking-tighter sm:text-5xl md:text-6xl">
+              About ZenJar
+            </h1>
+            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl mt-4">
+              A minimalist wellness and productivity tool to combat digital fatigue and foster mindfulness.
             </p>
           </header>
 
-          <div className="prose prose-lg dark:prose-invert mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-headline">Our Philosophy</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  In a world of overwhelming to-do lists and constant distractions, ZenJar was conceived to combat digital fatigue and foster mindfulness. Traditional productivity tools often focus on deadlines and "counting down," which can induce stress. ZenJar flips this script by embracing a "count-up" philosophy, turning focus and achievements into tangible, growing assets. Its uniqueness lies in its simple, satisfying "jar" metaphor, combined with intelligent AI that automates organization and provides supportive insights.
-                </p>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Our Philosophy: The "Count-Up" Approach</CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-stone dark:prose-invert max-w-none">
+              <p>
+                In a world of overwhelming to-do lists and constant distractions, ZenJar was conceived to combat digital fatigue. Traditional productivity tools often focus on deadlines and "counting down," which can induce stress.
+              </p>
+              <p>
+                ZenJar flips this script by embracing a "count-up" philosophy, turning focus and achievements into tangible, growing assets. Its uniqueness lies in its simple, satisfying "jar" metaphor, combined with intelligent AI that automates organization and provides supportive insights.
+              </p>
+            </CardContent>
+          </Card>
 
-            <h2 className="font-headline">The Jar Metaphor</h2>
-            <p>
-              Each "jar" in the application is a dedicated space for a different aspect of your well-being and productivity.
-            </p>
-            <ul>
-              <li><strong>The Task Jar:</strong> A place to offload your mental clutter. Our AI helps you make sense of it all by categorizing and prioritizing your tasks, allowing you to focus on what's important.</li>
-              <li><strong>The Motivation Jar:</strong> A source of inspiration when you need it most. Draw an affirmation or quote to overcome procrastination and find your drive.</li>
-              <li><strong>The Gratitude Jar:</strong> A space to cultivate a positive mindset. By recording moments of gratitude, you create a persistent reminder of the good things in your life.</li>
-              <li><strong>The Win Jar:</strong> Celebrate your accomplishments, big and small. Paired with our "count-up" focus timer, this system helps you build momentum and recognize your progress.</li>
-            </ul>
-
-            <h2 className="font-headline">Our Approach to AI</h2>
-            <p>
-              We believe AI should be a supportive partner, not an intrusive manager. ZenJar uses AI to reduce friction and provide gentle guidance. From parsing your "brain dumps" into actionable tasks to providing personalized encouragement, our AI is designed to work quietly in the background, helping you find clarity and build confidence without adding to the noise.
-            </p>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Core Features</CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-stone dark:prose-invert max-w-none">
+              <ul>
+                <li><strong>AI-Powered Task Jar:</strong> Brain-dump your tasks and let our AI categorize and prioritize them for you.</li>
+                <li><strong>Motivation Jar:</strong> Draw from a curated collection of affirmations and quotes to overcome procrastination.</li>
+                <li><strong>Gratitude Jar:</strong> Record things you're grateful for and watch your jar fill up, with visual weighting for higher-rated items.</li>
+                <li><strong>Focus Timer & Win Jar:</strong> Measure your focus with our unique "count-up" timer and log your daily accomplishments.</li>
+                <li><strong>AI Intention Setter:</strong> Set your daily goal and receive a supportive, personalized response from our AI.</li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </PublicLayout>

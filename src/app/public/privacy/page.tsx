@@ -1,74 +1,60 @@
-import PublicLayout from "@/components/layout/public-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PublicLayout from '@/components/layout/public-layout';
 
 export default function PrivacyPolicyPage() {
   return (
     <PublicLayout>
-      <div className="container py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Privacy Policy</CardTitle>
-          </CardHeader>
-          <CardContent className="prose dark:prose-invert max-w-none">
-            <h2>1. Introduction</h2>
-            <p>
-              Welcome to Zen Jar. This is a placeholder for your Privacy Policy.
-              It's important to be transparent with your users about what data you
-              collect, why you collect it, and how you use it.
-            </p>
+      <div className="container max-w-4xl py-12">
+        <div className="prose prose-stone dark:prose-invert max-w-none">
+          <h1>Privacy Policy for ZenJar</h1>
 
-            <h2>2. Information We Collect</h2>
-            <p>
-              You should detail the types of information you collect here. For
-              Zen Jar, this might include:
-            </p>
-            <ul>
-              <li>
-                <strong>Account Information:</strong> Name, email address, and
-                profile picture from Google Sign-In.
-              </li>
-              <li>
-                <strong>User-Generated Content:</strong> Tasks, gratitude
-                entries, intentions, wins, and focus session data.
-              </li>
-              <li>
-                <strong>Usage Data:</strong> Information about how users interact
-                with the application.
-              </li>
-            </ul>
+          <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
 
-            <h2>3. How We Use Your Information</h2>
-            <p>
-              Explain the purpose of data collection. For example, to provide
-              the core service, to personalize the experience, and to power AI
-              features.
-            </p>
+          <p>
+            Welcome to ZenJar. We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application.
+          </p>
 
-            <h2>4. Data Sharing and Third Parties</h2>
-            <p>
-              Disclose if and how you share data with third parties (e.g.,
-              Google for authentication and AI processing, payment processors).
-            </p>
+          <h2>Information We Collect</h2>
+          <p>
+            We may collect information about you in a variety of ways. The information we may collect via the Application includes:
+          </p>
+          <ul>
+            <li>
+              <strong>Personal Data:</strong> Personally identifiable information, such as your name, and email address, that you voluntarily give to us when you register with the Application. You are under no obligation to provide us with personal information of any kind; however, your refusal to do so may prevent you from using certain features of the Application.
+            </li>
+            <li>
+              <strong>User-Generated Data:</strong> We collect the data you generate within the app, such as tasks, gratitude entries, intentions, and wins. This data is stored securely and is only accessible to you.
+            </li>
+            <li>
+              <strong>Derivative Data:</strong> Information our servers automatically collect when you access the Application, such as your IP address, your browser type, your operating system, your access times, and the pages you have viewed directly before and after accessing the Application.
+            </li>
+          </ul>
 
-            <h2>5. Your Rights and Choices</h2>
-            <p>
-              Inform users about their rights regarding their data, such as
-              accessing, correcting, or deleting their information.
-            </p>
+          <h2>Use of Your Information</h2>
+          <p>
+            Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Application to:
+          </p>
+          <ul>
+            <li>Create and manage your account.</li>
+            <li>Provide the core functionality of the ZenJar application.</li>
+            <li>Anonymously improve our AI models and application performance.</li>
+            <li>Monitor and analyze usage and trends to improve your experience with the Application.</li>
+          </ul>
 
-            <h2>6. Contact Us</h2>
-            <p>
-              Provide a way for users to contact you with any privacy-related
-              questions.
-            </p>
-            <p>
-              <strong>Disclaimer:</strong> This is not legal advice. You should
-              consult with a legal professional to draft a comprehensive
-              privacy policy that complies with all applicable laws and
-              regulations.
-            </p>
-          </CardContent>
-        </Card>
+          <h2>Security of Your Information</h2>
+          <p>
+            We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
+          </p>
+          
+          <h2>Policy for Children</h2>
+          <p>
+            We do not knowingly solicit information from or market to children under the age of 13. If you become aware of any data we have collected from children under age 13, please contact us using the contact information provided below.
+          </p>
+
+          <h2>Contact Us</h2>
+          <p>
+            If you have questions or comments about this Privacy Policy, please contact us at: support@zenjar.app
+          </p>
+        </div>
       </div>
     </PublicLayout>
   );

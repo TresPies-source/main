@@ -9,8 +9,6 @@ import {
   query,
   where,
   onSnapshot,
-  addDoc,
-  Timestamp,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,13 +30,14 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { analyzeGratitudePatterns, type AnalyzeGratitudePatternsOutput } from '@/ai/flows/analyze-gratitude-patterns';
+import type { AnalyzeGratitudePatternsOutput } from '@/ai/flows/analyze-gratitude-patterns';
+import { addGratitudeEntry, callAnalyzeGratitudePatterns } from './gratitude-actions';
 
 type GratitudeEntry = {
   id: string;
   text: string;
   rating: number;
-  createdAt: Timestamp;
+  createdAt: { seconds: number; nanoseconds: number; };
 };
 
 const ratingDescriptions: { [key: number]: string } = {
@@ -70,7 +69,7 @@ export function GratitudeJar() {
       querySnapshot.forEach((doc) => {
         fetchedEntries.push({ ...doc.data(), id: doc.id } as GratitudeEntry);
       });
-      setEntries(fetchedEntries.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
+      setEntries(fetchedEntries.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds));
     });
 
     return () => unsubscribe();
@@ -93,12 +92,7 @@ export function GratitudeJar() {
 
     setIsSubmitting(true);
     try {
-        await addDoc(collection(db, 'gratitude'), {
-          text: newEntry,
-          rating: currentRating,
-          userId: user.uid,
-          createdAt: Timestamp.now(),
-        });
+        await addGratitudeEntry(user.uid, newEntry, currentRating);
 
         setNewEntry('');
         setCurrentRating(3);
@@ -126,7 +120,7 @@ export function GratitudeJar() {
     setInsightsState({ loading: true, data: null, open: true });
     try {
         const entryTexts = entries.map(e => e.text);
-        const result = await analyzeGratitudePatterns({ gratitudeEntries: entryTexts });
+        const result = await callAnalyzeGratitudePatterns({ gratitudeEntries: entryTexts });
         setInsightsState({ loading: false, data: result, open: true });
     } catch (error) {
         console.error('Error analyzing gratitude:', error);
@@ -247,7 +241,7 @@ export function GratitudeJar() {
                     Moments of thankfulness you've collected.
                     </CardDescription>
                 </div>
-                <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length === 0}>
+                <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length < 5}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     AI Insights
                 </Button>

@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { RefreshCw, Sparkles, Plus, Trash2, Wand2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RefreshCw, Sparkles, Plus, Trash2, Wand2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
@@ -13,14 +13,11 @@ import {
   query,
   where,
   onSnapshot,
-  addDoc,
-  Timestamp,
-  deleteDoc,
-  doc,
   orderBy
 } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { addCustomAffirmation, deleteCustomAffirmation } from './motivation-actions';
 
 const defaultQuotes = [
   "You don’t always get what you wish for; you get what you work for.",
@@ -80,7 +77,7 @@ const defaultQuotes = [
 type Affirmation = {
   id: string;
   text: string;
-  createdAt: Timestamp;
+  createdAt: { seconds: number, nanoseconds: number };
 };
 
 export function MotivationJar() {
@@ -88,6 +85,7 @@ export function MotivationJar() {
   const [currentQuote, setCurrentQuote] = useState('');
   const [customAffirmations, setCustomAffirmations] = useState<Affirmation[]>([]);
   const [newAffirmation, setNewAffirmation] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -121,7 +119,7 @@ export function MotivationJar() {
   useEffect(() => {
     drawQuote();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customAffirmations]); // Rerun when custom affirmations change
+  }, [customAffirmations, user]); // Rerun when custom affirmations or user change
 
   const handleAddAffirmation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,19 +128,28 @@ export function MotivationJar() {
         return;
     }
     if (newAffirmation.trim()) {
-        await addDoc(collection(db, 'affirmations'), {
-            text: newAffirmation,
-            userId: user.uid,
-            createdAt: Timestamp.now(),
-        });
-        setNewAffirmation('');
-        toast({ title: "Affirmation added!"});
+        setIsSubmitting(true);
+        try {
+            await addCustomAffirmation(user.uid, newAffirmation);
+            setNewAffirmation('');
+            toast({ title: "Affirmation added!"});
+        } catch (error) {
+            console.error("Error adding affirmation:", error);
+            toast({ title: "Error", description: "Could not add affirmation.", variant: "destructive"});
+        } finally {
+            setIsSubmitting(false);
+        }
     }
   }
 
   const handleDeleteAffirmation = async (id: string) => {
-    await deleteDoc(doc(db, 'affirmations', id));
-    toast({ title: 'Affirmation removed.' });
+    try {
+        await deleteCustomAffirmation(id);
+        toast({ title: 'Affirmation removed.' });
+    } catch (error) {
+        console.error("Error deleting affirmation: ", error);
+        toast({ title: "Error", description: "Could not remove affirmation.", variant: "destructive"});
+    }
   }
 
   return (
@@ -185,10 +192,10 @@ export function MotivationJar() {
                         placeholder="e.g., I am capable and strong."
                         value={newAffirmation}
                         onChange={(e) => setNewAffirmation(e.target.value)}
-                        disabled={!user}
+                        disabled={!user || isSubmitting}
                     />
-                    <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user}>
-                        <Plus className="h-4 w-4" />
+                    <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
+                        {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
                     </Button>
                 </form>
                 <Separator className="my-4" />

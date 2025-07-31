@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,16 +10,14 @@ import {
   where,
   orderBy,
   limit,
-  getDocs,
-  addDoc,
-  Timestamp,
+  onSnapshot
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sunrise, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { generateEncouragingResponse } from '@/ai/flows/generate-encouraging-response';
+import { setIntention as setIntentionAction } from './intention-actions';
 
 export function IntentionSetter() {
   const { user } = useAuth();
@@ -34,19 +33,18 @@ export function IntentionSetter() {
       return;
     }
 
-    const fetchPreviousIntentions = async () => {
-      const q = query(
+    const q = query(
         collection(db, 'intentions'),
         where('userId', '==', user.uid),
         orderBy('createdAt', 'desc'),
         limit(5)
-      );
-      const querySnapshot = await getDocs(q);
-      const intentions = querySnapshot.docs.map(doc => doc.data().intention as string);
-      setPreviousIntentions(intentions);
-    };
-
-    fetchPreviousIntentions();
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const intentions = querySnapshot.docs.map(doc => doc.data().intention as string);
+        setPreviousIntentions(intentions);
+    });
+    
+    return () => unsubscribe();
   }, [user]);
 
 
@@ -67,22 +65,8 @@ export function IntentionSetter() {
     setIsLoading(true);
     setResponse('');
     try {
-      const result = await generateEncouragingResponse({
-        intention,
-        previousIntentions: previousIntentions,
-      });
+      const result = await setIntentionAction(user.uid, intention, previousIntentions);
       setResponse(result.response);
-      
-      // Save the new intention to Firestore
-      await addDoc(collection(db, 'intentions'), {
-        userId: user.uid,
-        intention: intention,
-        aiResponse: result.response,
-        createdAt: Timestamp.now(),
-      });
-
-      // Optimistically update the local list of previous intentions
-      setPreviousIntentions([intention, ...previousIntentions].slice(0, 5));
       setIntention('');
 
     } catch (error) {
@@ -105,7 +89,7 @@ export function IntentionSetter() {
             What is your intention for today?
           </CardTitle>
           <CardDescription>
-            Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on (Pro Feature).
+            Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on.
           </CardDescription>
         </CardHeader>
         <CardContent>

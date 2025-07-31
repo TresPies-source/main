@@ -7,13 +7,9 @@ import {
   query,
   where,
   onSnapshot,
-  addDoc,
-  Timestamp,
   orderBy,
-  deleteDoc,
-  doc,
 } from 'firebase/firestore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,11 +17,12 @@ import { Plus, Trash2, Trophy, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
+import { addWin, deleteWin } from './win-actions';
 
 type Win = {
   id: string;
   text: string;
-  createdAt: Timestamp;
+  createdAt: { seconds: number; nanoseconds: number; };
 };
 
 export function WinJar() {
@@ -67,12 +64,7 @@ export function WinJar() {
     if (newWin.trim()) {
       setIsSubmitting(true);
       try {
-        await addDoc(collection(db, 'wins'), {
-            text: newWin,
-            userId: user.uid,
-            createdAt: Timestamp.now(),
-        });
-
+        await addWin(user.uid, newWin);
         setNewWin('');
         toast({
             title: 'Win Logged!',
@@ -88,8 +80,13 @@ export function WinJar() {
   };
 
   const handleDeleteWin = async (id: string) => {
-    await deleteDoc(doc(db, 'wins', id));
-    toast({ title: 'Win removed.' });
+    try {
+        await deleteWin(id);
+        toast({ title: 'Win removed.' });
+    } catch (error) {
+        console.error("Error deleting win:", error);
+        toast({ title: "Error", description: "Could not remove win.", variant: "destructive"});
+    }
   }
 
   return (

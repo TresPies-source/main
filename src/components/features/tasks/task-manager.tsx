@@ -77,6 +77,7 @@ export function TaskManager() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
+  const animationState = useRef({ isAnimating: false, progress: 0 });
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
@@ -84,11 +85,11 @@ export function TaskManager() {
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf3f0e9);
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 5;
     
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
     currentMount.appendChild(renderer.domElement);
 
@@ -106,9 +107,11 @@ export function TaskManager() {
     scene.add(jarMesh);
     
     // Animation variables
-    let isAnimating = false;
-    let animationProgress = 0;
     const animationDuration = 0.3; // seconds
+
+    if (playAddAnimation) {
+      animationState.current = { isAnimating: true, progress: 0 };
+    }
 
     // Animation loop
     let animationFrameId: number;
@@ -118,23 +121,16 @@ export function TaskManager() {
       animationFrameId = requestAnimationFrame(animate);
       const deltaTime = clock.getDelta();
 
-      if (isAnimating) {
-        animationProgress += deltaTime;
-        const phase = animationProgress / animationDuration;
+      if (animationState.current.isAnimating) {
+        animationState.current.progress += deltaTime;
+        const phase = animationState.current.progress / animationDuration;
 
-        if (phase < 0.5) {
-          // Scaling up
-          const scale = 1 + 0.2 * Math.sin(phase * 2 * Math.PI);
-          jarMesh.scale.set(scale, scale, scale);
-        } else if (phase < 1) {
-          // Scaling down
-           const scale = 1 + 0.2 * Math.sin(phase * 2 * Math.PI);
+        if (phase < 1) {
+          const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
           jarMesh.scale.set(scale, scale, scale);
         } else {
-          // End of animation
           jarMesh.scale.set(1, 1, 1);
-          isAnimating = false;
-          animationProgress = 0;
+          animationState.current.isAnimating = false;
         }
       }
 
@@ -142,12 +138,6 @@ export function TaskManager() {
 
       renderer.render(scene, camera);
     };
-    
-    if (playAddAnimation) {
-        isAnimating = true;
-        setPlayAddAnimation(false); // Reset state after triggering
-    }
-
     animate();
 
     // Handle resize
@@ -175,6 +165,13 @@ export function TaskManager() {
       renderer.dispose();
     };
   }, [playAddAnimation]);
+
+  useEffect(() => {
+    if (playAddAnimation) {
+        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
+        return () => clearTimeout(timer);
+    }
+  },[playAddAnimation]);
 
 
   useEffect(() => {
@@ -471,7 +468,7 @@ export function TaskManager() {
      <div className="relative h-full w-full">
         <div ref={mountRef} className="absolute inset-0 z-0" />
         <div className="absolute inset-0 z-10 grid md:grid-cols-2 gap-8 p-4">
-            <div className="relative space-y-4">
+            <div className="space-y-4">
                 <Card className="bg-background/80 backdrop-blur-sm">
                 <CardHeader>
                     <div className="flex justify-between items-start">
@@ -689,5 +686,3 @@ export function TaskManager() {
     </>
   );
 }
-
-    

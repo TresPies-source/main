@@ -252,10 +252,10 @@ export function MotivationJar() {
   }
 
   return (
-    <div className="relative h-full w-full max-w-4xl mx-auto">
+    <div className="relative h-full w-full">
         <div ref={mountRef} className="absolute inset-0 z-0" />
-        <div className="absolute inset-0 z-10 grid gap-8 p-4">
-            <div className="space-y-8">
+        <div className="absolute inset-0 z-10 p-4 flex flex-col items-center justify-center">
+            <div className="space-y-8 w-full max-w-lg">
                  <Card className="text-center shadow-lg bg-background/80 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="font-headline flex items-center justify-center gap-2">

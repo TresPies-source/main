@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root, .theme-kyoto-garden {
+  .theme-kyoto-garden {
     --background: 48 33% 94%; /* Parchment */
     --foreground: 210 10% 23%; /* Deep Charcoal */
 
@@ -46,7 +46,7 @@
     --chart-5: 27 87% 67%;
   }
 
-  .dark:root, .dark .theme-kyoto-garden {
+  .dark .theme-kyoto-garden {
     --background: 210 10% 18%; /* Deep Charcoal */
     --foreground: 48 33% 94%; /* Parchment */
 

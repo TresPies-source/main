@@ -36,6 +36,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
@@ -695,17 +696,17 @@ export function TaskManager() {
                     <div className="flex items-center gap-2">
                         <AlertDialog>
                             <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
-                                            <Dices className="h-4 w-4" />
-                                            <span className="sr-only">Draw a task</span>
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent>Draw a Task</TooltipContent>
-                            </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
+                                                <Dices className="h-4 w-4" />
+                                                <span className="sr-only">Draw a task</span>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Draw a Task</TooltipContent>
+                                </Tooltip>
                             </TooltipProvider>
                             {drawnTask && (
                                 <AlertDialogContent>
@@ -733,19 +734,19 @@ export function TaskManager() {
                             )}
                         </AlertDialog>
                         <AlertDialog>
-                             <TooltipProvider>
-                            <Tooltip>
-                            <TooltipTrigger asChild>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
-                                            <Trash2 className="h-4 w-4" />
-                                            <span className="sr-only">Empty Jar</span>
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent>Empty Jar</TooltipContent>
-                            </Tooltip>
-                             </TooltipProvider>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Empty Jar</span>
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Empty Jar</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -829,4 +830,3 @@ export function TaskManager() {
   );
 }
 
-    

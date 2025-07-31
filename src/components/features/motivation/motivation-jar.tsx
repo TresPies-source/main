@@ -90,7 +90,8 @@ export function MotivationJar() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0 });
+  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
+  const modelRef = useRef<THREE.Mesh | null>(null);
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
@@ -111,14 +112,39 @@ export function MotivationJar() {
     scene.add(directionalLight);
 
     const geometry = new THREE.TorusGeometry(1.5, 0.5, 16, 100);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const material = new THREE.MeshStandardMaterial({ color: 0xE5989B });
     const model = new THREE.Mesh(geometry, material);
+    modelRef.current = model;
     scene.add(model);
+    
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const originalColor = new THREE.Color(0xE5989B);
+    const clickColor = new THREE.Color(0x6B83A3);
     
     const animationDuration = 0.3;
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0 };
+      animationState.current = { isAnimating: true, progress: 0, type: 'pop' };
+      setPlayAddAnimation(false);
     }
+    
+    const handleMouseDown = (event: MouseEvent) => {
+        if (!currentMount) return;
+        const rect = currentMount.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children);
+        
+        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
+            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        }
+    };
+    
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
 
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -135,12 +161,22 @@ export function MotivationJar() {
       if (animationState.current.isAnimating && model) {
         animationState.current.progress += deltaTime;
         const phase = animationState.current.progress / animationDuration;
-        if (phase < 1) {
-          const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
-          model.scale.set(scale, scale, scale);
-        } else {
-          model.scale.set(1, 1, 1);
-          animationState.current.isAnimating = false;
+        
+        if (animationState.current.type === 'pop') {
+            if (phase < 1) {
+              const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
+              model.scale.set(scale, scale, scale);
+            } else {
+              model.scale.set(1, 1, 1);
+              animationState.current.isAnimating = false;
+            }
+        } else if (animationState.current.type === 'click') {
+            if (phase < 1) {
+                (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
+            } else {
+                (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
+                animationState.current.isAnimating = false;
+            }
         }
       }
       renderer.render(scene, camera);
@@ -160,6 +196,7 @@ export function MotivationJar() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
@@ -168,13 +205,6 @@ export function MotivationJar() {
       renderer.dispose();
     };
   }, [playAddAnimation]);
-
-  useEffect(() => {
-    if (playAddAnimation) {
-        const timer = setTimeout(() => setPlayAddAnimation(false), 500);
-        return () => clearTimeout(timer);
-    }
-  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -243,79 +273,79 @@ export function MotivationJar() {
 
   return (
     <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
-        <div className="space-y-8 w-full max-w-lg mx-auto">
-           <Card className="text-center shadow-lg">
-              <CardHeader>
-                  <CardTitle className="font-headline flex items-center justify-center gap-2">
-                  <Sparkles className="text-accent" /> A Dose of Motivation
-                  </CardTitle>
-                  <CardDescription>Click the button for a burst of inspiration from your collection.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center gap-6">
-                  <div className="min-h-[100px] flex items-center justify-center p-4">
-                      {currentQuote ? (
-                          <blockquote className="text-xl italic font-medium text-center">
-                          "\"{currentQuote}\""
-                          </blockquote>
-                      ) : (
-                          <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />
-                      )}
-                  </div>
-                  <Button onClick={drawQuote} size="lg">
-                  <RefreshCw className="mr-2 h-4 w-4" /> Draw Another
-                  </Button>
-              </CardContent>
-          </Card>
+      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
+      <div className="space-y-8 w-full max-w-lg mx-auto">
+        <Card className="text-center shadow-lg">
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center justify-center gap-2">
+              <Sparkles className="text-accent" /> A Dose of Motivation
+            </CardTitle>
+            <CardDescription>Click the button for a burst of inspiration from your collection.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-6">
+            <div className="min-h-[100px] flex items-center justify-center p-4">
+              {currentQuote ? (
+                <blockquote className="text-xl italic font-medium text-center">
+                  "\"{currentQuote}\""
+                </blockquote>
+              ) : (
+                <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />
+              )}
+            </div>
+            <Button onClick={drawQuote} size="lg">
+              <RefreshCw className="mr-2 h-4 w-4" /> Draw Another
+            </Button>
+          </CardContent>
+        </Card>
 
-           <Card>
-              <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                      <Wand2 className="text-accent" /> Your Custom Affirmations
-                  </CardTitle>
-                  <CardDescription>
-                      Add your own personal quotes, mantras, and affirmations to the jar.
-                  </CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <form onSubmit={handleAddAffirmation} className="flex gap-2">
-                      <Input 
-                          placeholder="e.g., I am capable and strong."
-                          value={newAffirmation}
-                          onChange={(e) => setNewAffirmation(e.target.value)}
-                          disabled={!user || isSubmitting}
-                      />
-                      <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
-                          {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <Wand2 className="text-accent" /> Your Custom Affirmations
+            </CardTitle>
+            <CardDescription>
+              Add your own personal quotes, mantras, and affirmations to the jar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAddAffirmation} className="flex gap-2">
+              <Input
+                placeholder="e.g., I am capable and strong."
+                value={newAffirmation}
+                onChange={(e) => setNewAffirmation(e.target.value)}
+                disabled={!user || isSubmitting}
+              />
+              <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
+                {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
+              </Button>
+            </form>
+            <Separator className="my-4" />
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+              {user ? (
+                customAffirmations.length > 0 ? (
+                  customAffirmations.map(affirmation => (
+                    <div key={affirmation.id} className="group flex items-center justify-between p-3 bg-secondary/50 rounded-md">
+                      <p className="text-sm">{affirmation.text}</p>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteAffirmation(affirmation.id)}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                  </form>
-                  <Separator className="my-4" />
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                      {user ? (
-                          customAffirmations.length > 0 ? (
-                              customAffirmations.map(affirmation => (
-                                  <div key={affirmation.id} className="group flex items-center justify-between p-3 bg-secondary/50 rounded-md">
-                                      <p className="text-sm">{affirmation.text}</p>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteAffirmation(affirmation.id)}>
-                                          <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                  </div>
-                              ))
-                          ) : (
-                              <p className="text-sm text-muted-foreground text-center py-8">
-                                  Your custom affirmations will appear here.
-                              </p>
-                          )
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Your custom affirmations will appear here.
+                  </p>
+                )
 
-                      ) : (
-                          <p className="text-sm text-muted-foreground text-center py-8">
-                              Sign in to manage your affirmations.
-                          </p>
-                      )}
-                  </div>
-              </CardContent>
-          </Card>
-        </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Sign in to manage your affirmations.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -59,7 +59,8 @@ export function GratitudeJar() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0 });
+  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
+  const modelRef = useRef<THREE.Mesh | null>(null);
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
@@ -80,14 +81,39 @@ export function GratitudeJar() {
     scene.add(directionalLight);
 
     const geometry = new THREE.IcosahedronGeometry(1.5, 0);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const material = new THREE.MeshStandardMaterial({ color: 0xA3B18A });
     const model = new THREE.Mesh(geometry, material);
+    modelRef.current = model;
     scene.add(model);
+    
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const originalColor = new THREE.Color(0xA3B18A);
+    const clickColor = new THREE.Color(0xE5989B);
 
     const animationDuration = 0.3;
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0 };
+      animationState.current = { isAnimating: true, progress: 0, type: 'pop' };
+      setPlayAddAnimation(false);
     }
+    
+    const handleMouseDown = (event: MouseEvent) => {
+        if (!currentMount) return;
+        const rect = currentMount.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children);
+        
+        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
+            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        }
+    };
+    
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
 
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -104,12 +130,21 @@ export function GratitudeJar() {
       if (animationState.current.isAnimating && model) {
         animationState.current.progress += deltaTime;
         const phase = animationState.current.progress / animationDuration;
-        if (phase < 1) {
-          const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
-          model.scale.set(scale, scale, scale);
-        } else {
-          model.scale.set(1, 1, 1);
-          animationState.current.isAnimating = false;
+        if (animationState.current.type === 'pop') {
+            if (phase < 1) {
+              const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
+              model.scale.set(scale, scale, scale);
+            } else {
+              model.scale.set(1, 1, 1);
+              animationState.current.isAnimating = false;
+            }
+        } else if (animationState.current.type === 'click') {
+            if (phase < 1) {
+                (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
+            } else {
+                (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
+                animationState.current.isAnimating = false;
+            }
         }
       }
 
@@ -130,6 +165,7 @@ export function GratitudeJar() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
@@ -138,13 +174,6 @@ export function GratitudeJar() {
       renderer.dispose();
     };
   }, [playAddAnimation]);
-
-   useEffect(() => {
-    if (playAddAnimation) {
-        const timer = setTimeout(() => setPlayAddAnimation(false), 500);
-        return () => clearTimeout(timer);
-    }
-  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -272,100 +301,100 @@ export function GratitudeJar() {
     </AlertDialog>
 
     <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
-        <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-1">
-                <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2">
-                    <Plus className="text-accent" /> Add Gratitude
-                    </CardTitle>
-                    <CardDescription>
-                    What are you thankful for right now?
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                    <Textarea
-                        placeholder="e.g., A warm cup of coffee, a call from a friend..."
-                        value={newEntry}
-                        onChange={e => setNewEntry(e.target.value)}
-                        className="min-h-[100px]"
-                        disabled={!user || isSubmitting}
-                    />
-                    <div>
-                        <label className="text-sm font-medium mb-2 block">How grateful do you feel?</label>
-                        <TooltipProvider>
-                            <div className="flex items-center justify-between">
-                                {[1, 2, 3, 4, 5].map(rating => (
-                                    <Tooltip key={rating}>
-                                        <TooltipTrigger asChild>
-                                            <Heart
-                                                key={rating}
-                                                className={`cursor-pointer transition-all ${currentRating >= rating ? 'text-red-500 fill-current' : 'text-muted-foreground'}`}
-                                                onClick={() => setCurrentRating(rating)}
-                                            />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>{ratingDescriptions[rating]}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ))}
-                            </div>
-                        </TooltipProvider>
+      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <Plus className="text-accent" /> Add Gratitude
+              </CardTitle>
+              <CardDescription>
+                What are you thankful for right now?
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Textarea
+                  placeholder="e.g., A warm cup of coffee, a call from a friend..."
+                  value={newEntry}
+                  onChange={e => setNewEntry(e.target.value)}
+                  className="min-h-[100px]"
+                  disabled={!user || isSubmitting}
+                />
+                <div>
+                  <label className="text-sm font-medium mb-2 block">How grateful do you feel?</label>
+                  <TooltipProvider>
+                    <div className="flex items-center justify-between">
+                      {[1, 2, 3, 4, 5].map(rating => (
+                        <Tooltip key={rating}>
+                          <TooltipTrigger asChild>
+                            <Heart
+                              key={rating}
+                              className={`cursor-pointer transition-all ${currentRating >= rating ? 'text-red-500 fill-current' : 'text-muted-foreground'}`}
+                              onClick={() => setCurrentRating(rating)}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{ratingDescriptions[rating]}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
                     </div>
-                    <Button type="submit" className="w-full" disabled={!user || isSubmitting}>
-                        {isSubmitting ? <Loader2 className="animate-spin" /> : 'Add to Jar'}
-                    </Button>
-                    </form>
-                    {!user && <p className="text-xs text-center text-muted-foreground mt-4">Please sign in to save your entries.</p>}
-                </CardContent>
-                </Card>
-            </div>
-
-            <div className="md:col-span-2">
-                <Card className="min-h-[400px]">
-                <CardHeader>
-                    <div className='flex justify-between items-start'>
-                        <div>
-                            <CardTitle className="font-headline">Your Gratitude Jar</CardTitle>
-                            <CardDescription>
-                            Moments of thankfulness you've collected.
-                            </CardDescription>
-                        </div>
-                        <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length < 5}>
-                            <Wand2 className="mr-2 h-4 w-4" />
-                            AI Insights
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {user ? (
-                        entries.length > 0 ? (
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                                {entries.map(entry => (
-                                    <div key={entry.id} className="p-3 bg-secondary/50 rounded-lg">
-                                        <p className={`${getFontSizeClass(entry.rating)} transition-all`}>
-                                            {entry.text}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                        <div className="text-center text-muted-foreground pt-20">
-                            <p>Your gratitude jar is empty.</p>
-                            <p className="text-sm">Add something you're thankful for to start.</p>
-                        </div>
-                        )
-                    ) : (
-                        <div className="text-center text-muted-foreground pt-20">
-                            <p>Please sign in to see your gratitude jar.</p>
-                        </div>
-                    )}
-                </CardContent>
-                </Card>
-            </div>
+                  </TooltipProvider>
+                </div>
+                <Button type="submit" className="w-full" disabled={!user || isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Add to Jar'}
+                </Button>
+              </form>
+              {!user && <p className="text-xs text-center text-muted-foreground mt-4">Please sign in to save your entries.</p>}
+            </CardContent>
+          </Card>
         </div>
+
+        <div className="md:col-span-2">
+          <Card className="min-h-[400px]">
+            <CardHeader>
+              <div className='flex justify-between items-start'>
+                <div>
+                  <CardTitle className="font-headline">Your Gratitude Jar</CardTitle>
+                  <CardDescription>
+                    Moments of thankfulness you've collected.
+                  </CardDescription>
+                </div>
+                <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length < 5}>
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  AI Insights
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {user ? (
+                entries.length > 0 ? (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    {entries.map(entry => (
+                      <div key={entry.id} className="p-3 bg-secondary/50 rounded-lg">
+                        <p className={`${getFontSizeClass(entry.rating)} transition-all`}>
+                          {entry.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground pt-20">
+                    <p>Your gratitude jar is empty.</p>
+                    <p className="text-sm">Add something you're thankful for to start.</p>
+                  </div>
+                )
+              ) : (
+                <div className="text-center text-muted-foreground pt-20">
+                  <p>Please sign in to see your gratitude jar.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
     </>
   );

@@ -29,7 +29,8 @@ export function IntentionSetter() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0 });
+  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
+  const modelRef = useRef<THREE.Mesh | null>(null);
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
@@ -52,12 +53,37 @@ export function IntentionSetter() {
     const geometry = new THREE.CapsuleGeometry(1, 1, 4, 8);
     const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
+    modelRef.current = model;
     scene.add(model);
+    
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    
+    const originalColor = new THREE.Color(0x8BAA7A);
+    const clickColor = new THREE.Color(0xE5989B);
 
     const animationDuration = 0.3;
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0 };
+      animationState.current = { isAnimating: true, progress: 0, type: 'pop' };
+      setPlayAddAnimation(false);
     }
+    
+    const handleMouseDown = (event: MouseEvent) => {
+        if (!currentMount) return;
+        const rect = currentMount.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children);
+        
+        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
+            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        }
+    };
+    
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
 
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -74,12 +100,22 @@ export function IntentionSetter() {
       if (animationState.current.isAnimating && model) {
         animationState.current.progress += deltaTime;
         const phase = animationState.current.progress / animationDuration;
-        if (phase < 1) {
-          const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
-          model.scale.set(scale, scale, scale);
-        } else {
-          model.scale.set(1, 1, 1);
-          animationState.current.isAnimating = false;
+        
+        if (animationState.current.type === 'pop') {
+            if (phase < 1) {
+              const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
+              model.scale.set(scale, scale, scale);
+            } else {
+              model.scale.set(1, 1, 1);
+              animationState.current.isAnimating = false;
+            }
+        } else if (animationState.current.type === 'click') {
+            if (phase < 1) {
+                (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
+            } else {
+                (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
+                animationState.current.isAnimating = false;
+            }
         }
       }
 
@@ -100,6 +136,7 @@ export function IntentionSetter() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
@@ -108,13 +145,6 @@ export function IntentionSetter() {
       renderer.dispose();
     };
   }, [playAddAnimation]);
-
-  useEffect(() => {
-    if (playAddAnimation) {
-        const timer = setTimeout(() => setPlayAddAnimation(false), 500);
-        return () => clearTimeout(timer);
-    }
-  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -171,58 +201,58 @@ export function IntentionSetter() {
 
   return (
     <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
-        <div className="w-full max-w-lg space-y-8 mx-auto">
-          <Card>
-              <CardHeader>
-              <CardTitle className="font-headline flex items-center gap-2">
-                  <Sunrise className="text-accent" />
-                  What is your intention for today?
-              </CardTitle>
-              <CardDescription>
-                  Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on.
-              </CardDescription>
-              </CardHeader>
-              <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                  <Textarea
-                  placeholder="e.g., To be present in every conversation, to complete my most important task, to drink more water..."
-                  value={intention}
-                  onChange={e => setIntention(e.target.value)}
-                  className="min-h-[100px]"
-                  disabled={!user || isLoading}
-                  />
-                  <Button type="submit" className="w-full" disabled={!user || isLoading}>
-                  {isLoading ? (
-                      <Loader2 className="animate-spin" />
-                  ) : (
-                      'Set My Intention'
-                  )}
-                  </Button>
-              </form>
-              </CardContent>
-          </Card>
+      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
+      <div className="w-full max-w-lg space-y-8 mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+              <Sunrise className="text-accent" />
+              What is your intention for today?
+            </CardTitle>
+            <CardDescription>
+              Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Textarea
+                placeholder="e.g., To be present in every conversation, to complete my most important task, to drink more water..."
+                value={intention}
+                onChange={e => setIntention(e.target.value)}
+                className="min-h-[100px]"
+                disabled={!user || isLoading}
+              />
+              <Button type="submit" className="w-full" disabled={!user || isLoading}>
+                {isLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  'Set My Intention'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          {(isLoading || response) && (
-              <Card className="bg-secondary/50">
-              <CardHeader>
-                  <CardTitle className="font-headline text-base flex items-center gap-2">
-                      <Sparkles className="text-accent" />
-                      Your Daily Boost
-                  </CardTitle>
-              </CardHeader>
-              <CardContent>
-                  {isLoading && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                          <Loader2 className="animate-spin h-4 w-4" />
-                          <p>Generating your encouragement...</p>
-                      </div>
-                  )}
-                  {response && <p className="text-lg italic">{response}</p>}
-              </CardContent>
-              </Card>
-          )}
-        </div>
+        {(isLoading || response) && (
+          <Card className="bg-secondary/50">
+            <CardHeader>
+              <CardTitle className="font-headline text-base flex items-center gap-2">
+                <Sparkles className="text-accent" />
+                Your Daily Boost
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="animate-spin h-4 w-4" />
+                  <p>Generating your encouragement...</p>
+                </div>
+              )}
+              {response && <p className="text-lg italic">{response}</p>}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

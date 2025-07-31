@@ -2,6 +2,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { handleDiscordCommand } from '@/ai/flows/handle-discord-command';
 
+// This is a requirement for Cloud Functions and other server-side environments.
+export const config = {
+  maxInstances: 10,
+  region: 'us-central1'
+};
+
+
 // In a real app, you would use a library like 'discord-interactions' to handle verification.
 // const { verifyKey } = require('discord-interactions');
 

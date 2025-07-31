@@ -2,6 +2,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { handleSlackCommand, HandleSlackCommandOutput } from '@/ai/flows/handle-slack-command';
 
+// This is a requirement for Cloud Functions and other server-side environments.
+export const config = {
+  maxInstances: 10,
+  region: 'us-central1'
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse<HandleSlackCommandOutput | { error: string }>) {
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);

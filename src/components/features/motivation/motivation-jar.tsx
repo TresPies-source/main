@@ -80,8 +80,8 @@ export function MotivationJar() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const geometry = new THREE.TorusGeometry(1.5, 0.5, 16, 100);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
+    const geometry = new THREE.CylinderGeometry(1.5, 1.5, 2, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
     scene.add(model);
     
@@ -137,7 +137,6 @@ export function MotivationJar() {
 
       if (model) {
         model.rotation.y += 0.005;
-        model.rotation.x += 0.005;
       }
 
       if (animationState.isAnimating && model) {

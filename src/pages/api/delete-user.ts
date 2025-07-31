@@ -3,6 +3,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import * as admin from 'firebase-admin';
 import { verifyFirebaseToken } from '@/lib/api-auth';
 
+// This is a requirement for Cloud Functions and other server-side environments.
+export const config = {
+  maxInstances: 10,
+  region: 'us-central1'
+};
+
 // Initialize Firebase Admin SDK
 // This should be set as an environment variable in your hosting environment.
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY

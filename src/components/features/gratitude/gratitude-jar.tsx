@@ -132,7 +132,6 @@ export function GratitudeJar() {
 
       if (model) {
         model.rotation.y += 0.005;
-        model.rotation.x += 0.005;
       }
       
       if (animationState.isAnimating && model) {
@@ -434,5 +433,3 @@ export function GratitudeJar() {
     </>
   );
 }
-
-    

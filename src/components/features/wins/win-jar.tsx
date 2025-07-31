@@ -328,5 +328,3 @@ export function WinJar() {
     </div>
   );
 }
-
-    

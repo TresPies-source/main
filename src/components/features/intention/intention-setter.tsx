@@ -1,6 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  addDoc,
+  Timestamp,
+} from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,13 +21,41 @@ import { useToast } from '@/hooks/use-toast';
 import { generateEncouragingResponse } from '@/ai/flows/generate-encouraging-response';
 
 export function IntentionSetter() {
+  const { user } = useAuth();
   const [intention, setIntention] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [previousIntentions, setPreviousIntentions] = useState<string[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) {
+      setPreviousIntentions([]);
+      return;
+    }
+
+    const fetchPreviousIntentions = async () => {
+      const q = query(
+        collection(db, 'intentions'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc'),
+        limit(5)
+      );
+      const querySnapshot = await getDocs(q);
+      const intentions = querySnapshot.docs.map(doc => doc.data().intention as string);
+      setPreviousIntentions(intentions);
+    };
+
+    fetchPreviousIntentions();
+  }, [user]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+        toast({ title: 'Not signed in', description: 'You must be signed in to set an intention.', variant: 'destructive' });
+        return;
+    }
     if (!intention.trim()) {
       toast({
         title: 'No intention set',
@@ -27,8 +67,24 @@ export function IntentionSetter() {
     setIsLoading(true);
     setResponse('');
     try {
-      const result = await generateEncouragingResponse({ intention });
+      const result = await generateEncouragingResponse({
+        intention,
+        previousIntentions: previousIntentions,
+      });
       setResponse(result.response);
+      
+      // Save the new intention to Firestore
+      await addDoc(collection(db, 'intentions'), {
+        userId: user.uid,
+        intention: intention,
+        aiResponse: result.response,
+        createdAt: Timestamp.now(),
+      });
+
+      // Optimistically update the local list of previous intentions
+      setPreviousIntentions([intention, ...previousIntentions].slice(0, 5));
+      setIntention('');
+
     } catch (error) {
       console.error('Error generating response:', error);
       toast({
@@ -49,7 +105,7 @@ export function IntentionSetter() {
             What is your intention for today?
           </CardTitle>
           <CardDescription>
-            Set a clear goal or focus for your day. The AI will give you a little boost.
+            Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on (Pro Feature).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -59,8 +115,9 @@ export function IntentionSetter() {
               value={intention}
               onChange={e => setIntention(e.target.value)}
               className="min-h-[100px]"
+              disabled={!user || isLoading}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={!user || isLoading}>
               {isLoading ? (
                 <Loader2 className="animate-spin" />
               ) : (

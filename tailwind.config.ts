@@ -22,7 +22,7 @@ const config: Config = {
         headline: ['var(--font-lora)'],
       },
       colors: {
-        border: 'hsl(var(--card-foreground))',
+        border: 'hsl(var(--input))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',

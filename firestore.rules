@@ -2,26 +2,52 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // TASKS
     match /tasks/{taskId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
+    
+    // WINS
     match /wins/{winId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
+
+    // FOCUS SESSIONS
     match /focusSessions/{sessionId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
+
+    // GRATITUDE
     match /gratitude/{gratitudeId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
+
+    // INTENTIONS
     match /intentions/{intentionId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
+    
+    // AFFIRMATIONS
     match /affirmations/{affirmationId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
+    
+    // USER MAPPINGS (for Slack/Discord bots)
     match /userMappings/{mappingId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.zenJarUserId;
+       allow read, write: if isOwner(request.auth.uid);
+       allow create: if isOwner(request.resource.data.zenJarUserId);
     }
   }
 }

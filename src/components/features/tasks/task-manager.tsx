@@ -109,7 +109,7 @@ export function TaskManager() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    const geometry = new THREE.CylinderGeometry(1.5, 1.5, 2, 32);
     const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
     scene.add(model);
@@ -698,12 +698,10 @@ export function TaskManager() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
-                                                <Dices className="h-4 w-4" />
-                                                <span className="sr-only">Draw a task</span>
-                                            </Button>
-                                        </AlertDialogTrigger>
+                                        <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
+                                            <Dices className="h-4 w-4" />
+                                            <span className="sr-only">Draw a task</span>
+                                        </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Draw a Task</TooltipContent>
                                 </Tooltip>
@@ -737,12 +735,10 @@ export function TaskManager() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
-                                                <Trash2 className="h-4 w-4" />
-                                                <span className="sr-only">Empty Jar</span>
-                                            </Button>
-                                        </AlertDialogTrigger>
+                                        <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Empty Jar</span>
+                                        </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Empty Jar</TooltipContent>
                                 </Tooltip>
@@ -829,4 +825,3 @@ export function TaskManager() {
     </>
   );
 }
-

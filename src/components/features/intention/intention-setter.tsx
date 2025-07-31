@@ -60,13 +60,21 @@ export function IntentionSetter() {
     const originalColor = new THREE.Color(0x8BAA7A);
     const clickColor = new THREE.Color(0xE5989B);
     
-    let animatedObjects: { mesh: THREE.Mesh; progress: number; }[] = [];
+    let animatedObjects: { mesh: THREE.Mesh; progress: number; type: 'add' | 'remove', targetPosition: THREE.Vector3, startPosition: THREE.Vector3 }[] = [];
     const animationDuration = 0.3;
     const taskAnimationDuration = 1.0;
     let animationState = { isAnimating: false, progress: 0, type: '' };
 
     if (playAddAnimation) {
-      animationState = { isAnimating: true, progress: 0, type: 'addTask' };
+       animatedObjects.push({ 
+            mesh: new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), new THREE.MeshStandardMaterial({ color: 0xffffff })), 
+            progress: 0, 
+            type: 'add',
+            startPosition: new THREE.Vector3(Math.random() * 4 - 2, Math.random() * 4 - 2, 2),
+            targetPosition: new THREE.Vector3(0,0,0)
+        });
+        animatedObjects[animatedObjects.length-1].mesh.position.copy(animatedObjects[animatedObjects.length-1].startPosition);
+        scene.add(animatedObjects[animatedObjects.length-1].mesh);
       setPlayAddAnimation(false);
     }
     
@@ -108,21 +116,13 @@ export function IntentionSetter() {
                 (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
                 animationState.isAnimating = false;
             }
-        } else if (animationState.type === 'addTask') {
-            const taskGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-            const taskMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-            const taskCube = new THREE.Mesh(taskGeometry, taskMaterial);
-            taskCube.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, 2);
-            scene.add(taskCube);
-            animatedObjects.push({ mesh: taskCube, progress: 0 });
-            animationState.isAnimating = false; // Reset for next trigger
         }
       }
       
-      animatedObjects.forEach((obj, index) => {
+       animatedObjects.forEach((obj, index) => {
         obj.progress += deltaTime / taskAnimationDuration;
         if (obj.progress < 1) {
-            obj.mesh.position.lerp(new THREE.Vector3(0, 0, 0), deltaTime * 2);
+            obj.mesh.position.lerp(obj.targetPosition, deltaTime * 2);
         } else {
             scene.remove(obj.mesh);
             obj.mesh.geometry.dispose();

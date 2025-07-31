@@ -75,7 +75,7 @@ function IntegrationsCard() {
             <h3 className="font-semibold">Google Suite</h3>
             <p className="text-sm text-muted-foreground">Sync with Calendar, Tasks, Keep, and Drive.</p>
           </div>
-          <Button variant={isConnected ? 'secondary' : 'outline'} onClick={connectGoogle} disabled={!user}>
+          <Button variant={isConnected ? 'secondary' : 'default'} onClick={connectGoogle} disabled={!user}>
             {isConnected ? (
               <>
                 <PowerOff className="mr-2 h-4 w-4"/>
@@ -278,5 +278,3 @@ export default function SettingsPage() {
     </MainLayout>
   );
 }
-
-    

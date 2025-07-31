@@ -26,7 +26,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, ChevronsDown, FileText, MoreHorizontal } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, ChevronsDown, FileText, MoreHorizontal, Power } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
@@ -84,6 +83,8 @@ export function TaskManager() {
   const [playRemoveAnimation, setPlayRemoveAnimation] = useState(false);
   const [pending3DTasks, setPending3DTasks] = useState<CategorizeAndPrioritizeTasksOutput>([]);
   const [textAreaKey, setTextAreaKey] = useState(0);
+  const [authAction, setAuthAction] = useState<(() => void) | null>(null);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
@@ -430,27 +431,25 @@ export function TaskManager() {
     }
   }
 
-  const handleAuthForApi = async () => {
-    let token = googleAccessToken;
-    if (!token) {
-        token = await connectGoogle();
+  const handleAuthForApi = async (callback: (token: string) => void) => {
+    if (googleAccessToken) {
+        callback(googleAccessToken);
+        return;
     }
-    if (!token) {
-        toast({ title: 'Authentication Failed', description: 'Could not get Google access token. Please try connecting your account again from Settings.', variant: 'destructive' });
-        return null;
-    }
-    return token;
+    
+    setAuthAction(() => async () => {
+        const token = await connectGoogle();
+        if(token) {
+            callback(token);
+        }
+    });
+    setIsAuthDialogOpen(true);
   }
 
-  const handleSyncToGoogleTasks = async () => {
-    setIsSyncing(true);
-    try {
-        const token = await handleAuthForApi();
-        if (!token) {
-            setIsSyncing(false);
-            return;
-        }
-
+  const handleSyncToGoogleTasks = () => {
+    handleAuthForApi(async (token) => {
+      setIsSyncing(true);
+      try {
         const result = await callSyncToGoogleTasks(token, tasks);
         if (result.success) {
             toast({
@@ -465,24 +464,21 @@ export function TaskManager() {
         } else {
             throw new Error(result.message);
         }
-    } catch (error: any) {
-        console.error('Error syncing with Google Tasks:', error);
-        toast({ title: 'Sync Error', description: error.message || 'Failed to sync tasks with Google. Please try again.', variant: 'destructive' });
-    }
-    setIsSyncing(false);
+      } catch (error: any) {
+          console.error('Error syncing with Google Tasks:', error);
+          toast({ title: 'Sync Error', description: error.message || 'Failed to sync tasks with Google. Please try again.', variant: 'destructive' });
+      } finally {
+        setIsSyncing(false);
+      }
+    });
   }
 
-  const handleCreateCalendarEvent = async () => {
+  const handleCreateCalendarEvent = () => {
     if (!drawnTask) return;
     
-    setIsCreatingEvent(true);
-    try {
-        const token = await handleAuthForApi();
-        if (!token) {
-            setIsCreatingEvent(false);
-            return;
-        }
-        
+    handleAuthForApi(async (token) => {
+      setIsCreatingEvent(true);
+      try {
         const taskToEvent = { ...drawnTask, createdAt: drawnTask.createdAt.toMillis() };
         const result = await callCreateCalendarEvent(token, taskToEvent);
         if (result.success) {
@@ -498,12 +494,14 @@ export function TaskManager() {
         } else {
             throw new Error(result.message);
         }
-    } catch (error: any) {
-        console.error('Error creating calendar event:', error);
-        toast({ title: 'Calendar Error', description: error.message || 'Failed to create event in Google Calendar.', variant: 'destructive' });
-    }
-    setIsCreatingEvent(false);
-    setDrawnTask(null);
+      } catch (error: any) {
+          console.error('Error creating calendar event:', error);
+          toast({ title: 'Calendar Error', description: error.message || 'Failed to create event in Google Calendar.', variant: 'destructive' });
+      } finally {
+        setIsCreatingEvent(false);
+        setDrawnTask(null);
+      }
+    });
   }
 
   const handleGenerateSubtasks = async (task: Task) => {
@@ -522,36 +520,31 @@ export function TaskManager() {
     }
   }
 
-  const handleConfirmImport = async () => {
-    if (!googleDocId) {
-        toast({ title: 'No Document ID', description: 'Please paste the ID of your Google Doc.', variant: 'destructive' });
-        return;
-    }
-    setIsImporting(true);
-
-    try {
-        const token = await handleAuthForApi();
-        if(!token) {
-            setIsImporting(false);
-            return;
-        }
-        
-        const result = await callImportFromGoogleDoc(token, googleDocId);
-        if (result.success && result.content) {
-            setTaskInput(prev => prev ? `${prev}\n${result.content}` : result.content);
-            setTextAreaKey(k => k + 1); // Force re-render of textarea
-            toast({ title: 'Import Successful', description: 'Your Google Doc content has been added to the text area.'});
-            setIsDocImportOpen(false);
-            setGoogleDocId('');
-        } else {
-            throw new Error(result.message || "Failed to import document.");
-        }
-    } catch (error: any) {
-        console.error("Error importing from Google Doc: ", error);
-        toast({ title: 'Import Error', description: error.message, variant: 'destructive' });
-    }
-
-    setIsImporting(false);
+  const handleConfirmImport = () => {
+    handleAuthForApi(async (token) => {
+      if (!googleDocId) {
+          toast({ title: 'No Document ID', description: 'Please paste the ID of your Google Doc.', variant: 'destructive' });
+          return;
+      }
+      setIsImporting(true);
+      try {
+          const result = await callImportFromGoogleDoc(token, googleDocId);
+          if (result.success && result.content) {
+              setTaskInput(prev => prev ? `${prev}\n${result.content}` : result.content);
+              setTextAreaKey(k => k + 1); // Force re-render of textarea
+              toast({ title: 'Import Successful', description: 'Your Google Doc content has been added to the text area.'});
+              setIsDocImportOpen(false);
+              setGoogleDocId('');
+          } else {
+              throw new Error(result.message || "Failed to import document.");
+          }
+      } catch (error: any) {
+          console.error("Error importing from Google Doc: ", error);
+          toast({ title: 'Import Error', description: error.message, variant: 'destructive' });
+      } finally {
+        setIsImporting(false);
+      }
+    });
   }
 
 
@@ -566,6 +559,27 @@ export function TaskManager() {
 
   return (
     <>
+    <AlertDialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Connect Google Account</AlertDialogTitle>
+                <AlertDialogDescription>
+                    To use this feature, you need to connect your Google account. This will allow ZenJar to securely access your Google services.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                    authAction?.();
+                    setIsAuthDialogOpen(false);
+                }}>
+                    <Power className="mr-2 h-4 w-4" />
+                    Connect Google
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
     <AlertDialog open={isDocImportOpen} onOpenChange={setIsDocImportOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -642,11 +656,11 @@ export function TaskManager() {
                         <DropdownMenuContent>
                             <DropdownMenuLabel>Data Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)} disabled={!googleAccessToken}>
+                            <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)} disabled={!user}>
                                 <FileText className="mr-2 h-4 w-4" />
                                 Import from Google Doc
                             </DropdownMenuItem>
-                             <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing || !googleAccessToken}>
+                             <DropdownMenuItem onSelect={handleSyncToGoogleTasks} disabled={isSyncing || !user}>
                             {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
                             Sync to Google Tasks
                             </DropdownMenuItem>
@@ -695,17 +709,19 @@ export function TaskManager() {
                     </CardTitle>
                     <div className="flex items-center gap-2">
                         <AlertDialog>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
-                                            <Dices className="h-4 w-4" />
-                                            <span className="sr-only">Draw a task</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Draw a Task</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <AlertDialogTrigger asChild>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
+                                                <Dices className="h-4 w-4" />
+                                                <span className="sr-only">Draw a task</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Draw a Task</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </AlertDialogTrigger>
                             {drawnTask && (
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
@@ -724,7 +740,7 @@ export function TaskManager() {
                                         </div>
                                     </div>
                                     <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
-                                    <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
+                                    <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent}>
                                         {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
                                         Add to Google Calendar
                                     </Button>
@@ -734,17 +750,19 @@ export function TaskManager() {
                             )}
                         </AlertDialog>
                         <AlertDialog>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
-                                            <Trash2 className="h-4 w-4" />
-                                            <span className="sr-only">Empty Jar</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Empty Jar</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <AlertDialogTrigger asChild>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Empty Jar</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Empty Jar</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>

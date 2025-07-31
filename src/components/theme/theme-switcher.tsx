@@ -21,28 +21,29 @@ const themes = [
 export function ThemeSwitcher() {
     const { theme, setTheme } = useTheme();
 
+    const currentThemeName = themes.find(t => t.value === theme)?.name || 'Kyoto Garden';
+
     return (
         <div>
             <h3 className="text-sm font-medium mb-2">Color Theme</h3>
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {themes.map((t) => {
-                    const isActive = (theme === 'system' && t.value === 'theme-kyoto-garden') || theme === t.value;
-                    return (
-                        <Button
-                            key={t.value}
-                            variant="outline"
-                            className={cn(
-                                "justify-start h-12",
-                                isActive && "border-primary border-2"
-                            )}
-                            onClick={() => setTheme(t.value)}
-                        >
-                            {isActive && <Check className="mr-2 h-4 w-4" />}
-                            {t.name}
-                        </Button>
-                    )
-                })}
-            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                        <span>{currentThemeName}</span>
+                        <Palette className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                    {themes.map((t) => (
+                         <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
+                            <div className="flex items-center justify-between w-full">
+                                <span>{t.name}</span>
+                                {theme === t.value && <Check className="h-4 w-4" />}
+                            </div>
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
     );
 }

@@ -22,7 +22,7 @@ if (typeof window !== 'undefined') {
   // Pass your reCAPTCHA v3 site key (public) to activate(). Make sure this
   // key is the counterpart to the secret key you set in the Firebase console.
   const appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'), // default reCAPTCHA public key
+    provider: new ReCaptchaV3Provider('6LdwEpUrAAAAAPYyDdnwcYHtgUwlwj-EzCGgYM0q'),
     isTokenAutoRefreshEnabled: true
   });
 }

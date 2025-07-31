@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,9 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Zap } from 'lucide-react';
+import { TrendingUp, Lock } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import Link from 'next/link';
 
 type FocusSession = {
   duration: number;
@@ -31,13 +31,14 @@ type ChartData = {
 };
 
 export function GrowthInsights() {
-  const { user, isPro } = useAuth();
+  const { user } = useAuth();
   const [chartData, setChartData] = useState<ChartData[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !isPro) {
+    if (!user) {
       setLoading(false);
+      setChartData([]);
       return;
     }
 
@@ -79,7 +80,7 @@ export function GrowthInsights() {
     });
 
     return () => unsubscribe();
-  }, [user, isPro]);
+  }, [user]);
   
   const chartConfig = {
     focusMinutes: {
@@ -96,14 +97,14 @@ export function GrowthInsights() {
             Growth Insights
         </CardTitle>
         <CardDescription>
-          {isPro ? "Visualize your focus trends over the last 7 days." : "Upgrade to Pro to visualize your focus trends."}
+          Visualize your focus trends over the last 7 days.
         </CardDescription>
       </CardHeader>
       <CardContent className="relative">
         {loading ? (
           <Skeleton className="h-[250px] w-full" />
         ) : (
-          <ChartContainer config={chartConfig} className={`h-[250px] w-full ${!isPro ? 'blur-md' : ''}`}>
+          <ChartContainer config={chartConfig} className={`h-[250px] w-full ${!user ? 'blur-md' : ''}`}>
             <BarChart data={chartData ?? []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -127,16 +128,14 @@ export function GrowthInsights() {
             </BarChart>
           </ChartContainer>
         )}
-        {!isPro && !loading && (
+        {!user && !loading && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80">
                 <div className="text-center">
-                    <p className="font-bold text-lg">Unlock Your Growth Insights</p>
-                    <p className="text-muted-foreground">Upgrade to Pro to see your focus trends and patterns.</p>
+                    <p className="font-bold text-lg">Sign In to See Your Insights</p>
+                    <p className="text-muted-foreground">Your focus trends and patterns will appear here once you sign in.</p>
                 </div>
-                <Button asChild>
-                    <Link href="/settings">
-                        <Zap className="mr-2" /> Upgrade to Pro
-                    </Link>
+                <Button disabled>
+                    <Lock className="mr-2" /> Sign In to View
                 </Button>
             </div>
         )}

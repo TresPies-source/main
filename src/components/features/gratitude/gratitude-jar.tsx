@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Heart, Plus, Wand2, Loader2, Sparkles, BrainCircuit, Zap } from 'lucide-react';
+import { Heart, Plus, Wand2, Loader2, Sparkles, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Tooltip,
@@ -33,7 +33,6 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { analyzeGratitudePatterns, type AnalyzeGratitudePatternsOutput } from '@/ai/flows/analyze-gratitude-patterns';
-import Link from 'next/link';
 
 type GratitudeEntry = {
   id: string;
@@ -51,7 +50,7 @@ const ratingDescriptions: { [key: number]: string } = {
 };
 
 export function GratitudeJar() {
-  const { user, isPro } = useAuth();
+  const { user } = useAuth();
   const [entries, setEntries] = useState<GratitudeEntry[]>([]);
   const [newEntry, setNewEntry] = useState('');
   const [currentRating, setCurrentRating] = useState(3);
@@ -81,10 +80,6 @@ export function GratitudeJar() {
     e.preventDefault();
     if (!user) {
         toast({ title: 'Not signed in', description: 'You must be signed in to add to your jar.', variant: 'destructive' });
-        return;
-    }
-    if (!isPro && entries.length >= 100) {
-        toast({ title: "Free Tier Limit Reached", description: "Upgrade to Pro for unlimited gratitude entries."});
         return;
     }
     if (!newEntry.trim()) {
@@ -122,10 +117,6 @@ export function GratitudeJar() {
   const handleAnalyzeGratitude = async () => {
     if (!user) {
         toast({ title: 'Not signed in', description: 'Please sign in to analyze your gratitude.', variant: 'destructive' });
-        return;
-    }
-    if (!isPro) {
-        toast({ title: 'Pro Feature', description: 'Upgrade to ZenJar Pro to unlock AI-powered Gratitude Insights.', variant: 'default' });
         return;
     }
     if (entries.length < 5) {
@@ -205,7 +196,6 @@ export function GratitudeJar() {
             </CardTitle>
             <CardDescription>
               What are you thankful for right now?
-              {!isPro && user && <span className="block mt-1">Free entries: {entries.length}/100</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -242,14 +232,6 @@ export function GratitudeJar() {
                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Add to Jar'}
               </Button>
             </form>
-            {!isPro && user && entries.length >= 100 && (
-                 <Button asChild className="w-full mt-2" variant="outline">
-                    <Link href="/settings">
-                        <Zap className="mr-2 h-4 w-4" />
-                        Upgrade for Unlimited Entries
-                    </Link>
-                </Button>
-            )}
             {!user && <p className="text-xs text-center text-muted-foreground mt-4">Please sign in to save your entries.</p>}
           </CardContent>
         </Card>
@@ -267,7 +249,7 @@ export function GratitudeJar() {
                 </div>
                 <Button variant="outline" onClick={handleAnalyzeGratitude} disabled={!user || entries.length === 0}>
                     <Wand2 className="mr-2 h-4 w-4" />
-                    AI Insights {isPro ? "" : "(Pro)"}
+                    AI Insights
                 </Button>
             </div>
           </CardHeader>

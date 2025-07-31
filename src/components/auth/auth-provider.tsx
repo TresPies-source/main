@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
@@ -15,7 +16,7 @@ const auth = getAuth(app);
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  isPro: boolean; // Placeholder for subscription status
+  isPro: boolean; // This will now just reflect login status
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   connectGoogle: () => Promise<string | null>;
@@ -27,19 +28,16 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false); // Placeholder
+  const [isPro, setIsPro] = useState(false);
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      // In a real app, you would fetch the user's subscription status here
-      // from Firestore or via custom claims after they sign in.
-      // For this prototype, we will default all users to the Free tier.
+      // isPro is now true if the user is logged in.
       if (user) {
-        // You would typically check for a custom claim like `user.getIdTokenResult().then(r => r.claims.pro)`
-        setIsPro(false);
+        setIsPro(true);
       } else {
         setIsPro(false);
       }
@@ -152,10 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     isPro,
-    signInWithGoogle,
     signOut: handleSignOut,
     connectGoogle,
     googleAccessToken,
+    signInWithGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

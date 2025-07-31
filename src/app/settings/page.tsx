@@ -1,3 +1,4 @@
+
 'use client';
 
 import MainLayout from "@/components/layout/main-layout";
@@ -27,10 +28,9 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Info, Power, PowerOff, Compass, Trash2, Loader2, Download, Zap } from "lucide-react";
+import { Info, Power, PowerOff, Compass, Trash2, Loader2, Download } from "lucide-react";
 import { useState } from "react";
 import { exportToDrive } from "@/ai/flows/export-to-drive";
-import { Badge } from "@/components/ui/badge";
 
 function AccountCard() {
     const { user, loading } = useAuth();
@@ -55,45 +55,6 @@ function AccountCard() {
                 <p>You are not signed in.</p>
              )}
           </CardContent>
-        </Card>
-    );
-}
-
-function SubscriptionCard() {
-    const { user, isPro } = useAuth();
-    const { toast } = useToast();
-
-    const handleUpgrade = () => {
-        // This is where you would trigger your payment provider's checkout flow.
-        // e.g., `stripe.redirectToCheckout(...)`
-        toast({
-            title: "Redirecting to checkout...",
-            description: "This is a placeholder. A real payment provider would be integrated here."
-        });
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Subscription</CardTitle>
-                <CardDescription>Manage your ZenJar Pro subscription.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                        <h3 className="font-semibold">Your Plan</h3>
-                        <Badge variant={isPro ? "default" : "secondary"}>{isPro ? 'ZenJar Pro' : 'Free Tier'}</Badge>
-                    </div>
-                    {isPro ? (
-                        <Button variant="outline" onClick={() => toast({ title: "Coming Soon!", description: "Subscription management portal is not yet implemented."})}>Manage Subscription</Button>
-                    ) : (
-                        <Button onClick={handleUpgrade} disabled={!user}>
-                            <Zap className="mr-2 h-4 w-4" />
-                            Upgrade to Pro
-                        </Button>
-                    )}
-                </div>
-            </CardContent>
         </Card>
     );
 }
@@ -291,7 +252,6 @@ export default function SettingsPage() {
     <MainLayout title="Settings">
       <div className="space-y-6 max-w-3xl">
         <AccountCard />
-        <SubscriptionCard />
         <IntegrationsCard />
         <Card>
             <CardHeader>

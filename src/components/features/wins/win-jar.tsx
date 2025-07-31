@@ -17,11 +17,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Trophy, Zap, Loader2 } from "lucide-react";
+import { Plus, Trash2, Trophy, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
-import Link from 'next/link';
 
 type Win = {
   id: string;
@@ -30,7 +29,7 @@ type Win = {
 };
 
 export function WinJar() {
-  const { user, isPro } = useAuth();
+  const { user } = useAuth();
   const [wins, setWins] = useState<Win[]>([]);
   const [newWin, setNewWin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,10 +63,6 @@ export function WinJar() {
     if (!user) {
       toast({ title: 'Not signed in', description: 'You must be signed in to log a win.', variant: 'destructive' });
       return;
-    }
-    if (!isPro && wins.length >= 100) {
-        toast({ title: "Free Tier Limit Reached", description: "Upgrade to Pro for unlimited wins."});
-        return;
     }
     if (newWin.trim()) {
       setIsSubmitting(true);
@@ -106,7 +101,6 @@ export function WinJar() {
             </CardTitle>
             <CardDescription>
                 A dedicated space for you to quickly record your daily or weekly wins.
-                {!isPro && user && <span className="block mt-1">Free wins: {wins.length}/100</span>}
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -141,16 +135,6 @@ export function WinJar() {
                 </div>
             </ScrollArea>
         </CardContent>
-         {!isPro && user && wins.length >= 100 && (
-                <CardFooter>
-                    <Button asChild className="w-full" variant="outline">
-                        <Link href="/settings">
-                            <Zap className="mr-2 h-4 w-4" />
-                            Upgrade for Unlimited Wins
-                        </Link>
-                    </Button>
-                </CardFooter>
-             )}
         </Card>
     </div>
   );

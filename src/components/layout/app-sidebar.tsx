@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
-  BrainCircuit,
   Gift,
   LayoutDashboard,
   ListTodo,
@@ -23,7 +22,6 @@ import {
   Sunrise,
   Info,
   Compass,
-  Palette
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
@@ -49,10 +47,9 @@ export default function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-          <BrainCircuit className="w-8 h-8 text-accent" />
-          <span className="text-xl font-semibold font-headline">Zen Jar</span>
-        </div>
+        <Link href="/" className="block p-2 text-foreground/90 hover:text-foreground transition-colors">
+            <span className="text-xl font-semibold font-headline">Zen Jar</span>
+        </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-1">
         <SidebarMenu>

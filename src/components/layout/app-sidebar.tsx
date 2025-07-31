@@ -24,6 +24,7 @@ import {
   Info,
   Compass,
   Rss,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
@@ -34,6 +35,7 @@ const menuItems = [
   { href: "/tasks", label: "Task Jar", icon: ListTodo },
   { href: "/motivation", label: "Motivation Jar", icon: Sparkles },
   { href: "/gratitude", label: "Gratitude Jar", icon: Gift },
+  { href: "/wins", label: "Win Jar", icon: Trophy },
   { href: "/intention", label: "Intention Setter", icon: Sunrise },
 ];
 

@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -75,6 +76,7 @@ export function TaskManager() {
   const [googleDocId, setGoogleDocId] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
+  const [isModelLoading, setIsModelLoading] = useState(true);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const animationState = useRef({ isAnimating: false, progress: 0 });
@@ -82,38 +84,45 @@ export function TaskManager() {
   useLayoutEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
-
-    // Scene setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
-    
+    camera.position.z = 4;
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setClearColor(0x000000, 0);
     renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
     currentMount.appendChild(renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
+
+    const loader = new GLTFLoader();
+    let model: THREE.Group;
+    setIsModelLoading(true);
+
+    loader.load(
+        '/models/task-jar.glb',
+        (gltf) => {
+            model = gltf.scene;
+            scene.add(model);
+            setIsModelLoading(false);
+        },
+        undefined, // onProgress callback (optional)
+        (error) => {
+            console.error('An error happened while loading the model:', error);
+            setIsModelLoading(false);
+        }
+    );
     
-    // Jar
-    const geometry = new THREE.BoxGeometry(1.5, 2, 1.5);
-    const material = new THREE.MeshStandardMaterial({ color: 'royalblue' });
-    const jarMesh = new THREE.Mesh(geometry, material);
-    scene.add(jarMesh);
-    
-    // Animation variables
-    const animationDuration = 0.3; // seconds
+    const animationDuration = 0.3; 
 
     if (playAddAnimation) {
       animationState.current = { isAnimating: true, progress: 0 };
     }
 
-    // Animation loop
     let animationFrameId: number;
     const clock = new THREE.Clock();
     
@@ -121,26 +130,25 @@ export function TaskManager() {
       animationFrameId = requestAnimationFrame(animate);
       const deltaTime = clock.getDelta();
 
-      if (animationState.current.isAnimating) {
+      if(model) {
+        model.rotation.y += 0.005;
+      }
+
+      if (animationState.current.isAnimating && model) {
         animationState.current.progress += deltaTime;
         const phase = animationState.current.progress / animationDuration;
-
         if (phase < 1) {
           const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
-          jarMesh.scale.set(scale, scale, scale);
+          model.scale.set(scale, scale, scale);
         } else {
-          jarMesh.scale.set(1, 1, 1);
+          model.scale.set(1, 1, 1);
           animationState.current.isAnimating = false;
         }
       }
-
-      jarMesh.rotation.y += 0.005;
-
       renderer.render(scene, camera);
     };
     animate();
 
-    // Handle resize
     const handleResize = () => {
         if(currentMount) {
             const width = currentMount.clientWidth;
@@ -152,16 +160,13 @@ export function TaskManager() {
     }
     window.addEventListener('resize', handleResize);
 
-
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
       }
-      geometry.dispose();
-      material.dispose();
+      scene.clear();
       renderer.dispose();
     };
   }, [playAddAnimation]);
@@ -172,7 +177,6 @@ export function TaskManager() {
         return () => clearTimeout(timer);
     }
   },[playAddAnimation]);
-
 
   useEffect(() => {
     if (!user) {
@@ -466,8 +470,10 @@ export function TaskManager() {
     </AlertDialog>
 
      <div className="flex flex-col h-full w-full">
-      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
-      <div className="grid md:grid-cols-2 gap-8">
+        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8 relative flex items-center justify-center">
+            {isModelLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
+        </div>
+        <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
                 <Card>
                 <CardHeader>

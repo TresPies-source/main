@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Check, Palette } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,15 +26,13 @@ const themes = [
 export function ThemeSwitcher() {
     const { theme, setTheme } = useTheme();
 
-    const currentThemeName = themes.find(t => t.value === theme)?.name || 'Kyoto Garden';
-
     return (
         <DropdownMenu>
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" className="w-full">
+                            <Button variant="outline" size="icon" className="group-data-[collapsible=icon]:w-full">
                                 <Palette />
                                 <span className="sr-only">Switch Theme</span>
                             </Button>

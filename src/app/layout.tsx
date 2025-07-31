@@ -24,15 +24,15 @@ export default function RootLayout({
       </head>
       <body className={cn("antialiased")}>
         <ThemeProvider
-            attribute="class"
-            defaultTheme="kyoto-garden"
-            enableSystem
-            disableTransitionOnChange
+          attribute="class"
+          defaultTheme="kyoto-garden"
+          enableSystem
+          disableTransitionOnChange
         >
-            <AuthProvider>
+          <AuthProvider>
             {children}
             <Toaster />
-            </AuthProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -48,7 +48,6 @@ export function ThemeSwitcher() {
                      <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
                         <div className="flex items-center justify-between w-full">
                             <span>{t.name}</span>
-                            {/* Check if current theme starts with the value, to handle light/dark variants */}
                             {theme === t.value && <Check className="h-4 w-4" />}
                         </div>
                     </DropdownMenuItem>

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -18,7 +19,7 @@ const TaskSchema = z.object({
     category: z.string(),
     priority: z.number(),
     completed: z.boolean(),
-    createdAt: z.any(),
+    createdAt: z.number(),
 });
 
 const CreateCalendarEventInputSchema = z.object({

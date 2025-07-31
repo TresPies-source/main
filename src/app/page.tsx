@@ -8,7 +8,7 @@ import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firest
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Focus, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { startOfToday } from 'date-fns';
 import { StreakCard } from '@/components/features/dashboard/streak-card';
@@ -124,9 +124,8 @@ export default function DashboardPage() {
 
          <Card className="lg:col-span-3">
             <CardHeader>
-                <CardTitle className="font-headline flex items-center gap-2">
-                    <Trophy className="text-accent"/>
-                    Log Your Accomplishments
+                <CardTitle asChild>
+                  <h2 className="font-headline flex items-center gap-2"><Trophy className="text-accent"/> Log Your Accomplishments</h2>
                 </CardTitle>
                 <CardDescription>
                     Visit the Win Jar to log your daily accomplishments and build momentum.

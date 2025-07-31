@@ -483,7 +483,8 @@ export function TaskManager() {
             return;
         }
         
-        const result = await callCreateCalendarEvent(token, drawnTask);
+        const taskToEvent = { ...drawnTask, createdAt: drawnTask.createdAt.toMillis() };
+        const result = await callCreateCalendarEvent(token, taskToEvent);
         if (result.success) {
             toast({
                 title: 'Event Created!',
@@ -593,8 +594,8 @@ export function TaskManager() {
         {subtaskState.task && (
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="font-headline flex items-center gap-2">
-                        <Wand2 /> AI Generated Sub-tasks
+                    <AlertDialogTitle asChild>
+                      <h2 className="font-headline flex items-center gap-2"><Wand2 /> AI Generated Sub-tasks</h2>
                     </AlertDialogTitle>
                     <AlertDialogDescription>
                         Here are some smaller steps to help you tackle: <span className="font-bold text-foreground">{subtaskState.task.task}</span>
@@ -629,12 +630,9 @@ export function TaskManager() {
             <Card>
             <CardHeader>
                 <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="font-headline flex items-center gap-2">
-                            <Wand2 className="text-accent" />
-                            Brain Dump
-                        </CardTitle>
-                    </div>
+                    <CardTitle asChild>
+                      <h2 className="font-headline flex items-center gap-2"><Wand2 className="text-accent" /> Brain Dump</h2>
+                    </CardTitle>
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" disabled={!user}>
@@ -692,7 +690,9 @@ export function TaskManager() {
             <Card className="h-full flex flex-col">
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline">Your Tasks</CardTitle>
+                    <CardTitle asChild>
+                      <h2 className="font-headline">Your Tasks</h2>
+                    </CardTitle>
                     <div className="flex items-center gap-2">
                         <AlertDialog>
                             <TooltipProvider>
@@ -703,13 +703,15 @@ export function TaskManager() {
                                             <span className="sr-only">Draw a task</span>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Draw a Task</TooltipContent>
+                                    <TooltipContent><p>Draw a Task</p></TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                             {drawnTask && (
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                    <AlertDialogTitle className="font-headline">Your Next Task!</AlertDialogTitle>
+                                    <AlertDialogTitle asChild>
+                                      <h2 className="font-headline">Your Next Task!</h2>
+                                    </AlertDialogTitle>
                                     <AlertDialogDescription>
                                         Based on priority, the universe has selected this for you. What would you like to do with it?
                                     </AlertDialogDescription>
@@ -740,7 +742,7 @@ export function TaskManager() {
                                             <span className="sr-only">Empty Jar</span>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Empty Jar</TooltipContent>
+                                    <TooltipContent><p>Empty Jar</p></TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                             <AlertDialogContent>

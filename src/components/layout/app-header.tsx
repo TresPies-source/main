@@ -1,5 +1,6 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserButton } from "@/components/auth/user-button";
+import { ZenSpeak } from "@/components/features/voice/zen-speak";
 
 type AppHeaderProps = {
   title: string;
@@ -12,7 +13,8 @@ export default function AppHeader({ title }: AppHeaderProps) {
       <h1 className="text-xl font-semibold tracking-tight text-foreground/90 font-headline">
         {title}
       </h1>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-4">
+        <ZenSpeak />
         <UserButton />
       </div>
     </header>

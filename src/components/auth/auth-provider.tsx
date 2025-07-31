@@ -42,7 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     provider.addScope('https://www.googleapis.com/auth/tasks');
     provider.addScope('https://www.googleapis.com/auth/calendar.events');
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if(credential?.accessToken) {
+        setGoogleAccessToken(credential.accessToken);
+      }
       toast({
         title: 'Signed In',
         description: 'Welcome to Zen Jar!',

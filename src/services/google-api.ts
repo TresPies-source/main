@@ -81,7 +81,7 @@ export async function syncToGoogleTasks(accessToken: string, tasks: Task[]) {
 }
 
 
-export async function createGoogleCalendarEvent(accessToken: string, task: Task) {
+export async function createGoogleCalendarEvent(accessToken: string, task: any) {
     try {
         const auth = await getAuthenticatedClient(accessToken);
         const calendarService = google.calendar({ version: 'v3', auth });

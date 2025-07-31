@@ -2,7 +2,13 @@
 'use client';
 
 import MainLayout from "@/components/layout/main-layout";
-import { WinJar } from "@/components/features/wins/win-jar";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const WinJar = dynamic(() => import('@/components/features/wins/win-jar').then(mod => mod.WinJar), {
+  ssr: false,
+  loading: () => <Skeleton className="w-full h-[700px]" />
+});
 
 export default function WinsPage() {
   return (

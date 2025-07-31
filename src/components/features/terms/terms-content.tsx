@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +13,7 @@ export function TermsContent() {
                         Last updated: July 26, 2024
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="text-base text-foreground/80 space-y-6 prose dark:prose-invert">
+                <CardContent className="text-base text-foreground/80 space-y-6 prose dark:prose-invert max-w-none">
                     <p>Please read these terms and conditions carefully before using Our Service.</p>
                     
                     <h2 className="font-headline">Acknowledgment</h2>
@@ -46,10 +47,12 @@ export function TermsContent() {
                     <h2 className="font-headline">Contact Us</h2>
                     <p>
                         If you have any questions about these Terms, You can contact us:
-                        By email: [Your Contact Email Here]
+                        By email: <a href="mailto:help@trespiesdesign.com">help@trespiesdesign.com</a>
                     </p>
                 </CardContent>
             </Card>
         </div>
     );
 }
+
+    

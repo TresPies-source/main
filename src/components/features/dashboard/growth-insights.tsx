@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Zap } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import Link from 'next/link';
 
 type FocusSession = {
   duration: number;
@@ -30,15 +31,12 @@ type ChartData = {
 };
 
 export function GrowthInsights() {
-  const { user } = useAuth();
-  // We'll assume a "pro" user for now for demonstration.
-  // In a real app, this would come from the user's subscription status.
-  const isProUser = true; 
+  const { user, isPro } = useAuth();
   const [chartData, setChartData] = useState<ChartData[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !isPro) {
       setLoading(false);
       return;
     }
@@ -81,7 +79,7 @@ export function GrowthInsights() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isPro]);
   
   const chartConfig = {
     focusMinutes: {
@@ -95,27 +93,17 @@ export function GrowthInsights() {
       <CardHeader>
         <CardTitle className="font-headline flex items-center gap-2">
             <TrendingUp className="text-accent"/>
-            Growth Insights (Pro)
+            Growth Insights
         </CardTitle>
         <CardDescription>
-          Visualize your focus trends over the last 7 days.
+          {isPro ? "Visualize your focus trends over the last 7 days." : "Upgrade to Pro to visualize your focus trends."}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative">
         {loading ? (
           <Skeleton className="h-[250px] w-full" />
-        ) : !isProUser ? (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
-             <div className="text-center">
-                <p className="font-bold text-lg">Unlock Your Growth Insights</p>
-                <p className="text-muted-foreground">Upgrade to Pro to see your focus trends and patterns.</p>
-             </div>
-             <Button>
-                <Zap className="mr-2" /> Upgrade to Pro
-            </Button>
-          </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-[250px] w-full">
+          <ChartContainer config={chartConfig} className={`h-[250px] w-full ${!isPro ? 'blur-md' : ''}`}>
             <BarChart data={chartData ?? []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -138,6 +126,19 @@ export function GrowthInsights() {
               <Bar dataKey="focusMinutes" fill="var(--color-focusMinutes)" radius={4} />
             </BarChart>
           </ChartContainer>
+        )}
+        {!isPro && !loading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80">
+                <div className="text-center">
+                    <p className="font-bold text-lg">Unlock Your Growth Insights</p>
+                    <p className="text-muted-foreground">Upgrade to Pro to see your focus trends and patterns.</p>
+                </div>
+                <Button asChild>
+                    <Link href="/settings">
+                        <Zap className="mr-2" /> Upgrade to Pro
+                    </Link>
+                </Button>
+            </div>
         )}
       </CardContent>
     </Card>

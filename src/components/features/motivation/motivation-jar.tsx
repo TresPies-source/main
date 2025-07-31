@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { RefreshCw, Sparkles, Plus, Trash2, Wand2 } from 'lucide-react';
+import { RefreshCw, Sparkles, Plus, Trash2, Wand2, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 const defaultQuotes = [
   "You don’t always get what you wish for; you get what you work for.",
@@ -84,9 +85,7 @@ type Affirmation = {
 };
 
 export function MotivationJar() {
-  const { user } = useAuth();
-  // Assume pro user for demonstration
-  const isProUser = true; 
+  const { user, isPro } = useAuth();
   const [currentQuote, setCurrentQuote] = useState('');
   const [customAffirmations, setCustomAffirmations] = useState<Affirmation[]>([]);
   const [newAffirmation, setNewAffirmation] = useState('');
@@ -95,7 +94,6 @@ export function MotivationJar() {
   useEffect(() => {
     if (!user) {
       setCustomAffirmations([]);
-      // When logged out, draw from default quotes
       const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
       setCurrentQuote(defaultQuotes[randomIndex]);
       return;
@@ -132,7 +130,7 @@ export function MotivationJar() {
         toast({ title: "Not signed in", variant: "destructive"});
         return;
     }
-    if (!isProUser) {
+    if (!isPro) {
         toast({ title: "Upgrade to Pro", description: "Add your own affirmations with ZenJar Pro."});
         return;
     }
@@ -180,10 +178,10 @@ export function MotivationJar() {
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2">
-                    <Wand2 className="text-accent" /> Your Custom Affirmations (Pro)
+                    <Wand2 className="text-accent" /> Your Custom Affirmations
                 </CardTitle>
                 <CardDescription>
-                    Add your own personal quotes, mantras, and affirmations to the jar.
+                    {isPro ? "Add your own personal quotes, mantras, and affirmations to the jar." : "Upgrade to Pro to add your own affirmations."}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -192,9 +190,9 @@ export function MotivationJar() {
                         placeholder="e.g., I am capable and strong."
                         value={newAffirmation}
                         onChange={(e) => setNewAffirmation(e.target.value)}
-                        disabled={!user || !isProUser}
+                        disabled={!user || !isPro}
                     />
-                    <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || !isProUser}>
+                    <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || !isPro}>
                         <Plus className="h-4 w-4" />
                     </Button>
                 </form>
@@ -223,9 +221,14 @@ export function MotivationJar() {
                     )}
                 </div>
             </CardContent>
-             {!isProUser && user && (
+             {!isPro && user && (
                 <CardFooter>
-                    <Button className="w-full">Upgrade to Pro to Add Affirmations</Button>
+                    <Button asChild className="w-full">
+                        <Link href="/settings">
+                            <Zap className="mr-2 h-4 w-4" />
+                            Upgrade to Pro to Add Affirmations
+                        </Link>
+                    </Button>
                 </CardFooter>
              )}
         </Card>

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus, ListChecks, RefreshCw } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus, ListChecks, RefreshCw, Zap } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +50,7 @@ import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
 import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
+import Link from 'next/link';
 
 type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
     id: string;
@@ -58,7 +59,7 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
 };
 
 export function TaskManager() {
-  const { user, googleAccessToken, connectGoogle } = useAuth();
+  const { user, googleAccessToken, connectGoogle, isPro } = useAuth();
   const [taskInput, setTaskInput] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +90,10 @@ export function TaskManager() {
   const handleProcessTasks = async () => {
     if (!user) {
         toast({ title: 'Not signed in', description: 'You must be signed in to add tasks.', variant: 'destructive' });
+        return;
+    }
+    if (!isPro && tasks.length >= 50) {
+        toast({ title: 'Free Tier Limit Reached', description: 'Upgrade to Pro for unlimited tasks.' });
         return;
     }
     if (!taskInput.trim()) {
@@ -253,6 +258,10 @@ export function TaskManager() {
   }
 
   const handleGenerateSubtasks = async (task: Task) => {
+    if (!isPro) {
+      toast({ title: "Pro Feature", description: "Upgrade to Pro to use AI-powered sub-task generation." });
+      return;
+    }
     setSubtaskState({ task: task, loading: true, subtasks: [] });
     try {
         const result = await generateSubtasks({ task: task.task });
@@ -342,6 +351,7 @@ export function TaskManager() {
             </div>
             <CardDescription>
               Enter your tasks below, separated by commas or new lines. Our AI will do the rest.
+              {!isPro && user && <span className="block mt-1">Free tasks: {tasks.length}/50</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -366,6 +376,14 @@ export function TaskManager() {
                 )}
               </Button>
             </form>
+             {!isPro && user && tasks.length >= 50 && (
+                <Button asChild className="w-full mt-2" variant="outline">
+                    <Link href="/settings">
+                        <Zap className="mr-2 h-4 w-4" />
+                        Upgrade for Unlimited Tasks
+                    </Link>
+                </Button>
+            )}
              {!user && (
                 <p className="text-sm text-center text-muted-foreground mt-4">Please sign in to add and manage tasks.</p>
             )}

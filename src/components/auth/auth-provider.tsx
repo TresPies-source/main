@@ -15,6 +15,7 @@ const auth = getAuth(app);
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isPro: boolean; // Placeholder for subscription status
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   connectGoogle: () => Promise<string | null>;
@@ -26,12 +27,17 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false); // Placeholder
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      // In a real app, you would fetch the user's subscription status here
+      // from Firestore or via custom claims after they sign in.
+      // For this prototype, we'll keep it simple.
+      // e.g., checkUserProStatus(user).then(setIsPro);
       setLoading(false);
     });
 
@@ -122,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOut(auth);
       setGoogleAccessToken(null);
+      setIsPro(false); // Reset pro status on sign out
       toast({
         title: 'Signed Out',
         description: 'You have been successfully signed out.',
@@ -139,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     loading,
+    isPro,
     signInWithGoogle,
     signOut: handleSignOut,
     connectGoogle,

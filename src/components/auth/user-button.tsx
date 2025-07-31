@@ -12,10 +12,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogIn } from "lucide-react";
+import { LogIn, Zap } from "lucide-react";
+import Link from "next/link";
 
 export function UserButton() {
-  const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, signInWithGoogle, signOut, isPro } = useAuth();
 
   if (loading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
@@ -59,8 +60,17 @@ export function UserButton() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Upgrade to Pro</DropdownMenuItem>
+        {!isPro && (
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
+              <Zap className="mr-2 h-4 w-4 text-orange-500" />
+              Upgrade to Pro
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem asChild>
+            <Link href="/settings">Settings</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>

@@ -1,10 +1,8 @@
 
-
 'use client';
 
 import { useState, useEffect, Suspense, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {
   collection,
   query,
@@ -34,7 +32,6 @@ export function WinJar() {
   const [newWin, setNewWin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(true);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const animationState = useRef({ isAnimating: false, progress: 0 });
@@ -56,25 +53,12 @@ export function WinJar() {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
-
-    const loader = new GLTFLoader();
-    let model: THREE.Group;
-    setIsModelLoading(true);
-
-    loader.load(
-        '/models/win-jar.glb',
-        (gltf) => {
-            model = gltf.scene;
-            scene.add(model);
-            setIsModelLoading(false);
-        },
-        undefined, 
-        (error) => {
-            console.error('An error happened while loading the model:', error);
-            setIsModelLoading(false);
-        }
-    );
-
+    
+    const geometry = new THREE.ConeGeometry(1.5, 3, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const model = new THREE.Mesh(geometry, material);
+    scene.add(model);
+    
     const animationDuration = 0.3;
     if (playAddAnimation) {
       animationState.current = { isAnimating: true, progress: 0 };
@@ -195,9 +179,7 @@ export function WinJar() {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8 relative flex items-center justify-center">
-        {isModelLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
-      </div>
+      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
       <Card className="shadow-lg w-full max-w-lg mx-auto">
         <CardHeader>
           <CardTitle className="font-headline flex items-center gap-2">

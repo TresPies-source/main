@@ -3,7 +3,6 @@
 
 import { useState, useEffect, Suspense, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Sparkles, Plus, Trash2, Wand2, Loader2 } from 'lucide-react';
@@ -89,7 +88,6 @@ export function MotivationJar() {
   const [newAffirmation, setNewAffirmation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(true);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const animationState = useRef({ isAnimating: false, progress: 0 });
@@ -112,24 +110,11 @@ export function MotivationJar() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const loader = new GLTFLoader();
-    let model: THREE.Group;
-    setIsModelLoading(true);
+    const geometry = new THREE.TorusGeometry(1.5, 0.5, 16, 100);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const model = new THREE.Mesh(geometry, material);
+    scene.add(model);
     
-    loader.load(
-        '/models/motivation-jar.glb',
-        (gltf) => {
-            model = gltf.scene;
-            scene.add(model);
-            setIsModelLoading(false);
-        },
-        undefined, 
-        (error) => {
-            console.error('An error happened while loading the model:', error);
-            setIsModelLoading(false);
-        }
-    );
-
     const animationDuration = 0.3;
     if (playAddAnimation) {
       animationState.current = { isAnimating: true, progress: 0 };
@@ -144,6 +129,7 @@ export function MotivationJar() {
 
       if (model) {
         model.rotation.y += 0.005;
+        model.rotation.x += 0.005;
       }
 
       if (animationState.current.isAnimating && model) {
@@ -257,9 +243,7 @@ export function MotivationJar() {
 
   return (
     <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8 relative flex items-center justify-center">
-            {isModelLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
-        </div>
+        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
         <div className="space-y-8 w-full max-w-lg mx-auto">
            <Card className="text-center shadow-lg">
               <CardHeader>

@@ -1,10 +1,8 @@
 
-
 'use client';
 
 import { useState, useEffect, Suspense, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -29,7 +27,6 @@ export function IntentionSetter() {
   const [isLoading, setIsLoading] = useState(false);
   const [previousIntentions, setPreviousIntentions] = useState<string[]>([]);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(true);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const animationState = useRef({ isAnimating: false, progress: 0 });
@@ -52,23 +49,10 @@ export function IntentionSetter() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const loader = new GLTFLoader();
-    let model: THREE.Group;
-    setIsModelLoading(true);
-
-    loader.load(
-        '/models/intention-jar.glb',
-        (gltf) => {
-            model = gltf.scene;
-            scene.add(model);
-            setIsModelLoading(false);
-        },
-        undefined, 
-        (error) => {
-            console.error('An error happened while loading the model:', error);
-            setIsModelLoading(false);
-        }
-    );
+    const geometry = new THREE.CapsuleGeometry(1, 1, 4, 8);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const model = new THREE.Mesh(geometry, material);
+    scene.add(model);
 
     const animationDuration = 0.3;
     if (playAddAnimation) {
@@ -84,6 +68,7 @@ export function IntentionSetter() {
 
       if (model) {
         model.rotation.y += 0.005;
+        model.rotation.x += 0.005;
       }
       
       if (animationState.current.isAnimating && model) {
@@ -186,9 +171,7 @@ export function IntentionSetter() {
 
   return (
     <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8 relative flex items-center justify-center">
-            {isModelLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
-        </div>
+        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
         <div className="w-full max-w-lg space-y-8 mx-auto">
           <Card>
               <CardHeader>

@@ -1,10 +1,8 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -76,7 +74,6 @@ export function TaskManager() {
   const [googleDocId, setGoogleDocId] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(true);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
   const animationState = useRef({ isAnimating: false, progress: 0 });
@@ -99,23 +96,10 @@ export function TaskManager() {
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const loader = new GLTFLoader();
-    let model: THREE.Group;
-    setIsModelLoading(true);
-
-    loader.load(
-        '/models/task-jar.glb',
-        (gltf) => {
-            model = gltf.scene;
-            scene.add(model);
-            setIsModelLoading(false);
-        },
-        undefined, // onProgress callback (optional)
-        (error) => {
-            console.error('An error happened while loading the model:', error);
-            setIsModelLoading(false);
-        }
-    );
+    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const model = new THREE.Mesh(geometry, material);
+    scene.add(model);
     
     const animationDuration = 0.3; 
 
@@ -132,6 +116,7 @@ export function TaskManager() {
 
       if(model) {
         model.rotation.y += 0.005;
+        model.rotation.x += 0.005;
       }
 
       if (animationState.current.isAnimating && model) {
@@ -470,9 +455,7 @@ export function TaskManager() {
     </AlertDialog>
 
      <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8 relative flex items-center justify-center">
-            {isModelLoading && <Loader2 className="h-8 w-8 animate-spin text-primary" />}
-        </div>
+        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
         <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
                 <Card>

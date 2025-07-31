@@ -1,46 +1,51 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Zen Jar</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <div id="login-view" class="view">
-      <div class="header">
-        <h1>Welcome to Zen Jar</h1>
-        <p>Sign in to continue</p>
-      </div>
-      <button id="google-signin">Sign in with Google</button>
+<head>
+    <title>ZenJar</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="login-view" style="display: none;">
+        <h2>Welcome to ZenJar</h2>
+        <p>Sign in to access your jars.</p>
+        <button id="login-btn">Sign in with Google</button>
     </div>
 
-    <div id="main-view" class="view" style="display: none">
-      <div class="header">
-        <h1 id="user-greeting">Zen Jar</h1>
-        <button id="logout-button" class="link-button">Sign Out</button>
-      </div>
+    <div id="main-view" style="display: none;">
+        <div class="header">
+            <h3>ZenJar</h3>
+            <button id="logout-btn">Logout</button>
+        </div>
+        
+        <div id="quick-actions">
+            <button id="motivation-btn">Get Motivation</button>
+            <button id="draw-task-btn">Draw a Task</button>
+        </div>
 
-      <div class="action-section">
-        <textarea id="task-input" placeholder="Brain dump your tasks here..."></textarea>
-        <button id="add-tasks-button">Add Tasks with AI</button>
-      </div>
+        <div id="display-area">
+            <!-- Motivation or drawn task will be displayed here -->
+        </div>
 
-      <div class="quick-actions">
-        <button id="get-motivation-button">Get Motivation</button>
-        <button id="draw-task-button">Draw a Task</button>
-      </div>
+        <div class="divider"></div>
 
-      <div id="display-area" class="display-area">
-        <!-- Motivation or drawn task will be displayed here -->
-      </div>
-      
-      <div class="footer">
-        <a href="http://localhost:3000" target="_blank" id="open-app-link">Open Full App</a>
-      </div>
+        <form id="task-form">
+            <label for="task-input">Brain Dump</label>
+            <textarea id="task-input" placeholder="e.g., Finish report, Call mom" rows="4"></textarea>
+            <button type="submit" id="add-task-btn">Add Tasks with AI</button>
+        </form>
+
+        <footer>
+            <a href="http://localhost:3000" target="_blank" id="open-app-link">Open Full App</a>
+        </footer>
     </div>
 
+    <div id="loading-view" style="display: none;">
+        <p>Loading...</p>
+    </div>
+    
     <script src="firebase-app.js"></script>
     <script src="firebase-auth.js"></script>
     <script src="firebase-firestore.js"></script>
     <script src="popup.js"></script>
-  </body>
+</body>
 </html>

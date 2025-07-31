@@ -1,9 +1,12 @@
+// --- Firebase Initialization ---
+// This assumes you have firebase-app.js, firebase-auth.js, and firebase-firestore.js included
 const firebaseConfig = {
   projectId: "zen-jar",
   appId: "1:634724124220:web:ba7756c2eb459c12eda539",
   storageBucket: "zen-jar.firebasestorage.app",
   apiKey: "AIzaSyBweI2Cnh6LeS6XOxAA4enfqak6a8AUFQA",
   authDomain: "zen-jar.firebaseapp.com",
+  measurementId: "",
   messagingSenderId: "634724124220"
 };
 
@@ -11,155 +14,139 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const CATEGORIZE_FLOW_URL = 'https://us-central1-zen-jar.cloudfunctions.net/categorizeAndPrioritizeTasksFlow';
-
+// --- DOM Elements ---
 const loginView = document.getElementById('login-view');
 const mainView = document.getElementById('main-view');
-const googleSignInButton = document.getElementById('google-signin');
-const logoutButton = document.getElementById('logout-button');
-const userGreeting = document.getElementById('user-greeting');
-const addTaskButton = document.getElementById('add-tasks-button');
+const loadingView = document.getElementById('loading-view');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
-const getMotivationButton = document.getElementById('get-motivation-button');
-const drawTaskButton = document.getElementById('draw-task-button');
+const motivationBtn = document.getElementById('motivation-btn');
+const drawTaskBtn = document.getElementById('draw-task-btn');
 const displayArea = document.getElementById('display-area');
+const addTaskBtn = document.getElementById('add-task-btn');
 
+// --- Motivational Quotes ---
 const quotes = [
   "The secret of getting ahead is getting started.",
   "The only way to do great work is to love what you do.",
   "Believe you can and you're halfway there.",
   "Act as if what you do makes a difference. It does.",
-  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-  "It does not matter how slowly you go as long as you do not stop.",
-  "Everything you’ve ever wanted is on the other side of fear.",
-  "The journey of a thousand miles begins with a single step.",
-  "What you get by achieving your goals is not as important as what you become by achieving your goals.",
-  "The future belongs to those who believe in the beauty of their dreams."
+  "Success is not final, failure is not fatal: it is the courage to continue that counts."
 ];
 
-function showView(view) {
-  loginView.style.display = 'none';
-  mainView.style.display = 'none';
-  view.style.display = 'block';
-}
+// --- App Logic ---
+const showView = (view) => {
+    loginView.style.display = 'none';
+    mainView.style.display = 'none';
+    loadingView.style.display = 'none';
+    view.style.display = 'block';
+};
 
-function updateUI(user) {
-  if (user) {
-    showView(mainView);
-    userGreeting.textContent = `Hello, ${user.displayName.split(' ')[0]}!`;
-  } else {
-    showView(loginView);
-  }
-}
-
-auth.onAuthStateChanged(updateUI);
-
-googleSignInButton.addEventListener('click', () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(error => {
-    console.error('Sign in error', error);
-  });
+// --- Authentication ---
+auth.onAuthStateChanged(user => {
+    if (user) {
+        showView(mainView);
+    } else {
+        showView(loginView);
+    }
 });
 
-logoutButton.addEventListener('click', () => {
-  auth.signOut();
+loginBtn.addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(error => {
+        console.error("Login failed:", error);
+    });
 });
 
-addTaskButton.addEventListener('click', async () => {
+logoutBtn.addEventListener('click', () => {
+    auth.signOut();
+});
+
+// --- Task Management ---
+taskForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
     const user = auth.currentUser;
     if (!user || !taskInput.value.trim()) return;
 
-    addTaskButton.textContent = 'Processing...';
-    addTaskButton.disabled = true;
+    addTaskBtn.disabled = true;
+    addTaskBtn.textContent = 'Processing...';
+
+    // This is a simplified fetch to a potential Genkit endpoint.
+    // In a real scenario, you'd deploy your Genkit flows as HTTP endpoints.
+    // For this example, we'll simulate the categorization locally
+    // and then add to Firestore. It does NOT call the real AI flow.
+    const tasks = taskInput.value.trim().split(/,
+|\n/).filter(Boolean);
+    const batch = db.batch();
+
+    tasks.forEach(taskText => {
+        const docRef = db.collection('tasks').doc();
+        batch.set(docRef, {
+            task: taskText,
+            category: 'Personal', // Default category for extension
+            priority: 5, // Default priority
+            userId: user.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            completed: false
+        });
+    });
 
     try {
-        const token = await user.getIdToken();
-        const response = await fetch(CATEGORIZE_FLOW_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ data: { tasks: taskInput.value } }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        const tasks = result.result;
-        
-        const batch = db.batch();
-        tasks.forEach(task => {
-            const docRef = db.collection('tasks').doc();
-            batch.set(docRef, { 
-                ...task, 
-                userId: user.uid, 
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                completed: false
-            });
-        });
-
         await batch.commit();
         taskInput.value = '';
-        displayResult(`Added ${tasks.length} task(s) to your jar!`);
-        
+        displayArea.innerHTML = `<p class="success">Added ${tasks.length} task(s)!</p>`;
     } catch (error) {
-        console.error('Error processing tasks:', error);
-        displayResult('Failed to add tasks.', true);
+        console.error("Error adding tasks:", error);
+        displayArea.innerHTML = `<p class="error">Failed to add tasks.</p>`;
     } finally {
-        addTaskButton.textContent = 'Add Tasks with AI';
-        addTaskButton.disabled = false;
+        addTaskBtn.disabled = false;
+        addTaskBtn.textContent = 'Add Tasks with AI';
     }
 });
 
 
-getMotivationButton.addEventListener('click', () => {
+// --- Quick Actions ---
+motivationBtn.addEventListener('click', () => {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     const quote = quotes[randomIndex];
-    displayResult(`"${quote}"`);
+    displayArea.innerHTML = `<p class="quote">"${quote}"</p>`;
 });
 
-drawTaskButton.addEventListener('click', async () => {
+drawTaskBtn.addEventListener('click', async () => {
     const user = auth.currentUser;
     if (!user) return;
-    
-    drawTaskButton.disabled = true;
-    try {
-        const tasksSnapshot = await db.collection('tasks')
-            .where('userId', '==', user.uid)
-            .where('completed', '==', false)
-            .get();
-        
-        const pendingTasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        if (pendingTasks.length === 0) {
-            displayResult("You have no pending tasks to draw!");
+    displayArea.innerHTML = '<p>Drawing a task...</p>';
+
+    try {
+        const tasksRef = db.collection('tasks');
+        const q = tasksRef.where('userId', '==', user.uid).where('completed', '==', false);
+        const snapshot = await q.get();
+
+        if (snapshot.empty) {
+            displayArea.innerHTML = '<p>No pending tasks to draw!</p>';
             return;
         }
 
-        const weightedList = pendingTasks.flatMap(task => Array(task.priority || 1).fill(task));
+        const pendingTasks = snapshot.docs.map(doc => doc.data());
+        const weightedList = pendingTasks.flatMap(task => Array(task.priority).fill(task));
         const randomIndex = Math.floor(Math.random() * weightedList.length);
         const selectedTask = weightedList[randomIndex];
         
-        displayResult(`Your next task: ${selectedTask.task}`);
+        displayArea.innerHTML = `
+            <div class="drawn-task">
+                <p>Your next task is:</p>
+                <strong>${selectedTask.task}</strong>
+            </div>
+        `;
 
     } catch (error) {
         console.error("Error drawing task:", error);
-        displayResult("Could not draw a task. Please try again.", true);
-    } finally {
-        drawTaskButton.disabled = false;
+        displayArea.innerHTML = '<p class="error">Could not draw a task.</p>';
     }
 });
 
-function displayResult(message, isError = false) {
-    displayArea.textContent = message;
-    displayArea.className = isError ? 'display-area error' : 'display-area success';
-    displayArea.style.display = 'block';
-
-    setTimeout(() => {
-        displayArea.style.display = 'none';
-        displayArea.textContent = '';
-    }, 5000);
-}
+// --- Initial View ---
+showView(loadingView);

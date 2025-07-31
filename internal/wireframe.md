@@ -138,7 +138,7 @@ The application uses a consistent main layout across all pages:
     - This button navigates to the public-facing section of the website.
 
 ## 3. Public-Facing Website (External to Main App)
-This section is accessible via the link in the Settings page and will have its own distinct routes.
+This section is accessible via a link below the Settings link and above the logout button and will have its own distinct routes.
 
 ### 3.1. About Us
 - **Route:** `/public/about`

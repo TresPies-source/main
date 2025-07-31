@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import {
   Settings,
   Sparkles,
   Sunrise,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -80,7 +82,20 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
                 </SidebarMenuItem>
             ))}
+             <SidebarMenuItem>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/public/about'}
+                    tooltip={{ children: 'About' }}
+                >
+                    <Link href="/public/about">
+                    <Info />
+                    <span>About ZenJar</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
         </SidebarMenu>
+        <SidebarSeparator className="my-1"/>
         <Button variant="ghost" className="justify-start gap-2">
           <LogOut />
            <span className="group-data-[collapsible=icon]:hidden">Logout</span>

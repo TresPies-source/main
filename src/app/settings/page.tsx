@@ -32,7 +32,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/public/about">Learn More About ZenJar</Link>
+              <Link href="/public/roadmap">View Our Roadmap</Link>
             </Button>
           </CardContent>
         </Card>

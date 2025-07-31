@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Info, Power, PowerOff } from "lucide-react";
+import { Info, Power, PowerOff, Compass } from "lucide-react";
 
 function AccountCard() {
     const { user, loading } = useAuth();
@@ -85,14 +85,20 @@ export default function SettingsPage() {
         <IntegrationsCard />
         <Card>
             <CardHeader>
-                <CardTitle>About</CardTitle>
-                <CardDescription>Learn more about ZenJar's mission and what's next.</CardDescription>
+                <CardTitle>About ZenJar</CardTitle>
+                <CardDescription>Learn more about our mission and what's next.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="outline">
-                    <Link href="/public/about">
+                    <Link href="/about">
                         <Info className="mr-2 h-4 w-4" />
-                        About ZenJar & Our Roadmap
+                        Our Philosophy
+                    </Link>
+                </Button>
+                 <Button asChild variant="outline">
+                    <Link href="/roadmap">
+                        <Compass className="mr-2 h-4 w-4" />
+                        Development Roadmap
                     </Link>
                 </Button>
             </CardContent>

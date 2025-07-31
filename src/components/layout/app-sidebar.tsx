@@ -22,6 +22,7 @@ import {
   Sparkles,
   Sunrise,
   Info,
+  Compass
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
@@ -87,12 +88,24 @@ export default function AppSidebar() {
              <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={pathname === '/public/about'}
+                    isActive={pathname === '/about'}
                     tooltip={{ children: 'About' }}
                 >
-                    <Link href="/public/about">
+                    <Link href="/about">
                     <Info />
-                    <span>About ZenJar</span>
+                    <span>About</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/roadmap'}
+                    tooltip={{ children: 'Roadmap' }}
+                >
+                    <Link href="/roadmap">
+                    <Compass />
+                    <span>Roadmap</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

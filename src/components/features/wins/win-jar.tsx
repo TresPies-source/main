@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense, useRef, useLayoutEffect } from 'react';
+import * as THREE from 'three';
 import {
   collection,
   query,
@@ -18,32 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import { addWin, deleteWin } from './win-actions';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stage } from '@react-three/drei';
-import type { Mesh } from 'three';
-
-
-function PlaceholderJar({ playAnimation }: { playAnimation: boolean }) {
-  const meshRef = useRef<Mesh>(null!);
-
-  useFrame((state) => {
-    if (!meshRef.current) return;
-    if (playAnimation) {
-      const time = state.clock.getElapsedTime();
-      const scale = 1 + Math.sin(time * 20) * 0.1;
-      meshRef.current.scale.set(scale, scale, scale);
-       if (state.clock.elapsedTime > 0.5) {
-          meshRef.current.scale.set(1, 1, 1);
-       }
-    }
-  });
-  return (
-    <mesh ref={meshRef}>
-      <coneGeometry args={[1, 2, 32]} />
-      <meshStandardMaterial color="orange" />
-    </mesh>
-  );
-}
 
 type Win = {
   id: string;
@@ -58,6 +33,69 @@ export function WinJar() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!mountRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf3f0e9); // Parchment
+    const camera = new THREE.PerspectiveCamera(75, mountRef.current.clientWidth / mountRef.current.clientHeight, 0.1, 1000);
+    camera.position.z = 5;
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    mountRef.current.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(directionalLight);
+    
+    // Placeholder Jar
+    const geometry = new THREE.ConeGeometry(1, 2, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 'orange' });
+    const jarMesh = new THREE.Mesh(geometry, material);
+    scene.add(jarMesh);
+
+    // Animation loop
+    let animationFrameId: number;
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+      jarMesh.rotation.x += 0.005;
+      jarMesh.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+        if(mountRef.current) {
+            const width = mountRef.current.clientWidth;
+            const height = mountRef.current.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+    }
+    window.addEventListener('resize', handleResize);
+
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+      if (mountRef.current) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+    };
+  }, []);
 
    useEffect(() => {
     if (playAddAnimation) {
@@ -126,6 +164,7 @@ export function WinJar() {
 
   return (
     <div className="relative h-full w-full max-w-4xl mx-auto">
+        <div ref={mountRef} className="absolute inset-0 z-0" />
         <div className="absolute inset-0 z-10 grid gap-8 p-4">
             <Card className="shadow-lg bg-background/80 backdrop-blur-sm">
                 <CardHeader>
@@ -170,14 +209,6 @@ export function WinJar() {
                 </CardContent>
             </Card>
         </div>
-        <Canvas className="absolute inset-0 z-0">
-            <Suspense fallback={null}>
-                <Stage environment="city" intensity={0.6}>
-                    <PlaceholderJar playAnimation={playAddAnimation} />
-                </Stage>
-            </Suspense>
-            <OrbitControls makeDefault autoRotate />
-        </Canvas>
     </div>
   );
 }

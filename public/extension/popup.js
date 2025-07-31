@@ -1,13 +1,14 @@
 
+// This script will handle the logic for the Chrome extension's popup.
+// For now, it's a placeholder.
+
 document.addEventListener('DOMContentLoaded', function() {
-    const loginButton = document.getElementById('login');
-    const authStatus = document.getElementById('auth-status');
-
-    authStatus.textContent = 'Sign in to get started.';
-
-    loginButton.addEventListener('click', function() {
-        // This is a placeholder for the OAuth flow that would be needed.
-        // For a real extension, we would use chrome.identity API.
-        alert('This would initiate the Google Sign-In process!');
-    });
+  const contentDiv = document.getElementById('content');
+  
+  // Later, we will add logic here to:
+  // 1. Check if the user is logged in.
+  // 2. Fetch data from Firebase.
+  // 3. Display the user's jars and allow interaction.
+  
+  contentDiv.innerHTML = '<p>Welcome to your ZenJar extension!</p>';
 });

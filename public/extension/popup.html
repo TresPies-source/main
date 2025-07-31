@@ -1,42 +1,21 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZenJar</title>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            width: 300px;
-            padding: 1rem;
-            background-color: #F3F0E9;
-            color: #2A2F32;
-        }
-        h1 {
-            font-family: 'Lora', serif;
-            font-size: 1.25rem;
-            margin-top: 0;
-            color: #5B6467;
-        }
-        button {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #8BAA7A;
-            background-color: #8BAA7A;
-            color: white;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        button:hover {
-            background-color: #7d9c6d;
-        }
-    </style>
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <h1>ZenJar Quick Add</h1>
-    <p>Quickly interact with your jars.</p>
-    <div id="auth-status"></div>
-    <button id="login">Sign In with Google</button>
+    <div class="container">
+        <h1>ZenJar</h1>
+        <p>Quick access to your jars.</p>
+        <div id="content">
+            <!-- Dynamic content will be loaded here -->
+            <p>Loading...</p>
+        </div>
+    </div>
     <script src="popup.js"></script>
 </body>
 </html>

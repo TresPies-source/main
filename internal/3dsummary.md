@@ -1,72 +1,50 @@
-🧭 3D Expansion Summary for ZenJar
-🌐 Core Concept
-Turn each Jar (Task, Gratitude, Motivation, Intention, Win) into a beautifully animated, rotatable, openable, and fillable 3D object — living inside a WebGL scene that responds to mood and input.
+# ZenJar 3D Overhaul Plan
 
-🪄 Key Imaginative Enhancements
-🧱 Jars in 3D
-Fully modeled: Custom GLTF or glb files for each jar type.
+This document outlines the strategy for a complete refactor of the ZenJar application to integrate robust and stable 3D functionality. The core of this plan is to shift from a declarative, wrapper-based approach to an imperative `three.js` implementation to ensure stability and control.
 
-Behavior: Rotate, open lid, glow gently, and animate on item drop.
+### Core Strategy: Imperative `three.js` in a React Context
 
-Fillable: Each added item becomes a visible object inside the jar (scrolls, light orbs, affirmations).
+- **Primary Library:** We will use the foundational `three.js` library directly for all 3D rendering.
+- **Architecture:** The declarative `@react-three/fiber` library will be removed. Each 3D scene will be managed by a dedicated JavaScript/TypeScript class or module. The corresponding React component will be responsible for instantiating this scene manager and mounting its `<canvas>` element into the DOM.
+- **Benefit:** This architecture cleanly separates the `three.js` render loop and scene graph from React's virtual DOM and reconciler. This will prevent the `ReactCurrentOwner` dependency conflicts that previously blocked development.
 
-✨ Drag & Drop Interactions
-Use raycasting within `three.js` for pointer detection.
+---
 
-Simple animation loops or a lightweight physics library for natural item movement.
+### Phase 1: Foundational Scene Architecture (The Blueprint)
 
-Dropped objects trigger:
+- **Objective:** Create a single, stable, and reusable 3D scene component that can be adapted for all "Jar" pages. This will be our foundational blueprint.
+- **Hurdle:** Managing `three.js` objects and the render loop imperatively within a functional React component's lifecycle.
+- **Solution:**
+    1.  **DOM Mounting:** We will use `useRef` to get a stable reference to a container `<div>` in our React component.
+    2.  **Initialization:** We will use `useEffect` with an empty dependency array `[]` to perform the one-time setup. Inside this effect, we will:
+        - Instantiate our custom `three.js` scene manager class.
+        - Initialize the scene, camera, lights, and renderer.
+        - Append the renderer's `<canvas>` element to the `div` from our `useRef`.
+        - Start the animation loop.
+    3.  **Cleanup:** The return function from the `useEffect` hook will handle cleanup: stopping the animation loop and disposing of `three.js` objects to prevent memory leaks.
 
-Sound (via tone.js)
+### Phase 2: State Management & UI-3D Communication
 
-Particle effects (e.g., ripple rings, sparks)
+- **Objective:** Enable the React UI overlays to communicate with and control the 3D scene.
+- **Hurdle:** Passing data and triggering events between the declarative React UI and the imperative `three.js` scene.
+- **Solution:**
+    - **One-Way Data Flow:** We will use React props to pass data down to the `useEffect` hook that manages the `three.js` scene.
+    - **Example:** When a user adds a task, a state `playTaskAnimation` will be set to `true`. This will be a dependency in our `useEffect`. When the effect re-runs, it can call a method on our scene manager instance (e.g., `mySceneManager.triggerPopAnimation()`) to run the 3D animation. This keeps the state management within React while triggering imperative actions in `three.js`.
 
-Jar “fill” animation or glow pulse
+### Phase 3: Asset Loading & Performance Optimization
 
-🌌 Zen Mode
-Toggle into immersive mode:
+- **Objective:** Load custom 3D models (`.glb` files) for the jars and ensure the application remains performant.
+- **Hurdle:** Large 3D model files can significantly slow down initial page load and harm user experience.
+- **Solution:**
+    1.  **Dynamic Imports:** The parent React components containing the 3D scenes will be loaded using `next/dynamic`. This code-splitting is essential to keep the initial bundle size small.
+    2.  **Asynchronous Asset Loading:** We will use the `GLTFLoader` from `three.js` to load models asynchronously. Loading screens or placeholders will be displayed in the React UI while the assets are being fetched.
+    3.  **Asset Compression:** We will establish a workflow to compress all 3D models using tools like `gltfpack` and Draco compression before they are added to the project.
 
-Floating scene in space, forest, or beneath water
+### Phase 4: Interactivity & Physics
 
-Parallax layers and particle skies
-
-Timer floats softly
-
-UI fades away
-
-🌳 Growth View (Later Phases)
-“Zoom out” from jars into a garden or celestial constellation
-
-Constellation lights up with accomplishments (wins, focus, gratitude)
-
-Unlock new environments as milestones are hit
-
-🔉 Audio + Ambience
-Scene-based ambient tracks: Lo-fi rain, synth forest, wind cave, etc.
-
-Item-specific SFX:
-
-Tasks = parchment scroll flutter
-
-Gratitude = sparkle pop
-
-Wins = gong or piano chime
-
-🧠 ZenSpeak: Voice to Object
-Speak: “Add task: Send email to Joy”
-
-Visual: Scroll unrolls in air → user drags it into jar
-
-Visual feedback from mic icon, and optional “whispering guide” response
-
-🛠️ Technical Layers
-Layer	Tools
-WebGL Rendering	three.js (Imperative Approach)
-React Integration	Mounted in a React component's `useEffect` hook.
-UI	Tailwind CSS for overlays
-Physics (optional)	Simple animation loops or a small physics library.
-Audio	tone.js or howler.js
-Voice	Web Speech API + Firebase Functions
-AI	Firebase Genkit + Gemini
-Data Persistence	Firestore
-Models	.glb / .gltf via Blender, Sketchfab, or Remix3D
+- **Objective:** Implement drag-and-drop functionality, pointer interactions, and realistic object movement.
+- **Hurdle:** Calculating pointer positions in 3D space and simulating physics without a heavy library.
+- **Solution:**
+    - **Raycasting:** We will use `three.js`'s built-in `Raycaster` to translate the 2D mouse coordinates into the 3D scene. This will allow us to detect which objects the user is hovering over or clicking on.
+    - **Simple Physics:** For simple interactions like an object falling into a jar, we will write basic animation loops that simulate gravity and collision, avoiding the need for a full physics engine initially.
+    - **Future-Proofing:** For more advanced physics later, this architecture will easily accommodate a lightweight library like `cannon-es`, which can be integrated into our imperative `three.js` scene manager.

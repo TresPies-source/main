@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FocusTimer } from "@/components/features/dashboard/focus-timer";
@@ -24,30 +24,32 @@ type Win = {
   createdAt: Timestamp;
 };
 
-const StreakCard = ({ streak }: { streak: number | null }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="font-headline flex items-center gap-2 text-base">
-        <Flame className="text-accent"/>
-        Daily Streak
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      {streak === null ? (
-        <Skeleton className="h-10 w-1/2" />
-      ) : (
-        <>
-          <p className="text-4xl font-bold">{streak} <span className="text-lg font-normal text-muted-foreground">days</span></p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {streak > 0 ? "Keep up the great work!" : "Start a session or log a win to build a streak!"}
-          </p>
-        </>
-      )}
-    </CardContent>
-  </Card>
-);
+function StreakCard({ streak }: { streak: number | null }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-headline flex items-center gap-2 text-base">
+          <Flame className="text-accent"/>
+          Daily Streak
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {streak === null ? (
+          <Skeleton className="h-10 w-1/2" />
+        ) : (
+          <>
+            <p className="text-4xl font-bold">{streak} <span className="text-lg font-normal text-muted-foreground">days</span></p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {streak > 0 ? "Keep up the great work!" : "Start a session or log a win to build a streak!"}
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
-const RecordsCard = ({ longestSession, totalWins }: { longestSession: number | null, totalWins: number | null }) => {
+function RecordsCard({ longestSession, totalWins }: { longestSession: number | null, totalWins: number | null }) {
     const formatDuration = (seconds: number) => {
         if (seconds === 0) return 'N/A';
         const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -114,45 +116,69 @@ export default function DashboardPage() {
     const unsubWins = onSnapshot(winsQuery, (snapshot) => {
         setTotalWins(snapshot.docs.length);
     });
-    
-    const calculateStreak = () => {
-        const unsubFocusForStreak = onSnapshot(focusQuery, (focusSnapshot) => {
-            const unsubWinsForStreak = onSnapshot(winsQuery, (winsSnapshot) => {
-                const focusDates = focusSnapshot.docs.map(d => d.data().createdAt.toDate());
-                const winDates = winsSnapshot.docs.map(d => d.data().createdAt.toDate());
 
-                const activityDates = [...focusDates, ...winDates].map(d => {
-                    const date = new Date(d);
-                    date.setHours(0,0,0,0);
-                    return date.getTime();
-                });
-                const uniqueActivityDays = new Set(activityDates);
+    const unsubStreak = onSnapshot(
+        query(collection(db, 'focusSessions'), where('userId', '==', user.uid)),
+        (focusSnapshot) => {
+            const unsubInner = onSnapshot(
+                query(collection(db, 'wins'), where('userId', '==', user.uid)),
+                (winsSnapshot) => {
+                    const focusDates = focusSnapshot.docs.map(d => d.data().createdAt.toDate());
+                    const winDates = winsSnapshot.docs.map(d => d.data().createdAt.toDate());
 
-                let currentStreak = 0;
-                if (uniqueActivityDays.size > 0) {
+                    const activityDates = [...focusDates, ...winDates].map(d => {
+                        const date = new Date(d);
+                        date.setHours(0, 0, 0, 0);
+                        return date.getTime();
+                    });
+                    const uniqueActivityDays = new Set(activityDates);
+
+                    if (uniqueActivityDays.size === 0) {
+                        setStreak(0);
+                        return;
+                    }
+
+                    let currentStreak = 0;
                     let dateToCheck = new Date();
-                    dateToCheck.setHours(0,0,0,0);
-                    
-                    // Check for today's activity first
+                    dateToCheck.setHours(0, 0, 0, 0);
+
+                    // Check for today's activity
                     if (uniqueActivityDays.has(dateToCheck.getTime())) {
                         currentStreak++;
                         dateToCheck.setDate(dateToCheck.getDate() - 1);
+                    } else {
+                        // If no activity today, check if yesterday was the last activity
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        yesterday.setHours(0,0,0,0);
+                        if (!uniqueActivityDays.has(yesterday.getTime())) {
+                             // check if today is in the set
+                            if(!uniqueActivityDays.has(new Date().setHours(0,0,0,0))) {
+                               // there was no activity today or yesterday, so streak is 0
+                               // unless today is the day of the last activity
+                               const mostRecentActivity = Math.max(...Array.from(uniqueActivityDays));
+                               const today = new Date();
+                               today.setHours(0,0,0,0);
+                               if(mostRecentActivity < today.getTime()){
+                                   setStreak(0);
+                                   return;
+                               }
+                            }
+                        }
                     }
-                    
-                    // Then check for consecutive days before today
+
+                    // Check for consecutive days backwards
                     while (uniqueActivityDays.has(dateToCheck.getTime())) {
                         currentStreak++;
                         dateToCheck.setDate(dateToCheck.getDate() - 1);
                     }
+                    
+                    setStreak(currentStreak);
                 }
-                setStreak(currentStreak);
-            });
-            return unsubWinsForStreak;
-        });
-        return unsubFocusForStreak;
-    };
-    
-    const unsubStreak = calculateStreak();
+            );
+            return () => unsubInner();
+        }
+    );
 
     return () => {
       unsubFocus();

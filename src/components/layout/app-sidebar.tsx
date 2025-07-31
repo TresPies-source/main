@@ -36,8 +36,10 @@ const menuItems = [
   { href: "/intention", label: "Intention Setter", icon: Sunrise },
 ];
 
-const bottomMenuItems = [
-    { href: "/settings", label: "Settings", icon: Settings },
+const publicMenuItems = [
+    { href: "/about", label: "About", icon: Info },
+    { href: "/roadmap", label: "Roadmap", icon: Compass },
+    { href: "/public/blog", label: "Blog", icon: Rss },
 ]
 
 export default function AppSidebar() {
@@ -71,10 +73,7 @@ export default function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-2">
         <SidebarMenu>
-            <SidebarMenuItem>
-                <ThemeSwitcher />
-            </SidebarMenuItem>
-            {bottomMenuItems.map((item) => (
+            {publicMenuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                     asChild
@@ -88,46 +87,25 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
                 </SidebarMenuItem>
             ))}
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname.startsWith('/about')}
-                    tooltip={{ children: 'About' }}
-                >
-                    <Link href="/about">
-                    <Info />
-                    <span>About</span>
-                    </Link>
-                </SidebarMenuButton>
+            <SidebarSeparator className="my-1"/>
+            <SidebarMenuItem>
+                <ThemeSwitcher />
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={pathname.startsWith('/roadmap')}
-                    tooltip={{ children: 'Roadmap' }}
+                    isActive={pathname === '/settings'}
+                    tooltip={{ children: 'Settings' }}
                 >
-                    <Link href="/roadmap">
-                    <Compass />
-                    <span>Roadmap</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname.startsWith('/public/blog')}
-                    tooltip={{ children: 'Blog' }}
-                >
-                    <Link href="/public/blog">
-                    <Rss />
-                    <span>Blog</span>
+                    <Link href={'/settings'}>
+                        <Settings />
+                        <span>Settings</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
-        <SidebarSeparator className="my-1"/>
         {user && (
-          <Button variant="ghost" className="justify-start gap-2" onClick={signOut}>
+          <Button variant="ghost" className="justify-start gap-2 mt-2" onClick={signOut}>
             <LogOut />
             <span className="group-data-[collapsible=icon]:hidden">Logout</span>
           </Button>

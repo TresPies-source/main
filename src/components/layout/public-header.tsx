@@ -6,6 +6,14 @@ import { BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+const navLinks = [
+    { href: "/about", label: "About" },
+    { href: "/roadmap", label: "Roadmap" },
+    { href: "/public/blog", label: "Blog" },
+    { href: "/public/privacy", label: "Privacy" },
+    { href: "/public/terms", label: "Terms" },
+]
+
 export function PublicHeader() {
   const pathname = usePathname();
 
@@ -17,24 +25,11 @@ export function PublicHeader() {
           <span className="font-bold font-headline">ZenJar</span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            <Link href="/about" className={cn("transition-colors hover:text-foreground/80", pathname === "/about" ? "text-foreground" : "text-foreground/60")}>
-                About
-            </Link>
-            <Link href="/roadmap" className={cn("transition-colors hover:text-foreground/80", pathname === "/roadmap" ? "text-foreground" : "text-foreground/60")}>
-                Roadmap
-            </Link>
-            <Link href="/public/blog" className={cn("transition-colors hover:text-foreground/80", pathname.startsWith("/public/blog") ? "text-foreground" : "text-foreground/60")}>
-                Blog
-            </Link>
-            <Link href="/public/privacy" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/privacy" ? "text-foreground" : "text-foreground/60")}>
-                Privacy
-            </Link>
-             <Link href="/public/terms" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/terms" ? "text-foreground" : "text-foreground/60")}>
-                Terms
-            </Link>
-            <Link href="/public/license" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/license" ? "text-foreground" : "text-foreground/60")}>
-                License
-            </Link>
+            {navLinks.map(({ href, label }) => (
+                 <Link key={label} href={href} className={cn("transition-colors hover:text-foreground/80", pathname === href ? "text-foreground" : "text-foreground/60")}>
+                    {label}
+                </Link>
+            ))}
         </nav>
         <div className="flex-1 flex justify-end">
             <Button asChild>

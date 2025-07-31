@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const CategorizeAndPrioritizeTasksInputSchema = z.object({
-  tasks: z.string().describe('A comma separated list of tasks to categorize and prioritize.'),
+  tasks: z.string().describe('A list of tasks to categorize and prioritize, separated by commas or new lines.'),
 });
 export type CategorizeAndPrioritizeTasksInput = z.infer<typeof CategorizeAndPrioritizeTasksInputSchema>;
 
@@ -35,9 +35,10 @@ const prompt = ai.definePrompt({
   output: {schema: CategorizeAndPrioritizeTasksOutputSchema},
   prompt: `You are a personal assistant AI that categorizes and prioritizes tasks.
 
-You will receive a comma separated list of tasks. For each task, you will determine the category (e.g., Work, Personal) and assign a priority level (1-10). Respond with a valid JSON array.
+You will receive a list of tasks, which may be separated by commas or new lines. For each task, you will determine the category (e.g., Work, Personal) and assign a priority level (1-10). Respond with a valid JSON array.
 
-Tasks: {{{tasks}}}`,
+Tasks:
+{{{tasks}}}`,
 });
 
 const categorizeAndPrioritizeTasksFlow = ai.defineFlow(

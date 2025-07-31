@@ -13,6 +13,7 @@ import {
   getDocs,
   Timestamp,
   deleteDoc,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, Check, X, Download, Upload } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,13 +67,13 @@ export function TaskManager() {
       return;
     }
 
-    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
+    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedTasks: Task[] = [];
       querySnapshot.forEach((doc) => {
         fetchedTasks.push({ ...doc.data(), id: doc.id } as Task);
       });
-      setTasks(fetchedTasks.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()));
+      setTasks(fetchedTasks);
     });
 
     return () => unsubscribe();
@@ -158,9 +159,7 @@ export function TaskManager() {
 
   const handleToggleTask = async (task: Task) => {
     const taskRef = doc(db, 'tasks', task.id);
-    const batch = writeBatch(db);
-    batch.update(taskRef, { completed: !task.completed });
-    await batch.commit();
+    await updateDoc(taskRef, { completed: !task.completed });
   }
 
   const getPriorityColor = (priority: number) => {
@@ -177,7 +176,7 @@ export function TaskManager() {
       <div>
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start">
               <CardTitle className="font-headline flex items-center gap-2">
                 <Wand2 className="text-accent" />
                 Brain Dump
@@ -247,7 +246,6 @@ export function TaskManager() {
                           <DropdownMenuLabel>Export To</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem disabled>Google Tasks</DropdownMenuItem>
-                          <DropdownMenuItem disabled>Google Calendar</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <AlertDialog>
@@ -262,7 +260,7 @@ export function TaskManager() {
                                 <AlertDialogHeader>
                                 <AlertDialogTitle className="font-headline">Your Next Task!</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Based on priority, the universe has selected this for you.
+                                    Based on priority, the universe has selected this for you. What would you like to do with it?
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <div className="p-4 bg-secondary rounded-lg my-4">
@@ -272,8 +270,12 @@ export function TaskManager() {
                                         <Badge variant="secondary">Priority: {drawnTask.priority}</Badge>
                                     </div>
                                 </div>
-                                <AlertDialogFooter>
-                                <AlertDialogAction>Let's do it!</AlertDialogAction>
+                                <AlertDialogFooter className="sm:justify-between">
+                                  <Button variant="outline" disabled>
+                                    <CalendarPlus className="mr-2 h-4 w-4" />
+                                    Add to Google Calendar
+                                  </Button>
+                                  <AlertDialogAction>Let's do it!</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                          )}

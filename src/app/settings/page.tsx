@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Info, Link as LinkIcon, Power, PowerOff } from "lucide-react";
+import { Info, Power, PowerOff } from "lucide-react";
 
 function AccountCard() {
     const { user, loading } = useAuth();

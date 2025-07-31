@@ -435,7 +435,4 @@ Microphone Icon: A prominent microphone icon/button will be present in the main 
 
 Visual Feedback during Listening:
 
-The microphone icon will change state (e.g., color, pulsating animation)
-```
-
-    
+The microphone icon will change state (e.g., color, pulsating animation).

@@ -90,19 +90,21 @@ export function MotivationJar() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
+  const animationState = useRef({ isAnimating: false, progress: 0 });
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
+    const currentMount = mountRef.current;
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf3f0e9); // Parchment
-    const camera = new THREE.PerspectiveCamera(75, mountRef.current.clientWidth / mountRef.current.clientHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 5;
     
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-    mountRef.current.appendChild(renderer.domElement);
+    renderer.setClearColor(0x000000, 0);
+    renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
+    currentMount.appendChild(renderer.domElement);
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -117,21 +119,45 @@ export function MotivationJar() {
     const jarMesh = new THREE.Mesh(geometry, material);
     scene.add(jarMesh);
 
+    // Animation variables
+    const animationDuration = 0.3; // seconds
+
+    if (playAddAnimation) {
+      animationState.current = { isAnimating: true, progress: 0 };
+    }
+
     // Animation loop
     let animationFrameId: number;
+    const clock = new THREE.Clock();
+    
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      jarMesh.rotation.x += 0.005;
+      const deltaTime = clock.getDelta();
+
+      if (animationState.current.isAnimating) {
+        animationState.current.progress += deltaTime;
+        const phase = animationState.current.progress / animationDuration;
+
+        if (phase < 1) {
+          const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
+          jarMesh.scale.set(scale, scale, scale);
+        } else {
+          jarMesh.scale.set(1, 1, 1);
+          animationState.current.isAnimating = false;
+        }
+      }
+
       jarMesh.rotation.y += 0.005;
+
       renderer.render(scene, camera);
     };
     animate();
 
     // Handle resize
     const handleResize = () => {
-        if(mountRef.current) {
-            const width = mountRef.current.clientWidth;
-            const height = mountRef.current.clientHeight;
+        if(currentMount) {
+            const width = currentMount.clientWidth;
+            const height = currentMount.clientHeight;
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
@@ -144,14 +170,14 @@ export function MotivationJar() {
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
-      if (mountRef.current) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (currentMount) {
+        currentMount.removeChild(renderer.domElement);
       }
       geometry.dispose();
       material.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [playAddAnimation]);
 
   useEffect(() => {
     if (playAddAnimation) {

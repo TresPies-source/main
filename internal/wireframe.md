@@ -186,7 +186,7 @@ A stylized, floating scroll or object where the intention text is displayed.
 
 The AI response could appear as a shimmering text block next to it.
 
-Intention Input Overlay:
+Input Overlay:
 
 A textarea for the user's intention.
 
@@ -436,3 +436,6 @@ Microphone Icon: A prominent microphone icon/button will be present in the main 
 Visual Feedback during Listening:
 
 The microphone icon will change state (e.g., color, pulsating animation)
+```
+
+    

@@ -6,8 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default function SettingsPage() {
   return (
@@ -20,20 +18,6 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <p>Account details will be available here once authentication is set up.</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>About ZenJar & Our Roadmap</CardTitle>
-            <CardDescription>
-              Learn more about our mission, philosophy, and what's next on our journey.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/public/roadmap">View Our Roadmap</Link>
-            </Button>
           </CardContent>
         </Card>
       </div>

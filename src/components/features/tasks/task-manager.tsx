@@ -16,6 +16,8 @@ import {
   deleteDoc,
   updateDoc,
 } from 'firebase/firestore';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Stage } from '@react-three/drei';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -59,6 +61,16 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
     completed: boolean;
     createdAt: Timestamp;
 };
+
+
+function PlaceholderJar() {
+  return (
+    <mesh>
+      <cylinderGeometry args={[1, 1, 2, 32]} />
+      <meshStandardMaterial color="royalblue" />
+    </mesh>
+  );
+}
 
 export function TaskManager() {
   const { user, googleAccessToken, connectGoogle } = useAuth();
@@ -388,9 +400,18 @@ export function TaskManager() {
         )}
     </AlertDialog>
 
-    <div className="grid gap-8 md:grid-cols-2">
-      <div>
-        <Card>
+    <div className="grid gap-8 md:grid-cols-2 relative h-[70vh]">
+        <div className="md:col-span-2 md:absolute md:inset-0 z-0 h-full w-full">
+            <Canvas camera={{ position: [0, 2, 5], fov: 60 }}>
+                <Stage environment="city" intensity={0.6}>
+                    <PlaceholderJar />
+                </Stage>
+                <OrbitControls makeDefault autoRotate />
+            </Canvas>
+        </div>
+
+      <div className="z-10 relative space-y-4">
+        <Card className="bg-background/80 backdrop-blur-sm">
           <CardHeader>
             <div className="flex justify-between items-start">
                 <div>
@@ -416,7 +437,7 @@ export function TaskManager() {
                 </DropdownMenu>
             </div>
             <CardDescription>
-              Enter your tasks below, separated by commas or new lines. Our AI will do the rest.
+              Enter your tasks below. They will appear in the list on the right.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -448,8 +469,8 @@ export function TaskManager() {
         </Card>
       </div>
 
-      <div>
-        <Card className="min-h-[365px]">
+      <div className="z-10 relative">
+        <Card className="min-h-[365px] bg-background/80 backdrop-blur-sm">
           <CardHeader>
             <div className="flex justify-between items-center">
                 <CardTitle className="font-headline">Your Tasks</CardTitle>

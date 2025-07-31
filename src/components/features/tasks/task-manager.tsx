@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus, ListChecks } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus, ListChecks, RefreshCw } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -181,7 +181,7 @@ export function TaskManager() {
     return token;
   }
 
-  const handleExportToGoogleTasks = async () => {
+  const handleSyncToGoogleTasks = async () => {
     setIsSyncing(true);
     const token = await handleAuthForApi();
     if (!token) {
@@ -370,9 +370,9 @@ export function TaskManager() {
             <div className="flex justify-between items-center">
                 <CardTitle className="font-headline">Your Tasks</CardTitle>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" disabled={tasks.length === 0 || isSyncing} onClick={handleExportToGoogleTasks} title="Export to Google Tasks">
-                      {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4" />}
-                      <span className="sr-only">Export Tasks</span>
+                    <Button variant="outline" size="sm" disabled={tasks.length === 0 || isSyncing} onClick={handleSyncToGoogleTasks} title="Sync with Google Tasks">
+                      {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="h-4 w-4" />}
+                      <span className="sr-only">Sync Tasks</span>
                     </Button>
                     <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
                         <AlertDialogTrigger asChild>

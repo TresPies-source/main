@@ -1,133 +1,128 @@
-import path from 'path';
-import fs from 'fs';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import MainLayout from "@/components/layout/main-layout";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import PublicLayout from "@/components/layout/public-layout";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle } from "lucide-react";
 
+const roadmapPhases = [
+  {
+    title: "Phase 1: Foundation & Core Setup",
+    status: "Completed",
+    description: "Establish the basic application structure, user authentication, and core UI shell.",
+    features: [
+      "Project Initialization",
+      "User Authentication (Google)",
+      "Basic UI Layout & Navigation",
+      "Firebase Integration",
+    ],
+  },
+  {
+    title: "Phase 2: Task Jar & Initial AI Integration",
+    status: "Completed",
+    description: "Implement the core Task Jar functionality, including AI processing and weighted selection.",
+    features: [
+      "AI-Powered Task Categorization",
+      "Task Persistence (Firestore)",
+      "Weighted Random Task Selection",
+      "\"Empty Jar\" Functionality",
+    ],
+  },
+  {
+    title: "Phase 3: Motivation, Gratitude & Intention Setter",
+    status: "Completed",
+    description: "Implement the remaining core \"jar\" features and the AI-powered intention setter.",
+    features: [
+      "Motivation Jar",
+      "Gratitude Jar with Persistence",
+      "AI-Powered Intention Setter",
+    ],
+  },
+   {
+    title: "Phase 4: Growth Ecosystem",
+    status: "Completed",
+    description: "Integrate the \"count-up\" focus timer, \"Win\" Jar, and streak tracking.",
+    features: [
+        "\"Count-Up\" Focus Timer with Persistence",
+        "\"Win\" Jar for Accomplishments",
+        "Dynamic Streaks & Personal Records",
+    ],
+  },
+  {
+    title: "Phase 5: Public Presence",
+    status: "In Progress",
+    description: "Establish ZenJar's public-facing website and content.",
+     features: [
+        "Settings Page Enhancements",
+        "Public \"About Us\" Page",
+        "Public Development Roadmap",
+        "Blog Structure Setup",
+    ],
+  },
+  {
+    title: "Phase 6: Advanced Features & Integrations",
+    status: "Planned",
+    description: "Introduce Pro-tier features and connect ZenJar with other services.",
+    features: [
+        "Freemium Model & Pro Subscription",
+        "Google Suite Integrations (Calendar, Tasks)",
+        "Growth Dashboard (Pro)",
+        "AI-Powered Insights (Pro)",
+    ],
+  },
+    {
+    title: "Phase 7: Cross-Platform & Voice",
+    status: "Planned",
+    description: "Expand ZenJar's accessibility to other platforms and introduce voice commands.",
+    features: [
+        "Google Chrome Extension",
+        "Slack & Discord Bots",
+        "Voice Control (ZenSpeak)",
+    ],
+  },
+];
 
-const comprehensiveProjectDocument = fs.readFileSync(path.join(process.cwd(), 'internal/comprehensiveprojectdocument.md'), 'utf8');
-const wireframeDocument = fs.readFileSync(path.join(process.cwd(), 'internal/wireframe.md'), 'utf8');
-
-
-const phases = [
-    {
-      name: "Phase 1: Foundation & Core Setup",
-      description: "Establish the basic application structure, user authentication, and core UI shell.",
-      status: "completed",
-    },
-    {
-      name: "Phase 2: Task Jar & Initial AI Integration",
-      description: "Implement the core Task Jar functionality, including AI processing and weighted selection.",
-      status: "completed",
-    },
-    {
-      name: "Phase 3: Motivation, Gratitude & Intention Setter",
-      description: "Implement the remaining core 'jar' features and the AI-powered intention setter.",
-      status: "completed",
-    },
-    {
-        name: "Phase 4: Growth Ecosystem & Monetization",
-        description: "Integrate the 'count-up' focus timer, 'Win' Jar, streak tracking, and implement the freemium model.",
-        status: "active",
-    },
-    {
-      name: "Phase 5: Cross-Platform Integration & Polish",
-      description: "Extend ZenJar to other platforms and refine the user experience.",
-      status: "pending",
-    },
-    {
-        name: "Phase 6: Public Presence & Core Integrations",
-        description: "Establish ZenJar's public-facing website and implement initial Google Suite integrations.",
-        status: "pending",
-    },
-    {
-        name: "Phase 7: Advanced Integrations & Future Enhancements",
-        description: "Continuous improvement, expansion of integrations, and preparation for advanced AI agent collaboration.",
-        status: "pending",
-    }
-  ];
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500";
-      case "active":
-        return "bg-blue-500";
-      case "pending":
-      default:
-        return "bg-gray-400";
-    }
-  };
-  
 export default function RoadmapPage() {
-    return (
-      <MainLayout title="Development Roadmap">
-        <div className="space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Project Timeline</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="relative">
-                    <div className="absolute left-1/2 top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
-                    {phases.map((phase, index) => (
-                        <div key={index} className="relative mb-8">
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <div className={`h-4 w-4 rounded-full ${getStatusClass(phase.status)}`}></div>
-                        </div>
-                        <div className={`w-[calc(50%-1rem)] p-4 rounded-lg bg-card shadow-md ${index % 2 === 0 ? 'mr-auto' : 'ml-auto'}`}>
-                            <h3 className="font-bold">{phase.name}</h3>
-                            <p className="text-sm text-muted-foreground">{phase.description}</p>
-                        </div>
-                        </div>
-                    ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Accordion type="single" collapsible className="w-full space-y-6">
-              <AccordionItem value="item-1" className="border-none">
-                <Card>
-                  <AccordionTrigger className="p-6 hover:no-underline">
-                      <CardTitle>Comprehensive Project Document</CardTitle>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <CardContent>
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {comprehensiveProjectDocument}
-                            </ReactMarkdown>
-                        </div>
-                    </CardContent>
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
-              <AccordionItem value="item-2" className="border-none">
-                <Card>
-                    <AccordionTrigger className="p-6 hover:no-underline">
-                        <CardTitle>Wireframe Document</CardTitle>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <CardContent>
-                            <div className="prose prose-sm dark:prose-invert max-w-none">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {wireframeDocument}
-                                </ReactMarkdown>
-                            </div>
-                        </CardContent>
-                    </AccordionContent>
-                </Card>
-              </AccordionItem>
-            </Accordion>
+  return (
+    <PublicLayout>
+      <div className="container max-w-4xl py-12">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold font-headline tracking-tight">Development Roadmap</h1>
+          <p className="mt-2 text-lg text-muted-foreground">
+            Follow along with our progress as we build ZenJar.
+          </p>
         </div>
-      </MainLayout>
-    );
-  }
-  
+
+        <div className="space-y-8">
+          {roadmapPhases.map((phase, index) => (
+            <Card key={index} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle className="font-headline text-xl">{phase.title}</CardTitle>
+                    <Badge variant={phase.status === 'Completed' ? 'default' : phase.status === 'In Progress' ? 'secondary' : 'outline'}>
+                        {phase.status}
+                    </Badge>
+                </div>
+                <CardDescription>{phase.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                    {phase.features.map(feature => (
+                        <li key={feature} className="flex items-center gap-3 text-sm">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span>{feature}</span>
+                        </li>
+                    ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </PublicLayout>
+  );
+}

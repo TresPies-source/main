@@ -23,16 +23,58 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 
 const defaultQuotes = [
-  "The secret of getting ahead is getting started.",
-  "The only way to do great work is to love what you do.",
-  "Believe you can and you're halfway there.",
-  "Act as if what you do makes a difference. It does.",
-  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-  "It does not matter how slowly you go as long as you do not stop.",
-  "Everything you’ve ever wanted is on the other side of fear.",
-  "The journey of a thousand miles begins with a single step.",
-  "What you get by achieving your goals is not as important as what you become by achieving your goals.",
-  "The future belongs to those who believe in the beauty of their dreams."
+  "You don’t always get what you wish for; you get what you work for.",
+  "Believe you can, and you’re already halfway there.",
+  "Expect things of yourself before you can do them.",
+  "Progress, not perfection.",
+  "A small step today leads to a big leap tomorrow.",
+  "Done is better than perfect.",
+  "If not now, when?",
+  "Your future self will thank you for starting today.",
+  "Motivation follows action—just begin.",
+  "One minute of work leads to many more.",
+  "Break it down and build it up.",
+  "You have the power in this moment.",
+  "Consistency beats intensity over time.",
+  "Stop thinking. Start doing.",
+  "Every task completed is a win.",
+  "You’re closer than you were yesterday.",
+  "Actions create momentum.",
+  "Focus on the next right step.",
+  "Aim for progress, not excuses.",
+  "The journey of a thousand miles begins with a single click.",
+  "The difference between the ordinary and the extraordinary is that little extra.",
+  "The pain you feel today is the strength you will feel tomorrow.",
+  "For every challenge encountered, there is an opportunity for growth.",
+  "The secret of success is to do the common things uncommonly well.",
+  "There are no shortcuts to any place worth going.",
+  "The harder you work for something, the greater you'll feel when you finally achieve it.",
+  "Life has two rules. Never quit, and always remember rule number one.",
+  "The fact that you aren't where you want to be should be enough motivation.",
+  "It always seems impossible until it's done.",
+  "I don't regret the things I've done, I regret the things I didn't do when I had a chance.",
+  "Excuses don't get results.",
+  "There are no traffic jams on the extra mile.",
+  "If it's important to you, you'll find a way. If not, you'll find an excuse.",
+  "It’s not going to be easy, but it’s going to be worth it.",
+  "You don’t drown by falling in the water; you drown by staying there.",
+  "Challenges are what make life interesting. Overcoming them is what makes life meaningful.",
+  "There’s no substitute for hard work.",
+  "I find that the harder I work, the more luck I seem to have.",
+  "The expert in everything was once a beginner.",
+  "If you’re going through hell, keep going.",
+  "Some people dream of accomplishing great things. Others stay awake and make it happen.",
+  "It’s not about how bad you want it, it’s about how hard you’re willing to work for it.",
+  "The difference between a stumbling block and a stepping stone is how high you raise your foot.",
+  "You don’t have to be great to start, but you have to start to be great.",
+  "Never do tomorrow what you can do today.",
+  "Procrastination is the thief of time.",
+  "Push yourself because no one else is going to do it for you.",
+  "Strive for progress, not perfection.",
+  "Don’t let what you cannot do interfere with what you can do.",
+  "The secret to getting ahead is getting started.",
+  "Failure is the opportunity to begin again more intelligently.",
+  "Success is the sum of small efforts repeated day in and day out."
 ];
 
 type Affirmation = {
@@ -53,6 +95,9 @@ export function MotivationJar() {
   useEffect(() => {
     if (!user) {
       setCustomAffirmations([]);
+      // When logged out, draw from default quotes
+      const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
+      setCurrentQuote(defaultQuotes[randomIndex]);
       return;
     }
     const q = query(collection(db, 'affirmations'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
@@ -68,6 +113,10 @@ export function MotivationJar() {
 
   const drawQuote = () => {
     const allQuotes = [...defaultQuotes, ...customAffirmations.map(a => a.text)];
+    if (allQuotes.length === 0) {
+        setCurrentQuote("Add an affirmation to get started!");
+        return;
+    }
     const randomIndex = Math.floor(Math.random() * allQuotes.length);
     setCurrentQuote(allQuotes[randomIndex]);
   };
@@ -75,7 +124,7 @@ export function MotivationJar() {
   useEffect(() => {
     drawQuote();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customAffirmations]);
+  }, [customAffirmations]); // Rerun when custom affirmations change
 
   const handleAddAffirmation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,9 +223,9 @@ export function MotivationJar() {
                     )}
                 </div>
             </CardContent>
-             {!isProUser && (
+             {!isProUser && user && (
                 <CardFooter>
-                    <Button className="w-full" disabled>Upgrade to Pro to Add Affirmations</Button>
+                    <Button className="w-full">Upgrade to Pro to Add Affirmations</Button>
                 </CardFooter>
              )}
         </Card>

@@ -181,61 +181,59 @@ export function IntentionSetter() {
   };
 
   return (
-    <div className="relative h-full w-full">
-        <div ref={mountRef} className="absolute inset-0 z-0" />
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-lg space-y-8">
-                <Card className="bg-background/80 backdrop-blur-sm">
-                    <CardHeader>
-                    <CardTitle className="font-headline flex items-center gap-2">
-                        <Sunrise className="text-accent" />
-                        What is your intention for today?
-                    </CardTitle>
-                    <CardDescription>
-                        Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on.
-                    </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <Textarea
-                        placeholder="e.g., To be present in every conversation, to complete my most important task, to drink more water..."
-                        value={intention}
-                        onChange={e => setIntention(e.target.value)}
-                        className="min-h-[100px]"
-                        disabled={!user || isLoading}
-                        />
-                        <Button type="submit" className="w-full" disabled={!user || isLoading}>
-                        {isLoading ? (
-                            <Loader2 className="animate-spin" />
-                        ) : (
-                            'Set My Intention'
-                        )}
-                        </Button>
-                    </form>
-                    </CardContent>
-                </Card>
+    <div className="flex flex-col h-full w-full items-center">
+      <div ref={mountRef} className="w-full max-w-3xl h-[250px] rounded-lg bg-card border mb-8" />
+      <div className="w-full max-w-lg space-y-8">
+          <Card>
+              <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                  <Sunrise className="text-accent" />
+                  What is your intention for today?
+              </CardTitle>
+              <CardDescription>
+                  Set a clear goal or focus for your day. The AI will give you a little boost, remembering your past goals to cheer you on.
+              </CardDescription>
+              </CardHeader>
+              <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                  <Textarea
+                  placeholder="e.g., To be present in every conversation, to complete my most important task, to drink more water..."
+                  value={intention}
+                  onChange={e => setIntention(e.target.value)}
+                  className="min-h-[100px]"
+                  disabled={!user || isLoading}
+                  />
+                  <Button type="submit" className="w-full" disabled={!user || isLoading}>
+                  {isLoading ? (
+                      <Loader2 className="animate-spin" />
+                  ) : (
+                      'Set My Intention'
+                  )}
+                  </Button>
+              </form>
+              </CardContent>
+          </Card>
 
-                {(isLoading || response) && (
-                    <Card className="bg-secondary/50 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="font-headline text-base flex items-center gap-2">
-                            <Sparkles className="text-accent" />
-                            Your Daily Boost
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {isLoading && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Loader2 className="animate-spin h-4 w-4" />
-                                <p>Generating your encouragement...</p>
-                            </div>
-                        )}
-                        {response && <p className="text-lg italic">{response}</p>}
-                    </CardContent>
-                    </Card>
-                )}
-            </div>
-        </div>
+          {(isLoading || response) && (
+              <Card className="bg-secondary/50">
+              <CardHeader>
+                  <CardTitle className="font-headline text-base flex items-center gap-2">
+                      <Sparkles className="text-accent" />
+                      Your Daily Boost
+                  </CardTitle>
+              </CardHeader>
+              <CardContent>
+                  {isLoading && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="animate-spin h-4 w-4" />
+                          <p>Generating your encouragement...</p>
+                      </div>
+                  )}
+                  {response && <p className="text-lg italic">{response}</p>}
+              </CardContent>
+              </Card>
+          )}
+      </div>
     </div>
   );
 }

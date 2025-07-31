@@ -281,11 +281,11 @@ export function GratitudeJar() {
         </AlertDialogContent>
     </AlertDialog>
 
-    <div className="relative h-full w-full">
-        <div ref={mountRef} className="absolute inset-0 z-0" />
-        <div className="absolute inset-0 z-10 grid md:grid-cols-3 gap-8 p-4">
+    <div className="flex flex-col h-full w-full">
+        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card border mb-8" />
+        <div className="grid md:grid-cols-3 gap-8">
             <div className="md:col-span-1">
-                <Card className="bg-background/80 backdrop-blur-sm">
+                <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2">
                     <Plus className="text-accent" /> Add Gratitude
@@ -334,7 +334,7 @@ export function GratitudeJar() {
             </div>
 
             <div className="md:col-span-2">
-                <Card className="min-h-[400px] bg-background/80 backdrop-blur-sm">
+                <Card className="min-h-[400px]">
                 <CardHeader>
                     <div className='flex justify-between items-start'>
                         <div>

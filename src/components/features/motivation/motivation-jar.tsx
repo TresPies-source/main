@@ -252,82 +252,80 @@ export function MotivationJar() {
   }
 
   return (
-    <div className="relative h-full w-full">
-        <div ref={mountRef} className="absolute inset-0 z-0" />
-        <div className="absolute inset-0 z-10 p-4 flex flex-col items-center justify-center">
-            <div className="space-y-8 w-full max-w-lg">
-                 <Card className="text-center shadow-lg bg-background/80 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="font-headline flex items-center justify-center gap-2">
-                        <Sparkles className="text-accent" /> A Dose of Motivation
-                        </CardTitle>
-                        <CardDescription>Click the button for a burst of inspiration from your collection.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center gap-6">
-                        <div className="min-h-[100px] flex items-center justify-center p-4">
-                            {currentQuote ? (
-                                <blockquote className="text-xl italic font-medium text-center">
-                                "\"{currentQuote}\""
-                                </blockquote>
-                            ) : (
-                                <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />
-                            )}
-                        </div>
-                        <Button onClick={drawQuote} size="lg">
-                        <RefreshCw className="mr-2 h-4 w-4" /> Draw Another
-                        </Button>
-                    </CardContent>
-                </Card>
+    <div className="flex flex-col h-full w-full items-center">
+      <div ref={mountRef} className="w-full max-w-3xl h-[250px] rounded-lg bg-card border mb-8" />
+      <div className="space-y-8 w-full max-w-lg">
+           <Card className="text-center shadow-lg">
+              <CardHeader>
+                  <CardTitle className="font-headline flex items-center justify-center gap-2">
+                  <Sparkles className="text-accent" /> A Dose of Motivation
+                  </CardTitle>
+                  <CardDescription>Click the button for a burst of inspiration from your collection.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center gap-6">
+                  <div className="min-h-[100px] flex items-center justify-center p-4">
+                      {currentQuote ? (
+                          <blockquote className="text-xl italic font-medium text-center">
+                          "\"{currentQuote}\""
+                          </blockquote>
+                      ) : (
+                          <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />
+                      )}
+                  </div>
+                  <Button onClick={drawQuote} size="lg">
+                  <RefreshCw className="mr-2 h-4 w-4" /> Draw Another
+                  </Button>
+              </CardContent>
+          </Card>
 
-                 <Card className="bg-background/80 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="font-headline flex items-center gap-2">
-                            <Wand2 className="text-accent" /> Your Custom Affirmations
-                        </CardTitle>
-                        <CardDescription>
-                            Add your own personal quotes, mantras, and affirmations to the jar.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleAddAffirmation} className="flex gap-2">
-                            <Input 
-                                placeholder="e.g., I am capable and strong."
-                                value={newAffirmation}
-                                onChange={(e) => setNewAffirmation(e.target.value)}
-                                disabled={!user || isSubmitting}
-                            />
-                            <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
-                                {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
-                            </Button>
-                        </form>
-                        <Separator className="my-4" />
-                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                            {user ? (
-                                customAffirmations.length > 0 ? (
-                                    customAffirmations.map(affirmation => (
-                                        <div key={affirmation.id} className="group flex items-center justify-between p-3 bg-secondary/50 rounded-md">
-                                            <p className="text-sm">{affirmation.text}</p>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteAffirmation(affirmation.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-muted-foreground text-center py-8">
-                                        Your custom affirmations will appear here.
-                                    </p>
-                                )
+           <Card>
+              <CardHeader>
+                  <CardTitle className="font-headline flex items-center gap-2">
+                      <Wand2 className="text-accent" /> Your Custom Affirmations
+                  </CardTitle>
+                  <CardDescription>
+                      Add your own personal quotes, mantras, and affirmations to the jar.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <form onSubmit={handleAddAffirmation} className="flex gap-2">
+                      <Input 
+                          placeholder="e.g., I am capable and strong."
+                          value={newAffirmation}
+                          onChange={(e) => setNewAffirmation(e.target.value)}
+                          disabled={!user || isSubmitting}
+                      />
+                      <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
+                          {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
+                      </Button>
+                  </form>
+                  <Separator className="my-4" />
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                      {user ? (
+                          customAffirmations.length > 0 ? (
+                              customAffirmations.map(affirmation => (
+                                  <div key={affirmation.id} className="group flex items-center justify-between p-3 bg-secondary/50 rounded-md">
+                                      <p className="text-sm">{affirmation.text}</p>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteAffirmation(affirmation.id)}>
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  </div>
+                              ))
+                          ) : (
+                              <p className="text-sm text-muted-foreground text-center py-8">
+                                  Your custom affirmations will appear here.
+                              </p>
+                          )
 
-                            ) : (
-                                <p className="text-sm text-muted-foreground text-center py-8">
-                                    Sign in to manage your affirmations.
-                                </p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
+                      ) : (
+                          <p className="text-sm text-muted-foreground text-center py-8">
+                              Sign in to manage your affirmations.
+                          </p>
+                      )}
+                  </div>
+              </CardContent>
+          </Card>
+      </div>
     </div>
   );
 }

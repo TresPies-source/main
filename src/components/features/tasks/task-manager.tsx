@@ -465,11 +465,11 @@ export function TaskManager() {
         )}
     </AlertDialog>
 
-     <div className="relative h-full w-full">
-        <div ref={mountRef} className="absolute inset-0 z-0" />
-        <div className="absolute inset-0 z-10 grid md:grid-cols-2 gap-8 p-4">
+     <div className="flex flex-col h-full w-full">
+        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card border mb-8" />
+        <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-                <Card className="bg-background/80 backdrop-blur-sm">
+                <Card>
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
@@ -527,7 +527,7 @@ export function TaskManager() {
                 </Card>
             </div>
             <div className="relative">
-                <Card className="h-full bg-background/80 backdrop-blur-sm flex flex-col">
+                <Card className="h-full flex flex-col">
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <CardTitle className="font-headline">Your Tasks</CardTitle>

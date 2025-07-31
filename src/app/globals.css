@@ -76,7 +76,7 @@
     --accent-foreground: 48 33% 94%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 10% 18%;
+    --border: 210 7% 30%;
     --input: 210 7% 25%;
     --ring: 90 20% 67%;
   }
@@ -120,7 +120,7 @@
     --accent-foreground: 226 55% 11%;
     --destructive: 4 82% 78%;
     --destructive-foreground: 226 55% 11%;
-    --border: 226 55% 11%;
+    --border: 226 55% 25%;
     --input: 226 55% 21%;
     --ring: 355 79% 79%;
   }
@@ -164,7 +164,7 @@
     --accent-foreground: 215 28% 17%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
-    --border: 215 28% 17%;
+    --border: 215 28% 25%;
     --input: 215 28% 27%;
     --ring: 165 67% 76%;
   }

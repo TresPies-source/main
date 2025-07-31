@@ -33,7 +33,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="kyoto-garden"
-          enableSystem
+          enableSystem={false}
           disableTransitionOnChange
         >
           <AuthProvider>

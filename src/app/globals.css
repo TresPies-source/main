@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Default theme: Kyoto Garden Light as fallback */
+    /* Default theme: Kyoto Garden Light */
     --background: 48 33% 94%; /* Parchment */
     --foreground: 210 10% 23%; /* Deep Charcoal */
     --card: 48 33% 99%;
@@ -33,7 +33,7 @@
   }
 
   .dark {
-    /* Default dark theme: Kyoto Garden Dark as fallback */
+    /* Default dark theme: Kyoto Garden Dark */
     --background: 210 10% 18%; /* Deep Charcoal */
     --foreground: 48 33% 94%; /* Parchment */
     --card: 210 10% 23%;
@@ -60,7 +60,6 @@
     --chart-5: 340 75% 55%;
   }
 }
-
 
 @layer base {
   body {

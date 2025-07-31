@@ -26,9 +26,17 @@ type Win = {
   createdAt: { seconds: number; nanoseconds: number; };
 };
 
+const initialWins: Win[] = [
+    { id: 'w1', text: 'Finished the presentation ahead of schedule', createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } },
+    { id: 'w2', text: 'Went for a 30-minute run', createdAt: { seconds: Date.now() / 1000 - 1, nanoseconds: 0 } },
+    { id: 'w3', text: 'Cooked a healthy meal instead of ordering out', createdAt: { seconds: Date.now() / 1000 - 2, nanoseconds: 0 } },
+    { id: 'w4', text: 'Cleaned out the garage', createdAt: { seconds: Date.now() / 1000 - 3, nanoseconds: 0 } },
+    { id: 'w5', text: 'Read 50 pages of a book', createdAt: { seconds: Date.now() / 1000 - 4, nanoseconds: 0 } },
+];
+
 export function WinJar() {
   const { user } = useAuth();
-  const [wins, setWins] = useState<Win[]>([]);
+  const [wins, setWins] = useState<Win[]>(initialWins);
   const [newWin, setNewWin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
@@ -151,7 +159,7 @@ export function WinJar() {
 
   useEffect(() => {
     if (!user) {
-      setWins([]);
+      setWins(initialWins);
       return;
     }
 
@@ -162,6 +170,10 @@ export function WinJar() {
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (querySnapshot.empty) {
+            setWins(initialWins);
+            return;
+        }
       const fetchedWins: Win[] = [];
       querySnapshot.forEach((doc) => {
         fetchedWins.push({ ...doc.data(), id: doc.id } as Win);
@@ -209,49 +221,63 @@ export function WinJar() {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
-      <Card className="shadow-lg w-full max-w-lg mx-auto">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <Trophy className="text-accent" /> Log Your Accomplishments
-          </CardTitle>
-          <CardDescription>
-            A dedicated space for you to quickly record your daily or weekly wins.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAddWin} className="space-y-4">
-            <Textarea
-              placeholder="e.g., Finished the presentation, went for a run, cooked a healthy meal..."
-              value={newWin}
-              onChange={e => setNewWin(e.target.value)}
-              className="min-h-[100px]"
-              disabled={!user || isSubmitting}
-            />
-            <Button type="submit" className="w-full" disabled={!user || isSubmitting}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Win</>}
-            </Button>
-          </form>
-          <ScrollArea className="mt-6 max-h-60">
-            <div className="space-y-2 pr-4">
-              {user ? (
-                wins.length > 0 ? wins.map((win) => (
-                  <div key={win.id} className="group flex items-center justify-between gap-3 text-sm p-3 bg-secondary/50 rounded-md">
-                    <span className='flex-1'>{win.text}</span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteWin(win.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )) : (
-                  <p className="text-sm text-muted-foreground text-center py-8">No wins logged yet. Add one above!</p>
-                )
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">Sign in to log your wins.</p>
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+      <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+        <div ref={mountRef} className="w-full h-full" />
+      </div>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="md:col-span-1">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <Trophy className="text-accent" /> Log Your Accomplishments
+              </CardTitle>
+              <CardDescription>
+                A dedicated space for you to quickly record your daily or weekly wins.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddWin} className="space-y-4">
+                <Textarea
+                  placeholder="e.g., Finished the presentation, went for a run, cooked a healthy meal..."
+                  value={newWin}
+                  onChange={e => setNewWin(e.target.value)}
+                  className="min-h-[100px]"
+                  disabled={!user || isSubmitting}
+                />
+                <Button type="submit" className="w-full" disabled={!user || isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Win</>}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="md:col-span-1">
+          <Card className="min-h-[400px]">
+            <CardHeader>
+              <CardTitle className="font-headline">Your Wins</CardTitle>
+              <CardDescription>A list of your recent accomplishments.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-2 pr-4">
+                  {
+                    wins.length > 0 ? wins.map((win) => (
+                      <div key={win.id} className="group flex items-center justify-between gap-3 text-sm p-3 bg-secondary/50 rounded-md">
+                        <span className='flex-1'>{win.text}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteWin(win.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )) : (
+                      <p className="text-sm text-muted-foreground text-center py-8">No wins logged yet. Add one above!</p>
+                    )
+                  }
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

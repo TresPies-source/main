@@ -60,11 +60,18 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
     createdAt: Timestamp;
 };
 
+const initialTasks: Task[] = [
+    { id: 't1', task: 'Develop the new feature for the main project', category: 'Work', priority: 9, completed: false, createdAt: Timestamp.now() },
+    { id: 't2', task: 'Schedule a dentist appointment', category: 'Health', priority: 7, completed: false, createdAt: Timestamp.now() },
+    { id: 't3', task: 'Buy groceries for the week', category: 'Errand', priority: 5, completed: true, createdAt: Timestamp.now() },
+    { id: 't4', task: 'Call mom for her birthday', category: 'Personal', priority: 10, completed: false, createdAt: Timestamp.now() },
+    { id: 't5', task: 'Read one chapter of the new book', category: 'Learning', priority: 4, completed: false, createdAt: Timestamp.now() },
+];
 
 export function TaskManager() {
   const { user, googleAccessToken, connectGoogle } = useAuth();
   const [taskInput, setTaskInput] = useState('');
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
@@ -101,7 +108,7 @@ export function TaskManager() {
     scene.add(directionalLight);
 
     const geometry = new THREE.BoxGeometry(2, 2, 2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
+    const material = new THREE.MeshStandardMaterial({ color: 0x6B83A3 });
     const model = new THREE.Mesh(geometry, material);
     modelRef.current = model;
     scene.add(model);
@@ -109,7 +116,7 @@ export function TaskManager() {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    const originalColor = new THREE.Color(0x8BAA7A);
+    const originalColor = new THREE.Color(0x6B83A3);
     const clickColor = new THREE.Color(0xE5989B);
     
     const animationDuration = 0.3; 
@@ -200,12 +207,16 @@ export function TaskManager() {
 
   useEffect(() => {
     if (!user) {
-      setTasks([]);
+      setTasks(initialTasks);
       return;
     }
 
     const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (querySnapshot.empty) {
+            setTasks(initialTasks);
+            return;
+        }
       const fetchedTasks: Task[] = [];
       querySnapshot.forEach((doc) => {
         fetchedTasks.push({ ...doc.data(), id: doc.id } as Task);
@@ -490,7 +501,9 @@ export function TaskManager() {
     </AlertDialog>
 
      <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
+        <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+            <div ref={mountRef} className="w-full h-full" />
+        </div>
         <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
                 <Card>
@@ -639,12 +652,12 @@ export function TaskManager() {
                         </div>
                     </div>
                     <CardDescription>
-                        {user ? (tasks.length > 0 ? `You have ${pendingTasks.length} pending task(s).` : "Your task jar is empty. Add some tasks!") : "Sign in to see your tasks."}
+                        {tasks.length > 0 ? `You have ${pendingTasks.length} pending task(s).` : "Your task jar is empty. Add some tasks!"}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto">
                     <div className="space-y-3 pr-2">
-                    {user ? (
+                    {
                         tasks.length > 0 ? (
                         <>
                         {pendingTasks.map((item) => (
@@ -696,11 +709,7 @@ export function TaskManager() {
                             <p>Tasks will appear here once processed.</p>
                         </div>
                         )
-                    ) : (
-                        <div className="text-center text-muted-foreground h-full flex flex-col justify-center items-center">
-                            <p>Please sign in to manage your tasks.</p>
-                        </div>
-                    )}
+                    }
                     </div>
                 </CardContent>
                 </Card>

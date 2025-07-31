@@ -21,58 +21,27 @@ import { Separator } from '@/components/ui/separator';
 import { addCustomAffirmation, deleteCustomAffirmation } from './motivation-actions';
 
 const defaultQuotes = [
-  "You don’t always get what you wish for; you get what you work for.",
-  "Believe you can, and you’re already halfway there.",
-  "Expect things of yourself before you can do them.",
-  "Progress, not perfection.",
-  "A small step today leads to a big leap tomorrow.",
-  "Done is better than perfect.",
-  "If not now, when?",
-  "Your future self will thank you for starting today.",
-  "Motivation follows action—just begin.",
-  "One minute of work leads to many more.",
-  "Break it down and build it up.",
-  "You have the power in this moment.",
-  "Consistency beats intensity over time.",
-  "Stop thinking. Start doing.",
-  "Every task completed is a win.",
-  "You’re closer than you were yesterday.",
-  "Actions create momentum.",
-  "Focus on the next right step.",
-  "Aim for progress, not excuses.",
-  "The journey of a thousand miles begins with a single click.",
-  "The difference between the ordinary and the extraordinary is that little extra.",
-  "The pain you feel today is the strength you will feel tomorrow.",
-  "For every challenge encountered, there is an opportunity for growth.",
-  "The secret of success is to do the common things uncommonly well.",
-  "There are no shortcuts to any place worth going.",
-  "The harder you work for something, the greater you'll feel when you finally achieve it.",
-  "Life has two rules. Never quit, and always remember rule number one.",
-  "The fact that you aren't where you want to be should be enough motivation.",
-  "It always seems impossible until it's done.",
-  "I don't regret the things I've done, I regret the things I didn't do when I had a chance.",
-  "Excuses don't get results.",
-  "There are no traffic jams on the extra mile.",
-  "If it's important to you, you'll find a way. If not, you'll find an excuse.",
-  "It’s not going to be easy, but it’s going to be worth it.",
-  "You don’t drown by falling in the water; you drown by staying there.",
-  "Challenges are what make life interesting. Overcoming them is what makes life meaningful.",
-  "There’s no substitute for hard work.",
-  "I find that the harder I work, the more luck I seem to have.",
-  "The expert in everything was once a beginner.",
-  "If you’re going through hell, keep going.",
-  "Some people dream of accomplishing great things. Others stay awake and make it happen.",
-  "It’s not about how bad you want it, it’s about how hard you’re willing to work for it.",
-  "The difference between a stumbling block and a stepping stone is how high you raise your foot.",
+  "The secret of getting ahead is getting started.",
+  "The only way to do great work is to love what you do.",
+  "Believe you can and you're halfway there.",
+  "Act as if what you do makes a difference. It does.",
+  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+  "Don't watch the clock; do what it does. Keep going.",
+  "The future depends on what you do today.",
+  "You are braver than you believe, stronger than you seem, and smarter than you think.",
+  "The best way to predict the future is to create it.",
+  "Perfection is not attainable, but if we chase perfection we can catch excellence.",
   "You don’t have to be great to start, but you have to start to be great.",
-  "Never do tomorrow what you can do today.",
-  "Procrastination is the thief of time.",
-  "Push yourself because no one else is going to do it for you.",
-  "Strive for progress, not perfection.",
-  "Don’t let what you cannot do interfere with what you can do.",
-  "The secret to getting ahead is getting started.",
-  "Failure is the opportunity to begin again more intelligently.",
-  "Success is the sum of small efforts repeated day in and day out."
+  "A little progress each day adds up to big results.",
+  "The pain you feel today will be the strength you feel tomorrow.",
+  "Focus on progress, not perfection.",
+  "It always seems impossible until it's done.",
+  "The harder you work for something, the greater you'll feel when you achieve it.",
+  "Don't let yesterday take up too much of today.",
+  "The journey of a thousand miles begins with a single step.",
+  "You have to be odd to be number one.",
+  "Your limitation is only your imagination.",
+  "Push yourself, because no one else is going to do it for you."
 ];
 
 type Affirmation = {
@@ -206,24 +175,6 @@ export function MotivationJar() {
     };
   }, [playAddAnimation]);
 
-  useEffect(() => {
-    if (!user) {
-      setCustomAffirmations([]);
-      const randomIndex = Math.floor(Math.random() * defaultQuotes.length);
-      setCurrentQuote(defaultQuotes[randomIndex]);
-      return;
-    }
-    const q = query(collection(db, 'affirmations'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const userAffirmations: Affirmation[] = [];
-        snapshot.forEach(doc => {
-            userAffirmations.push({ ...doc.data(), id: doc.id } as Affirmation);
-        });
-        setCustomAffirmations(userAffirmations);
-    });
-    return () => unsubscribe();
-  }, [user]);
-
   const drawQuote = () => {
     const allQuotes = [...defaultQuotes, ...customAffirmations.map(a => a.text)];
     if (allQuotes.length === 0) {
@@ -236,9 +187,25 @@ export function MotivationJar() {
   };
   
   useEffect(() => {
+    if (!user) {
+      setCustomAffirmations([]);
+    } else {
+        const q = query(collection(db, 'affirmations'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const userAffirmations: Affirmation[] = [];
+            snapshot.forEach(doc => {
+                userAffirmations.push({ ...doc.data(), id: doc.id } as Affirmation);
+            });
+            setCustomAffirmations(userAffirmations);
+        });
+        return () => unsubscribe();
+    }
+  }, [user]);
+
+  useEffect(() => {
     drawQuote();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [customAffirmations]);
 
   const handleAddAffirmation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,78 +240,84 @@ export function MotivationJar() {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
-      <div className="space-y-8 w-full max-w-lg mx-auto">
-        <Card className="text-center shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center justify-center gap-2">
-              <Sparkles className="text-accent" /> A Dose of Motivation
-            </CardTitle>
-            <CardDescription>Click the button for a burst of inspiration from your collection.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-6">
-            <div className="min-h-[100px] flex items-center justify-center p-4">
-              {currentQuote ? (
-                <blockquote className="text-xl italic font-medium text-center">
-                  "\"{currentQuote}\""
-                </blockquote>
-              ) : (
-                <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />
-              )}
-            </div>
-            <Button onClick={drawQuote} size="lg">
-              <RefreshCw className="mr-2 h-4 w-4" /> Draw Another
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">
-              <Wand2 className="text-accent" /> Your Custom Affirmations
-            </CardTitle>
-            <CardDescription>
-              Add your own personal quotes, mantras, and affirmations to the jar.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAddAffirmation} className="flex gap-2">
-              <Input
-                placeholder="e.g., I am capable and strong."
-                value={newAffirmation}
-                onChange={(e) => setNewAffirmation(e.target.value)}
-                disabled={!user || isSubmitting}
-              />
-              <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
-                {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
+      <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+        <div ref={mountRef} className="w-full h-full" />
+      </div>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="md:col-span-1">
+          <Card className="text-center shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center justify-center gap-2">
+                <Sparkles className="text-accent" /> A Dose of Motivation
+              </CardTitle>
+              <CardDescription>Click the button for a burst of inspiration from your collection.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-6">
+              <div className="min-h-[100px] flex items-center justify-center p-4">
+                {currentQuote ? (
+                  <blockquote className="text-xl italic font-medium text-center">
+                    "\"{currentQuote}\""
+                  </blockquote>
+                ) : (
+                  <div className="h-8 w-3/4 animate-pulse bg-muted rounded-md" />
+                )}
+              </div>
+              <Button onClick={drawQuote} size="lg">
+                <RefreshCw className="mr-2 h-4 w-4" /> Draw Another
               </Button>
-            </form>
-            <Separator className="my-4" />
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-              {user ? (
-                customAffirmations.length > 0 ? (
-                  customAffirmations.map(affirmation => (
-                    <div key={affirmation.id} className="group flex items-center justify-between p-3 bg-secondary/50 rounded-md">
-                      <p className="text-sm">{affirmation.text}</p>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteAffirmation(affirmation.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <Wand2 className="text-accent" /> Your Custom Affirmations
+              </CardTitle>
+              <CardDescription>
+                Add your own personal quotes, mantras, and affirmations to the jar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddAffirmation} className="flex gap-2">
+                <Input
+                  placeholder="e.g., I am capable and strong."
+                  value={newAffirmation}
+                  onChange={(e) => setNewAffirmation(e.target.value)}
+                  disabled={!user || isSubmitting}
+                />
+                <Button type="submit" size="icon" aria-label="Add Affirmation" disabled={!user || isSubmitting}>
+                  {isSubmitting ? <Loader2 className='animate-spin' /> : <Plus className="h-4 w-4" />}
+                </Button>
+              </form>
+              <Separator className="my-4" />
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {user ? (
+                  customAffirmations.length > 0 ? (
+                    customAffirmations.map(affirmation => (
+                      <div key={affirmation.id} className="group flex items-center justify-between p-3 bg-secondary/50 rounded-md">
+                        <p className="text-sm">{affirmation.text}</p>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => handleDeleteAffirmation(affirmation.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Your custom affirmations will appear here.
+                    </p>
+                  )
+
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    Your custom affirmations will appear here.
+                    Sign in to manage your affirmations.
                   </p>
-                )
-
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Sign in to manage your affirmations.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

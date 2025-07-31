@@ -27,11 +27,10 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Info, Power, PowerOff, Compass, Trash2, Loader2, Download, Zap, Palette } from "lucide-react";
+import { Info, Power, PowerOff, Compass, Trash2, Loader2, Download, Zap } from "lucide-react";
 import { useState } from "react";
 import { exportToDrive } from "@/ai/flows/export-to-drive";
 import { Badge } from "@/components/ui/badge";
-import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 
 function AccountCard() {
     const { user, loading } = useAuth();
@@ -133,24 +132,6 @@ function IntegrationsCard() {
     </Card>
   )
 }
-
-function AppearanceCard() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Palette />
-                    Appearance
-                </CardTitle>
-                <CardDescription>Customize the look and feel of your ZenJar.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ThemeSwitcher />
-            </CardContent>
-        </Card>
-    );
-}
-
 
 function DataManagementCard() {
   const { user, signOut, googleAccessToken, connectGoogle } = useAuth();
@@ -311,7 +292,6 @@ export default function SettingsPage() {
       <div className="space-y-6 max-w-3xl">
         <AccountCard />
         <SubscriptionCard />
-        <AppearanceCard />
         <IntegrationsCard />
         <Card>
             <CardHeader>

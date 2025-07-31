@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  .theme-kyoto-garden {
+  :root {
     --background: 48 33% 94%; /* Parchment */
     --foreground: 210 10% 23%; /* Deep Charcoal */
 
@@ -46,7 +46,7 @@
     --chart-5: 27 87% 67%;
   }
 
-  .dark .theme-kyoto-garden {
+  .dark {
     --background: 210 10% 18%; /* Deep Charcoal */
     --foreground: 48 33% 94%; /* Parchment */
 
@@ -86,8 +86,52 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+  
+  .kyoto-garden {
+    --background: 48 33% 94%; /* Parchment */
+    --foreground: 210 10% 23%; /* Deep Charcoal */
+    --card: 48 33% 99%;
+    --card-foreground: 210 10% 23%;
+    --popover: 48 33% 99%;
+    --popover-foreground: 210 10% 23%;
+    --primary: 210 10% 40%; /* Slate Gray */
+    --primary-foreground: 48 33% 96%;
+    --secondary: 48 20% 90%;
+    --secondary-foreground: 210 10% 23%;
+    --muted: 48 20% 90%;
+    --muted-foreground: 210 7% 45%;
+    --accent: 90 20% 57%; /* Matcha Green */
+    --accent-foreground: 210 10% 23%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 48 10% 80%;
+    --input: 48 10% 80%;
+    --ring: 90 20% 57%;
+  }
 
-  .theme-twilight-gradient {
+  .dark .kyoto-garden {
+    --background: 210 10% 18%; /* Deep Charcoal */
+    --foreground: 48 33% 94%; /* Parchment */
+    --card: 210 10% 23%; /* Slightly lighter charcoal */
+    --card-foreground: 48 33% 94%;
+    --popover: 210 10% 18%;
+    --popover-foreground: 48 33% 94%;
+    --primary: 210 10% 60%; /* Lighter Slate Gray */
+    --primary-foreground: 210 10% 15%;
+    --secondary: 210 7% 25%;
+    --secondary-foreground: 48 33% 94%;
+    --muted: 210 7% 25%;
+    --muted-foreground: 210 7% 60%;
+    --accent: 90 20% 67%; /* Lighter Matcha Green */
+    --accent-foreground: 48 33% 94%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 7% 25%;
+    --input: 210 7% 25%;
+    --ring: 90 20% 67%;
+  }
+  
+  .twilight-gradient {
     --background: 220 23% 95%; /* Cloud White */
     --foreground: 226 55% 21%; /* Midnight Blue */
     --card: 220 23% 100%;
@@ -109,7 +153,7 @@
     --ring: 234 96% 85%;
   }
 
-  .dark .theme-twilight-gradient {
+  .dark .twilight-gradient {
     --background: 226 55% 21%; /* Midnight Blue */
     --foreground: 0 0% 100%;
     --card: 226 55% 26%;
@@ -131,7 +175,7 @@
     --ring: 4 82% 78%;
   }
 
-  .theme-fresh-mint {
+  .fresh-mint {
     --background: 0 0% 100%;
     --foreground: 215 28% 17%; /* Dark Slate */
     --card: 0 0% 98%;
@@ -153,7 +197,7 @@
     --ring: 170 50% 74%;
   }
 
-  .dark .theme-fresh-mint {
+  .dark .fresh-mint {
     --background: 215 28% 17%; /* Dark Slate */
     --foreground: 220 14% 96%;
     --card: 215 28% 22%;

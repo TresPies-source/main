@@ -22,10 +22,13 @@ import {
   Sparkles,
   Sunrise,
   Info,
-  Compass
+  Compass,
+  Palette
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
+import { ThemeSwitcher } from "@/components/theme/theme-switcher";
+import { ModeToggle } from "@/components/theme/mode-toggle";
 
 const menuItems = [
   { href: "/", label: "Growth", icon: LayoutDashboard },
@@ -71,6 +74,15 @@ export default function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-2">
         <SidebarMenu>
+            <SidebarMenuItem>
+                <div className="group-data-[collapsible=icon]:hidden flex items-center gap-1 w-full p-2">
+                    <ThemeSwitcher />
+                    <ModeToggle />
+                </div>
+                 <div className="group-data-[collapsible=icon]:block hidden">
+                    <ThemeSwitcher />
+                 </div>
+            </SidebarMenuItem>
             {bottomMenuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton

@@ -11,11 +11,17 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const themes = [
-    { name: 'Kyoto Garden', value: 'theme-kyoto-garden' },
-    { name: 'Twilight Gradient', value: 'theme-twilight-gradient' },
-    { name: 'Fresh Mint', value: 'theme-fresh-mint' },
+    { name: 'Kyoto Garden', value: 'kyoto-garden' },
+    { name: 'Twilight Gradient', value: 'twilight-gradient' },
+    { name: 'Fresh Mint', value: 'fresh-mint' },
 ];
 
 export function ThemeSwitcher() {
@@ -24,26 +30,32 @@ export function ThemeSwitcher() {
     const currentThemeName = themes.find(t => t.value === theme)?.name || 'Kyoto Garden';
 
     return (
-        <div>
-            <h3 className="text-sm font-medium mb-2">Color Theme</h3>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
-                        <span>{currentThemeName}</span>
-                        <Palette className="ml-2 h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
-                    {themes.map((t) => (
-                         <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
-                            <div className="flex items-center justify-between w-full">
-                                <span>{t.name}</span>
-                                {theme === t.value && <Check className="h-4 w-4" />}
-                            </div>
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+        <DropdownMenu>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="w-full">
+                                <Palette />
+                                <span className="sr-only">Switch Theme</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" align="center">
+                        <p>Switch Theme</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            <DropdownMenuContent align="end">
+                {themes.map((t) => (
+                     <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
+                        <div className="flex items-center justify-between w-full">
+                            <span>{t.name}</span>
+                            {theme === t.value && <Check className="h-4 w-4" />}
+                        </div>
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Download, Upload, CalendarPlus, ListChecks } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +44,7 @@ import {
   categorizeAndPrioritizeTasks,
   type CategorizeAndPrioritizeTasksOutput,
 } from '@/ai/flows/categorize-and-prioritize-tasks';
+import { generateSubtasks } from '@/ai/flows/generate-subtasks';
 import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
 import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +64,7 @@ export function TaskManager() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [drawnTask, setDrawnTask] = useState<Task | null>(null);
+  const [subtaskState, setSubtaskState] = useState<{task: Task | null, loading: boolean, subtasks: string[]}>({ task: null, loading: false, subtasks: [] });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -249,6 +251,17 @@ export function TaskManager() {
     setDrawnTask(null); // Close the dialog
   }
 
+  const handleGenerateSubtasks = async (task: Task) => {
+    setSubtaskState({ task: task, loading: true, subtasks: [] });
+    try {
+        const result = await generateSubtasks({ task: task.task });
+        setSubtaskState({ task: task, loading: false, subtasks: result.subtasks });
+    } catch (error) {
+        toast({ title: 'AI Error', description: 'Could not generate subtasks. Please try again.', variant: 'destructive' });
+        setSubtaskState({ task: null, loading: false, subtasks: [] });
+    }
+  }
+
 
   const getPriorityColor = (priority: number) => {
     if (priority >= 8) return 'bg-red-500';
@@ -260,6 +273,39 @@ export function TaskManager() {
   const completedTasks = tasks.filter(t => t.completed);
 
   return (
+    <>
+    <AlertDialog open={!!subtaskState.task} onOpenChange={(open) => !open && setSubtaskState({ task: null, loading: false, subtasks: [] })}>
+        {subtaskState.task && (
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="font-headline flex items-center gap-2">
+                        <Wand2 /> AI Generated Sub-tasks
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Here are some smaller steps to help you tackle: <span className="font-bold text-foreground">{subtaskState.task.task}</span>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                {subtaskState.loading ? (
+                    <div className="flex items-center justify-center h-24">
+                        <Loader2 className="animate-spin" />
+                    </div>
+                ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                        {subtaskState.subtasks.map((subtask, index) => (
+                            <div key={index} className="flex items-start gap-3 text-sm p-3 bg-secondary/50 rounded-md">
+                                <ListChecks className="h-4 w-4 mt-1 text-accent flex-shrink-0" />
+                                <span className='flex-1'>{subtask}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => setSubtaskState({ task: null, loading: false, subtasks: [] })}>Close</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        )}
+    </AlertDialog>
+
     <div className="grid gap-8 md:grid-cols-2">
       <div>
         <Card>
@@ -398,7 +444,10 @@ export function TaskManager() {
                         <p className="font-medium">{item.task}</p>
                         <Badge variant="outline" className="mt-1">{item.category}</Badge>
                       </div>
-                      <div className="text-sm font-bold">{item.priority}</div>
+                      <div className="text-sm font-bold mr-2">{item.priority}</div>
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSubtasks(item)} title="Break down with AI (Pro)">
+                          <Wand2 className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteTask(item.id)}>
                           <X className="h-4 w-4" />
                       </Button>
@@ -437,5 +486,6 @@ export function TaskManager() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

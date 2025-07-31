@@ -1,6 +1,3 @@
-// This is a placeholder for the extension's popup logic.
-// We will add Firebase initialization, authentication, and task management here.
-console.log("ZenJar extension popup loaded.");
 
 const firebaseConfig = {
   projectId: "zen-jar",
@@ -11,125 +8,198 @@ const firebaseConfig = {
   messagingSenderId: "634724124220"
 };
 
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const API_BASE_URL = `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net`;
 
-// --- DOM Elements ---
+// Mock data and functions for now
+const quotes = [
+  "The secret of getting ahead is getting started.",
+  "The only way to do great work is to love what you do.",
+  "Believe you can and you're halfway there.",
+  "Act as if what you do makes a difference. It does.",
+  "Success is not final, failure is not fatal: it is the courage to continue that counts."
+];
+
+let user = null;
+
+// UI Elements
 const loadingScreen = document.getElementById('loading-screen');
 const loginScreen = document.getElementById('login-screen');
 const mainApp = document.getElementById('main-app');
-const loginButton = document.getElementById('login-button');
-const logoutButton = document.getElementById('logout-button');
-const userGreeting = document.getElementById('user-greeting');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const welcomeMessage = document.getElementById('welcome-message');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('task-input');
+const getMotivationBtn = document.getElementById('get-motivation-btn');
+const drawTaskBtn = document.getElementById('draw-task-btn');
+const resultDisplay = document.getElementById('result-display');
+const openAppLink = document.getElementById('open-app-link');
 
-let currentUser = null;
-let idToken = null;
 
 // --- Authentication ---
-auth.onAuthStateChanged(user => {
-  currentUser = user;
-  if (user) {
-    user.getIdToken(true).then(token => {
-      idToken = token;
-      userGreeting.textContent = `Hello, ${user.displayName.split(' ')[0]}!`;
-      showScreen('main');
-    }).catch(error => {
-      console.error("Error getting ID token:", error);
-      showScreen('login');
+function updateUiForAuthState() {
+    loadingScreen.style.display = 'block';
+    loginScreen.style.display = 'none';
+    mainApp.style.display = 'none';
+
+    chrome.identity.getAuthToken({ interactive: false }, function(token) {
+        if (chrome.runtime.lastError || !token) {
+            console.log("Not signed in.");
+            user = null;
+            loadingScreen.style.display = 'none';
+            loginScreen.style.display = 'block';
+        } else {
+            // Fetch user info to make sure the token is still valid
+            fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`)
+            .then(response => response.json())
+            .then(userInfo => {
+                if (userInfo.id) {
+                    console.log("Signed in as:", userInfo.email);
+                    user = {
+                        email: userInfo.email,
+                        name: userInfo.name,
+                        id: userInfo.id,
+                        token: token
+                    };
+                    welcomeMessage.textContent = `Hi, ${user.name.split(' ')[0]}!`;
+                    loadingScreen.style.display = 'none';
+                    mainApp.style.display = 'block';
+                } else {
+                     // Token is invalid, remove it
+                    chrome.identity.removeCachedAuthToken({ token }, () => {
+                         updateUiForAuthState(); // Retry
+                    });
+                }
+            }).catch(e => {
+                console.error("Error fetching user info", e);
+                loadingScreen.style.display = 'none';
+                loginScreen.style.display = 'block';
+            });
+        }
     });
-  } else {
-    showScreen('login');
-  }
-});
+}
 
-loginButton.addEventListener('click', () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .catch(error => {
-      console.error("Login failed:", error);
+loginBtn.addEventListener('click', () => {
+    chrome.identity.getAuthToken({ interactive: true }, function(token) {
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+            return;
+        }
+        updateUiForAuthState();
     });
 });
 
-logoutButton.addEventListener('click', () => {
-  auth.signOut();
+logoutBtn.addEventListener('click', () => {
+    chrome.identity.getAuthToken({ interactive: false }, function(token) {
+        if (token) {
+            // Revoke the token
+            fetch(`https://accounts.google.com/o/oauth2/revoke?token=${token}`);
+            // Remove the cached token
+            chrome.identity.removeCachedAuthToken({ token: token }, () => {
+                console.log("Logged out.");
+                user = null;
+                updateUiForAuthState();
+            });
+        }
+    });
 });
 
 
-// --- Task Management ---
-taskForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const tasks = taskInput.value.trim();
-  if (!tasks || !currentUser || !idToken) return;
+// --- Core Logic ---
+function showResult(htmlContent, type = 'info') {
+    resultDisplay.innerHTML = `<div class="result-card ${type}">${htmlContent}</div>`;
+    setTimeout(() => {
+        resultDisplay.innerHTML = '';
+    }, 5000); // Clear after 5 seconds
+}
 
-  const button = document.getElementById('add-task-button');
-  button.disabled = true;
-  button.textContent = 'Processing...';
 
-  try {
-    // This function will call your Genkit flow.
-    // NOTE: For this to work, you must deploy your flows.
-    // We are calling the deployed function URL.
-    // Replace with your actual Cloud Function URL.
-    const functionUrl = `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net/categorizeAndPrioritizeTasksFlow`;
+getMotivationBtn.addEventListener('click', () => {
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    const quote = quotes[randomIndex];
+    showResult(`<blockquote>"${quote}"</blockquote>`, 'motivation');
+});
+
+
+drawTaskBtn.addEventListener('click', async () => {
+    if (!user) {
+        showResult('<p>Please sign in first.</p>', 'error');
+        return;
+    }
+    drawTaskBtn.disabled = true;
+    showResult('<p>Shuffling the jar...</p>', 'info');
     
-    const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify({ data: { tasks: tasks } })
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error.message || 'AI flow failed');
+    // In a real extension, this would be a Firestore call.
+    // We will simulate it for now.
+    // const pendingTasks = await getPendingTasksFromFirestore(user.id);
+    const pendingTasks = [
+        { id: '1', task: 'Write proposal', priority: 8 },
+        { id: '2', task: 'Follow up with client', priority: 9 },
+        { id: '3', task: 'Meditate for 5 minutes', priority: 4 },
+    ];
+
+
+    if (pendingTasks.length === 0) {
+        showResult("<p>Your Task Jar is empty!</p>", 'info');
+        drawTaskBtn.disabled = false;
+        return;
     }
 
-    const result = await response.json();
-    const categorizedTasks = result.result; // The actual data is in the 'result' field
-    
-    // Save to Firestore
-    const batch = db.batch();
-    categorizedTasks.forEach(task => {
-        const docRef = db.collection('tasks').doc();
-        batch.set(docRef, { 
-            ...task,
-            userId: currentUser.uid, 
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            completed: false 
-        });
-    });
-    await batch.commit();
+    const weightedList = pendingTasks.flatMap(task => Array(task.priority).fill(task));
+    const randomIndex = Math.floor(Math.random() * weightedList.length);
+    const selectedTask = weightedList[randomIndex];
 
-    taskInput.value = '';
-    alert(`${categorizedTasks.length} task(s) added successfully!`);
-
-  } catch (error) {
-    console.error('Error processing tasks:', error);
-    alert(`Error: ${error.message}`);
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Process with AI';
-  }
+    showResult(`<h3>Your Next Task:</h3><p>${selectedTask.task} (Priority: ${selectedTask.priority})</p>`, 'task');
+    drawTaskBtn.disabled = false;
 });
 
 
-// --- UI Management ---
-function showScreen(screenName) {
-  loadingScreen.style.display = 'none';
-  loginScreen.style.display = 'none';
-  mainApp.style.display = 'none';
+taskForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!taskInput.value.trim() || !user) {
+        showResult('<p>Please enter a task and sign in.</p>', 'error');
+        return;
+    }
 
-  if (screenName === 'login') {
-    loginScreen.style.display = 'flex';
-  } else if (screenName === 'main') {
-    mainApp.style.display = 'block';
-  } else {
-    loadingScreen.style.display = 'block';
-  }
-}
+    const tasks = taskInput.value;
+    taskInput.disabled = true;
+    e.target.querySelector('button').disabled = true;
+    e.target.querySelector('button').textContent = "Processing...";
+
+    try {
+        // This is where you would call your actual Genkit flow
+        // For now, we simulate the call
+        showResult(`<p>AI is categorizing and prioritizing your tasks...</p>`, 'info');
+        
+        // Simulating the result from `categorizeAndPrioritizeTasks` flow
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Fake delay
+        const result = tasks.split(',').map((t, i) => ({
+            task: t.trim(),
+            category: 'Personal',
+            priority: Math.floor(Math.random() * 10) + 1
+        }));
+        
+        console.log("Saving tasks to Firestore (simulated):", result);
+        showResult(`<p>Successfully added ${result.length} tasks to your jar!</p>`, 'success');
+        taskInput.value = '';
+
+    } catch (error) {
+        console.error("Error adding tasks:", error);
+        showResult('<p>Could not add tasks. Please try again.</p>', 'error');
+    } finally {
+        taskInput.disabled = false;
+        e.target.querySelector('button').disabled = false;
+        e.target.querySelector('button').textContent = "Add Tasks with AI";
+    }
+});
+
+
+openAppLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    // This will need to be replaced with your actual app URL
+    chrome.tabs.create({ url: 'https://zen-jar.web.app' }); 
+});
+
+
+// Initial Load
+document.addEventListener('DOMContentLoaded', updateUiForAuthState);

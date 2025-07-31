@@ -2,41 +2,49 @@
 <html>
 <head>
   <title>ZenJar</title>
-  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <div id="loading-screen" class="screen">
-    <p>Loading...</p>
+    <p>Loading ZenJar...</p>
   </div>
 
   <div id="login-screen" class="screen" style="display: none;">
     <div class="header">
-        <img src="icon48.png" alt="ZenJar Logo" data-ai-hint="logo">
+        <img src="icon48.png" alt="ZenJar Logo" class="logo">
         <h1>Welcome to ZenJar</h1>
     </div>
-    <button id="login-button">Sign in with Google</button>
+    <p>Sign in to connect with your jars.</p>
+    <button id="login-btn">Sign in with Google</button>
   </div>
 
   <div id="main-app" class="screen" style="display: none;">
     <div class="header">
-      <p id="user-greeting">Hello, User!</p>
-      <button id="logout-button">Logout</button>
+      <img src="icon48.png" alt="ZenJar Logo" class="logo">
+      <h1 id="welcome-message">ZenJar</h1>
+      <button id="logout-btn" title="Logout">Logout</button>
     </div>
-    <div class="content">
-      <h2>Brain Dump</h2>
-      <p class="description">Add your tasks below. The AI will categorize and prioritize them for you.</p>
+
+    <div id="result-display"></div>
+
+    <div class="action-buttons">
+       <button id="get-motivation-btn">Get Motivation</button>
+       <button id="draw-task-btn">Draw a Task</button>
+    </div>
+
+    <div class="task-adder">
       <form id="task-form">
-        <textarea id="task-input" placeholder="e.g., Finish report, Buy groceries" rows="5"></textarea>
-        <button type="submit" id="add-task-button">Process with AI</button>
+        <textarea id="task-input" placeholder="Brain dump your tasks here..." required></textarea>
+        <button type="submit" id="add-task-btn">Add Tasks with AI</button>
       </form>
+    </div>
+    
+    <div class="footer">
+        <a href="#" id="open-app-link">Open Full App</a>
     </div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  
   <script src="popup.js"></script>
 </body>
 </html>

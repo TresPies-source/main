@@ -1,8 +1,9 @@
+
 {
   "manifest_version": 3,
   "name": "ZenJar",
   "version": "1.0",
-  "description": "A minimalist companion for your ZenJar.",
+  "description": "A minimalist companion for focus, gratitude, and motivation.",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -17,16 +18,24 @@
     "128": "icon128.png"
   },
   "permissions": [
-    "identity"
+    "identity",
+    "storage"
   ],
-  "oauth2": {
-    "client_id": "634724124220-4k5j9i5p4s4f4a3b8c2j6g5k4h3j2f1e.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-  },
+  "host_permissions": [
+    "https://*.firebaseapp.com/*",
+    "https://*.firebaseio.com/*",
+    "https://*.firebasedatabase.app/*",
+    "https://*.cloudfunctions.net/*",
+    "https://*.googleapis.com/*"
+  ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' https://apis.google.com/ https://www.gstatic.com/ https://www.googleapis.com https://securetoken.googleapis.com; "
+  },
+  "oauth2": {
+    "client_id": "634724124220-4k5j9f5vjqn2q1q3gq2qgq2qgq2qgq2q.apps.googleusercontent.com",
+    "scopes": [
+      "profile",
+      "email"
+    ]
   }
 }

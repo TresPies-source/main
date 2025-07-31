@@ -71,6 +71,8 @@ export default function DashboardPage() {
   const [streak, setStreak] = useState<number | null>(null);
   const [longestSession, setLongestSession] = useState<number | null>(null);
   const [totalWins, setTotalWins] = useState<number | null>(null);
+  const [focusDates, setFocusDates] = useState<number[]>([]);
+  const [winDates, setWinDates] = useState<number[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -80,33 +82,37 @@ export default function DashboardPage() {
       return;
     }
 
-    const q = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
-    
-    // Combined listener for all stats
-    const unsub = onSnapshot(q, (focusSnapshot) => {
-        const unsubWins = onSnapshot(query(collection(db, 'wins'), where('userId', '==', user.uid)), (winsSnapshot) => {
-            // Longest Session Calculation
-            const sessions: FocusSession[] = focusSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FocusSession));
-            const maxDuration = sessions.reduce((max, s) => Math.max(max, s.duration), 0);
-            setLongestSession(maxDuration);
-            
-            // Total Wins Calculation
-            setTotalWins(winsSnapshot.docs.length);
+    // Listener for focus sessions
+    const focusQuery = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
+    const unsubFocus = onSnapshot(focusQuery, (snapshot) => {
+        const sessions: FocusSession[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FocusSession));
+        const maxDuration = sessions.reduce((max, s) => Math.max(max, s.duration), 0);
+        setLongestSession(maxDuration);
+        
+        const dates = snapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
+        setFocusDates(dates);
+    });
 
-            // Streak Calculation
-            const focusDates = focusSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
-            const winDates = winsSnapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
-            const uniqueActivityDays = new Set([...focusDates, ...winDates]);
-            setStreak(calculateStreak(uniqueActivityDays));
-        });
-
-        return () => unsubWins();
+    // Listener for wins
+    const winsQuery = query(collection(db, 'wins'), where('userId', '==', user.uid));
+    const unsubWins = onSnapshot(winsQuery, (snapshot) => {
+        setTotalWins(snapshot.docs.length);
+        const dates = snapshot.docs.map(d => startOfToday(d.data().createdAt.toDate()).getTime());
+        setWinDates(dates);
     });
 
     return () => {
-      unsub();
+      unsubFocus();
+      unsubWins();
     };
   }, [user]);
+
+  // Calculate streak whenever dates change
+  useEffect(() => {
+    const uniqueActivityDays = new Set([...focusDates, ...winDates]);
+    setStreak(calculateStreak(uniqueActivityDays));
+  }, [focusDates, winDates]);
+
 
   return (
     <MainLayout title="Growth Dashboard">

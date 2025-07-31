@@ -1,28 +1,26 @@
+
 {
   "manifest_version": 3,
   "name": "ZenJar",
   "version": "1.0",
-  "description": "A minimalist companion for wellness and productivity.",
-  "action": {
-    "default_popup": "popup.html"
-  },
-  "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
-  },
+  "description": "A quick-access companion for your ZenJar.",
   "permissions": [
-    "identity",
     "storage"
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' https://apis.google.com/ https://www.gstatic.com/ https://www.googleapis.com/ https://securetoken.googleapis.com;"
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/icon16.png",
+      "48": "/icon48.png",
+      "128": "/icon128.png"
+    }
   },
-  "oauth2": {
-    "client_id": "634724124220-k19r9m9k808p8k8v1j7f2g3h4i5j6k7l.apps.googleusercontent.com",
-    "scopes": [
-      "profile",
-      "email"
-    ]
+  "icons": {
+    "16": "/icon16.png",
+    "48": "/icon48.png",
+    "128": "/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' https://www.gstatic.com/ https://apis.google.com/ https://www.googleapis.com; object-src 'self'"
   }
 }

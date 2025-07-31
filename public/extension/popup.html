@@ -1,48 +1,88 @@
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>ZenJar</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            width: 300px;
+            background-color: #f3f0e9;
+            color: #2A2F32;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        h1 {
+            font-size: 18px;
+            margin: 0;
+            color: #5B6467;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        blockquote {
+            background-color: #fff;
+            border-left: 4px solid #8BAA7A;
+            margin: 0;
+            padding: 12px;
+            border-radius: 4px;
+            font-style: italic;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            background-color: #8BAA7A;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #7a996a;
+        }
+        a {
+            color: #8BAA7A;
+            text-decoration: none;
+            text-align: center;
+            font-size: 12px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .loading {
+            text-align: center;
+            font-size: 12px;
+            color: #5B6467;
+        }
+    </style>
 </head>
 <body>
-    <div id="loading-view" class="view">
-        <p>Loading...</p>
+    <div class="container">
+        <h1>
+            <img src="/icon48.png" width="24" alt="ZenJar Logo">
+            ZenJar Quick Access
+        </h1>
+        <blockquote id="quote-display">
+            <span class="loading">Loading...</span>
+        </blockquote>
+        <button id="draw-motivation">Draw Motivation</button>
+        <a href="http://localhost:3000" target="_blank" id="open-app-link">Open Full App</a>
     </div>
 
-    <div id="login-view" class="view" style="display: none;">
-        <div class="header">
-            <h1>Welcome to ZenJar</h1>
-        </div>
-        <button id="login-btn">Sign in with Google</button>
-    </div>
+    <!-- Firebase -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="popup.js"></script>
 
-    <div id="main-view" class="view" style="display: none;">
-        <div class="header">
-            <h1 id="welcome-message"></h1>
-            <button id="logout-btn">Sign Out</button>
-        </div>
-
-        <div id="add-task-section">
-            <h2>Add to Task Jar</h2>
-            <textarea id="task-input" placeholder="Brain dump your tasks here..."></textarea>
-            <button id="add-task-btn">Process with AI</button>
-        </div>
-        
-        <div class="actions-section">
-            <h2>Quick Actions</h2>
-            <div class="button-group">
-                <button id="motivation-btn">Get Motivation</button>
-                <button id="draw-task-btn">Draw a Task</button>
-            </div>
-        </div>
-
-        <div id="display-area"></div>
-
-        <div class="footer">
-            <a href="#" id="open-app-link">Open Full App</a>
-        </div>
-    </div>
-
-    <script src="popup.js"></script>
 </body>
 </html>

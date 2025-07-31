@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/theme/theme-provider';
 import { Button } from '@/components/ui/button';
 import { Check, Palette } from 'lucide-react';
 import {
@@ -24,7 +24,7 @@ const themes = [
 ];
 
 export function ThemeSwitcher() {
-    const { theme, setTheme } = useTheme();
+    const { themeName, setThemeByName } = useTheme();
 
     return (
         <DropdownMenu>
@@ -45,10 +45,10 @@ export function ThemeSwitcher() {
             </TooltipProvider>
             <DropdownMenuContent align="end">
                 {themes.map((t) => (
-                     <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
+                     <DropdownMenuItem key={t.value} onClick={() => setThemeByName(t.value)}>
                         <div className="flex items-center justify-between w-full">
                             <span>{t.name}</span>
-                            {theme === t.value && <Check className="h-4 w-4" />}
+                            {themeName === t.value && <Check className="h-4 w-4" />}
                         </div>
                     </DropdownMenuItem>
                 ))}

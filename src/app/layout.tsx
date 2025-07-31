@@ -4,6 +4,18 @@ import './globals.css';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { cn } from '@/lib/utils';
+import { Inter, Lora } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-lora',
+});
+
 
 export const metadata: Metadata = {
   title: 'Zen Jar',
@@ -17,17 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
-      </head>
-      <body className={cn("antialiased")}>
+      <body className={cn("antialiased", inter.variable, lora.variable)}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="kyoto-garden"
-          enableSystem
-          disableTransitionOnChange
+          defaultTheme="kyoto-garden-light"
         >
           <AuthProvider>
             {children}

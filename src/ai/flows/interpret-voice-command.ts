@@ -46,7 +46,7 @@ Extract the core content of the command as the 'entity'. For example:
 - "I'm grateful for my family" -> intent: 'addGratitude', entity: 'my family'
 - "Set my intention to finish the report" -> intent: 'setIntention', entity: 'finish the report'
 - "Give me some motivation" -> intent: 'getMotivation', entity: null
-- "What's the weather like?" -> intent: 'unknown', entity: 'What\'\'s the weather like?'
+- "What's the weather like?" -> intent: 'unknown', entity: "What's the weather like?"
 
 User Command: {{{command}}}`,
 });

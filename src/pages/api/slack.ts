@@ -1,22 +1,6 @@
 // src/pages/api/slack.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { handleSlackCommand, HandleSlackCommandOutput } from '@/ai/flows/handle-slack-command';
-import { urlencoded } from 'body-parser';
-import { promisify } from 'util';
-
-// Helper to run middleware
-const runMiddleware = (req: NextApiRequest, res: NextApiResponse, fn: any) => {
-    return new Promise((resolve, reject) => {
-        fn(req, res, (result: any) => {
-            if (result instanceof Error) {
-                return reject(result);
-            }
-            return resolve(result);
-        });
-    });
-};
-
-const urlencodedParser = promisify(urlencoded({ extended: true }));
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<HandleSlackCommandOutput | { error: string }>) {
     if (req.method !== 'POST') {
@@ -34,9 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
 
     try {
-        // Slack sends data as x-www-form-urlencoded, so we need to parse it.
-        await runMiddleware(req, res, urlencodedParser);
-        
+        // Next.js automatically parses urlencoded bodies.
         const { command, text, user_id, user_name } = req.body;
 
         if (!command || !text || !user_id || !user_name) {

@@ -7,3 +7,4 @@ import '@/ai/flows/generate-encouraging-response.ts';
 import '@/ai/flows/generate-subtasks.ts';
 import '@/ai/flows/sync-with-google-tasks.ts';
 import '@/ai/flows/create-calendar-event.ts';
+import '@/ai/flows/interpret-voice-command.ts';

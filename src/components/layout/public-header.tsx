@@ -26,6 +26,12 @@ export function PublicHeader() {
             <Link href="/public/blog" className={cn("transition-colors hover:text-foreground/80", pathname.startsWith("/public/blog") ? "text-foreground" : "text-foreground/60")}>
                 Blog
             </Link>
+            <Link href="/public/privacy" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/privacy" ? "text-foreground" : "text-foreground/60")}>
+                Privacy
+            </Link>
+             <Link href="/public/terms" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/terms" ? "text-foreground" : "text-foreground/60")}>
+                Terms
+            </Link>
         </nav>
         <div className="flex-1 flex justify-end">
             <Button asChild>

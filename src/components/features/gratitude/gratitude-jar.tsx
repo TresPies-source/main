@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -32,12 +32,28 @@ import {
 } from '@/components/ui/alert-dialog';
 import type { AnalyzeGratitudePatternsOutput } from '@/ai/flows/analyze-gratitude-patterns';
 import { addGratitudeEntry, callAnalyzeGratitudePatterns } from './gratitude-actions';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
+import type { Mesh } from 'three';
 
-function PlaceholderJar() {
+function PlaceholderJar({ playAnimation }: { playAnimation: boolean }) {
+  const meshRef = useRef<Mesh>(null!);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    if (playAnimation) {
+      // Simple "pop" animation
+      const time = state.clock.getElapsedTime();
+      const scale = 1 + Math.sin(time * 20) * 0.1;
+      meshRef.current.scale.set(scale, scale, scale);
+       if (state.clock.elapsedTime > 0.5) { // Assuming animation lasts 0.5s
+          meshRef.current.scale.set(1, 1, 1);
+       }
+    }
+  });
+
   return (
-    <mesh>
+    <mesh ref={meshRef}>
       <icosahedronGeometry args={[1.5, 0]} />
       <meshStandardMaterial color="hotpink" />
     </mesh>
@@ -67,7 +83,15 @@ export function GratitudeJar() {
   const [currentRating, setCurrentRating] = useState(3);
   const [insightsState, setInsightsState] = useState<{ loading: boolean; data: AnalyzeGratitudePatternsOutput | null; open: boolean }>({ loading: false, data: null, open: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
+
+   useEffect(() => {
+    if (playAddAnimation) {
+        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
+        return () => clearTimeout(timer);
+    }
+  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -108,6 +132,7 @@ export function GratitudeJar() {
 
         setNewEntry('');
         setCurrentRating(3);
+        setPlayAddAnimation(true);
         toast({
             title: 'Gratitude Added',
             description: 'Your moment has been saved in the jar.',
@@ -290,7 +315,7 @@ export function GratitudeJar() {
          <Canvas className="absolute inset-0 z-0">
             <Suspense fallback={null}>
                 <Stage environment="city" intensity={0.6}>
-                    <PlaceholderJar />
+                    <PlaceholderJar playAnimation={playAddAnimation} />
                 </Stage>
             </Suspense>
             <OrbitControls makeDefault autoRotate />

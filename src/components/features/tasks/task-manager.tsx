@@ -43,8 +43,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import {
   categorizeAndPrioritizeTasks,
-  type CategorizeAndPrioritizeTasksOutput,
 } from '@/ai/flows/categorize-and-prioritize-tasks';
+import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
 import { generateSubtasks } from '@/ai/flows/generate-subtasks';
 import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
 import { createCalendarEvent } from '@/ai/flows/create-calendar-event';

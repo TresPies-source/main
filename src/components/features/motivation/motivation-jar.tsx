@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,7 +61,7 @@ export function MotivationJar() {
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
     

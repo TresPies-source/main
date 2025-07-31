@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
@@ -89,7 +89,7 @@ export function TaskManager() {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
     

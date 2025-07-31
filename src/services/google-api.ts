@@ -79,3 +79,45 @@ export async function syncToGoogleTasks(accessToken: string, tasks: Task[]) {
         throw new Error("Failed to sync tasks with Google. Please try reconnecting your account.");
     }
 }
+
+
+export async function createGoogleCalendarEvent(accessToken: string, task: Task) {
+    try {
+        const auth = await getAuthenticatedClient(accessToken);
+        const calendarService = google.calendar({ version: 'v3', auth });
+
+        const eventStartTime = new Date();
+        const eventEndTime = new Date(eventStartTime.getTime() + 60 * 60 * 1000); // 1 hour later
+
+        const event = {
+            summary: task.task,
+            description: `From your ZenJar.\nCategory: ${task.category}\nPriority: ${task.priority}`,
+            start: {
+                dateTime: eventStartTime.toISOString(),
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
+            end: {
+                dateTime: eventEndTime.toISOString(),
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
+        };
+
+        const createdEvent = await calendarService.events.insert({
+            calendarId: 'primary',
+            requestBody: event,
+        });
+
+        return {
+            success: true,
+            message: 'Successfully created a 1-hour event in your primary Google Calendar.',
+            eventLink: createdEvent.data.htmlLink,
+        };
+
+    } catch (error: any) {
+        console.error("Error creating Google Calendar event:", error);
+        if (error.response?.data?.error_description) {
+            throw new Error(`Google API Error: ${error.response.data.error_description}`);
+        }
+        throw new Error("Failed to create event in Google Calendar. Please try reconnecting your account.");
+    }
+}

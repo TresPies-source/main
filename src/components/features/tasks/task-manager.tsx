@@ -45,6 +45,7 @@ import {
   type CategorizeAndPrioritizeTasksOutput,
 } from '@/ai/flows/categorize-and-prioritize-tasks';
 import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
+import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -60,6 +61,7 @@ export function TaskManager() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [drawnTask, setDrawnTask] = useState<Task | null>(null);
   const { toast } = useToast();
 
@@ -164,15 +166,22 @@ export function TaskManager() {
     await updateDoc(taskRef, { completed: !task.completed });
   }
 
-  const handleExportToGoogleTasks = async () => {
-    setIsSyncing(true);
+  const handleAuthForApi = async () => {
     let token = googleAccessToken;
     if (!token) {
         token = await connectGoogle();
     }
-
     if (!token) {
         toast({ title: 'Authentication Failed', description: 'Could not get Google access token. Please try connecting your account again from Settings.', variant: 'destructive' });
+        return null;
+    }
+    return token;
+  }
+
+  const handleExportToGoogleTasks = async () => {
+    setIsSyncing(true);
+    const token = await handleAuthForApi();
+    if (!token) {
         setIsSyncing(false);
         return;
     }
@@ -200,6 +209,40 @@ export function TaskManager() {
     }
     setIsSyncing(false);
   }
+
+  const handleCreateCalendarEvent = async () => {
+    if (!drawnTask) return;
+    
+    setIsCreatingEvent(true);
+    const token = await handleAuthForApi();
+    if (!token) {
+        setIsCreatingEvent(false);
+        return;
+    }
+
+    try {
+        const result = await createCalendarEvent({ accessToken: token, task: drawnTask });
+        if (result.success) {
+            toast({
+                title: 'Event Created!',
+                description: result.message,
+                action: (
+                    <a href={result.eventLink} target="_blank" rel="noopener noreferrer">
+                       <Button variant="outline">View Event</Button>
+                    </a>
+                )
+            });
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('Error creating calendar event:', error);
+        toast({ title: 'Calendar Error', description: 'Failed to create event in Google Calendar.', variant: 'destructive' });
+    }
+    setIsCreatingEvent(false);
+    setDrawnTask(null); // Close the dialog
+  }
+
 
   const getPriorityColor = (priority: number) => {
     if (priority >= 8) return 'bg-red-500';
@@ -276,7 +319,7 @@ export function TaskManager() {
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" disabled={tasks.length === 0 || isSyncing} onClick={handleExportToGoogleTasks}>
+                          <Button variant="outline" size="icon" disabled={tasks.length === 0 || !googleAccessToken} onClick={handleExportToGoogleTasks}>
                               {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4" />}
                               <span className="sr-only">Export Tasks</span>
                           </Button>
@@ -284,12 +327,12 @@ export function TaskManager() {
                       <DropdownMenuContent>
                           <DropdownMenuLabel>Export To</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={handleExportToGoogleTasks} disabled={isSyncing}>
+                          <DropdownMenuItem onClick={handleExportToGoogleTasks} disabled={isSyncing || tasks.length === 0}>
                             {isSyncing ? 'Syncing...' : 'Google Tasks'}
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <AlertDialog>
+                    <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
                         <AlertDialogTrigger asChild>
                            <Button variant="outline" size="icon" disabled={pendingTasks.length === 0} onClick={handleDrawTask}>
                                 <Dices className="h-4 w-4" />
@@ -311,12 +354,12 @@ export function TaskManager() {
                                         <Badge variant="secondary">Priority: {drawnTask.priority}</Badge>
                                     </div>
                                 </div>
-                                <AlertDialogFooter className="sm:justify-between">
-                                  <Button variant="outline" disabled>
-                                    <CalendarPlus className="mr-2 h-4 w-4" />
+                                <AlertDialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
+                                  <Button variant="outline" onClick={handleCreateCalendarEvent} disabled={isCreatingEvent || !googleAccessToken}>
+                                    {isCreatingEvent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarPlus className="mr-2 h-4 w-4" />}
                                     Add to Google Calendar
                                   </Button>
-                                  <AlertDialogAction>Let's do it!</AlertDialogAction>
+                                  <AlertDialogAction onClick={() => setDrawnTask(null)}>Let's do it!</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                          )}

@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { createGoogleTasks } from '@/services/google-api';
+import { syncToGoogleTasks } from '@/services/google-api';
 
 export const SyncWithGoogleTasksInputSchema = z.object({
   accessToken: z.string().describe('The OAuth access token for the user.'),
@@ -42,19 +42,22 @@ const syncWithGoogleTasksFlow = ai.defineFlow(
     name: 'syncWithGoogleTasksFlow',
     inputSchema: SyncWithGoogleTasksInputSchema,
     outputSchema: SyncWithGoogleTasksOutputSchema,
+    auth: (input) => {
+        if (!input.accessToken) {
+            throw new Error('Authentication required.');
+        }
+    }
   },
   async (input) => {
-    // For now, this is a placeholder. In a real implementation,
-    // this would call the Google Tasks API.
-    console.log(`Simulating sync for ${input.tasks.length} tasks.`);
-    
-    // const result = await createGoogleTasks(input.accessToken, input.tasks);
-    // return result;
-
-    return {
-        success: true,
-        message: `Successfully simulated syncing ${input.tasks.length} tasks.`,
-        tasklistLink: 'https://mail.google.com/tasks/canvas'
+    try {
+        const result = await syncToGoogleTasks(input.accessToken, input.tasks);
+        return result;
+    } catch(e: any) {
+        console.error('Error in syncWithGoogleTasksFlow:', e);
+        return {
+            success: false,
+            message: e.message || 'An unknown error occurred while syncing to Google Tasks.'
+        }
     }
   }
 );

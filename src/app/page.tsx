@@ -64,7 +64,7 @@ const RecordsCard = ({ longestSession, totalWins }: { longestSession: number | n
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm pt-2">
-            {longestSession === null ? (
+            {longestSession === null || totalWins === null ? (
                 <>
                     <Skeleton className="h-6 w-full" />
                     <Skeleton className="h-6 w-full" />
@@ -101,31 +101,30 @@ export default function DashboardPage() {
       return;
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const focusQuery = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
+    const winsQuery = query(collection(db, 'wins'), where('userId', '==', user.uid));
 
-    const unsubFocus = onSnapshot(query(collection(db, 'focusSessions'), where('userId', '==', user.uid)), (snapshot) => {
+    const unsubFocus = onSnapshot(focusQuery, (snapshot) => {
       const sessions: FocusSession[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FocusSession));
-      setLongestSession(sessions.reduce((max, s) => Math.max(max, s.duration), 0));
-      // Streak calculation depends on both sessions and wins, handled below
+      const maxDuration = sessions.reduce((max, s) => Math.max(max, s.duration), 0);
+      setLongestSession(maxDuration);
+    });
+
+    const unsubWins = onSnapshot(winsQuery, (snapshot) => {
+        setTotalWins(snapshot.docs.length);
     });
     
-    const unsubWins = onSnapshot(query(collection(db, 'wins'), where('userId', '==', user.uid)), (snapshot) => {
-      const wins: Win[] = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Win));
-      setTotalWins(wins.length);
-       // Streak calculation depends on both sessions and wins, handled below
-    });
-
     const calculateStreak = () => {
-        const focusQuery = query(collection(db, 'focusSessions'), where('userId', '==', user.uid));
-        const winsQuery = query(collection(db, 'wins'), where('userId', '==', user.uid));
-
-        const unsub = onSnapshot(focusQuery, (focusSnapshot) => {
-            onSnapshot(winsQuery, (winsSnapshot) => {
+        const unsubFocusForStreak = onSnapshot(focusQuery, (focusSnapshot) => {
+            const unsubWinsForStreak = onSnapshot(winsQuery, (winsSnapshot) => {
                 const focusDates = focusSnapshot.docs.map(d => d.data().createdAt.toDate());
                 const winDates = winsSnapshot.docs.map(d => d.data().createdAt.toDate());
 
-                const activityDates = [...focusDates, ...winDates].map(d => d.setHours(0,0,0,0));
+                const activityDates = [...focusDates, ...winDates].map(d => {
+                    const date = new Date(d);
+                    date.setHours(0,0,0,0);
+                    return date.getTime();
+                });
                 const uniqueActivityDays = new Set(activityDates);
 
                 let currentStreak = 0;
@@ -133,6 +132,13 @@ export default function DashboardPage() {
                     let dateToCheck = new Date();
                     dateToCheck.setHours(0,0,0,0);
                     
+                    // Check for today's activity first
+                    if (uniqueActivityDays.has(dateToCheck.getTime())) {
+                        currentStreak++;
+                        dateToCheck.setDate(dateToCheck.getDate() - 1);
+                    }
+                    
+                    // Then check for consecutive days before today
                     while (uniqueActivityDays.has(dateToCheck.getTime())) {
                         currentStreak++;
                         dateToCheck.setDate(dateToCheck.getDate() - 1);
@@ -140,8 +146,9 @@ export default function DashboardPage() {
                 }
                 setStreak(currentStreak);
             });
+            return unsubWinsForStreak;
         });
-        return unsub;
+        return unsubFocusForStreak;
     };
     
     const unsubStreak = calculateStreak();

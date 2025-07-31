@@ -11,3 +11,4 @@ import '@/ai/flows/interpret-voice-command.ts';
 import '@/ai/flows/handle-slack-command.ts';
 import '@/ai/flows/handle-discord-command.ts';
 import '@/ai/flows/export-to-drive.ts';
+import '@/ai/flows/import-from-google-doc.ts';

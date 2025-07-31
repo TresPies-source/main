@@ -263,6 +263,15 @@ export function TaskManager() {
     }
   }
 
+  const handleGoogleDocImport = () => {
+      // In a real app, this would open the Google Picker API to select a file.
+      // For now, it's a placeholder.
+      toast({
+          title: "Feature in development",
+          description: "A file picker to select your Google Doc is coming soon!"
+      })
+  }
+
 
   const getPriorityColor = (priority: number) => {
     if (priority >= 8) return 'bg-red-500';
@@ -326,8 +335,8 @@ export function TaskManager() {
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Import From</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>Google Keep</DropdownMenuItem>
-                  <DropdownMenuItem disabled>Google Docs</DropdownMenuItem>
+                  <DropdownMenuItem disabled>Google Keep (API not available)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleGoogleDocImport}>Google Docs</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

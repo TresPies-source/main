@@ -170,3 +170,38 @@ export async function exportDataToGoogleDrive(accessToken: string, userData: any
         throw new Error("Failed to export data to Google Drive. Please try reconnecting your account.");
     }
 }
+
+export async function getGoogleDocContent(accessToken: string, documentId: string) {
+    try {
+        const auth = await getAuthenticatedClient(accessToken);
+        const docsService = google.docs({ version: 'v1', auth });
+
+        const doc = await docsService.documents.get({
+            documentId: documentId,
+        });
+
+        let text = '';
+        doc.data.body?.content?.forEach(element => {
+            if (element.paragraph) {
+                element.paragraph.elements?.forEach(paraElement => {
+                    if (paraElement.textRun && paraElement.textRun.content) {
+                        text += paraElement.textRun.content;
+                    }
+                });
+            }
+        });
+
+        return {
+            success: true,
+            content: text,
+            message: "Successfully fetched document content."
+        };
+
+    } catch (error: any) {
+        console.error("Error fetching Google Doc content:", error);
+        if (error.response?.data?.error?.message) {
+            throw new Error(`Google API Error: ${error.response.data.error.message}`);
+        }
+        throw new Error("Failed to fetch Google Doc content. Ensure the document is accessible.");
+    }
+}

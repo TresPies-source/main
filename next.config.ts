@@ -16,7 +16,7 @@ const nextConfig = {
       },
     ],
   },
-  transpilePackages: ['@react-three/drei', '@react-three/fiber', 'genkit', '@genkit-ai/firebase'],
+  transpilePackages: ['three', 'genkit', '@genkit-ai/firebase'],
 };
 
 export default nextConfig;

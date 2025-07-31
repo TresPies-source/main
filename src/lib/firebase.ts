@@ -7,7 +7,7 @@ const firebaseConfig = {
   projectId: "zen-jar",
   appId: "1:634724124220:web:ba7756c2eb459c12eda539",
   storageBucket: "zen-jar.firebasestorage.app",
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  apiKey: "AIzaSyDmavORnnpuvKzvHm12h3C7wVKtX1hoUOQ",
   authDomain: "zen-jar.firebaseapp.com",
   measurementId: "",
   messagingSenderId: "634724124220"

@@ -1,5 +1,3 @@
-// This needs wav package to be installed
-
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for generating subtasks for a given task.
@@ -35,7 +33,7 @@ const prompt = ai.definePrompt({
   Task: {{{task}}}
 
   Generate a list of subtasks that will help the user break down the task into smaller, more manageable steps.
-  The subtasks should be specific and actionable. Return the subtasks as a JSON array of strings.
+  The subtasks should be specific and actionable.
   `,
 });
 

@@ -9,12 +9,7 @@ import {
   query,
   where,
   onSnapshot,
-  doc,
-  writeBatch,
-  getDocs,
   Timestamp,
-  deleteDoc,
-  updateDoc,
 } from 'firebase/firestore';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
@@ -44,17 +39,21 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import {
-  categorizeAndPrioritizeTasks,
-} from '@/ai/flows/categorize-and-prioritize-tasks';
 import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
-import { generateSubtasks } from '@/ai/flows/generate-subtasks';
-import { syncWithGoogleTasks } from '@/ai/flows/sync-with-google-tasks';
-import { createCalendarEvent } from '@/ai/flows/create-calendar-event';
-import { importFromGoogleDoc } from '@/ai/flows/import-from-google-doc';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+    processTasks,
+    emptyJar,
+    deleteTask,
+    toggleTask,
+    callSyncToGoogleTasks,
+    callCreateCalendarEvent,
+    callGenerateSubtasks,
+    callImportFromGoogleDoc
+} from './task-actions';
+
 
 type Task = CategorizeAndPrioritizeTasksOutput[0] & { 
     id: string;
@@ -119,15 +118,7 @@ export function TaskManager() {
     }
     setIsLoading(true);
     try {
-      const result = await categorizeAndPrioritizeTasks({ tasks: taskInput });
-      
-      const batch = writeBatch(db);
-      result.forEach((task) => {
-        const docRef = doc(collection(db, 'tasks'));
-        batch.set(docRef, { ...task, userId: user.uid, createdAt: Timestamp.now(), completed: false });
-      });
-      await batch.commit();
-
+      const result = await processTasks(user.uid, taskInput);
       setTaskInput('');
       toast({
         title: 'Tasks Added',
@@ -161,14 +152,7 @@ export function TaskManager() {
     if (!user) return;
     
     try {
-        const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
-        const querySnapshot = await getDocs(q);
-        const batch = writeBatch(db);
-        querySnapshot.forEach((doc) => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
-
+        await emptyJar(user.uid);
         toast({
             title: 'Jar Emptied',
             description: 'All tasks have been cleared from your account.',
@@ -181,7 +165,7 @@ export function TaskManager() {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-        await deleteDoc(doc(db, "tasks", taskId));
+        await deleteTask(taskId);
         toast({
             title: "Task Deleted",
             description: "The task has been removed from your jar."
@@ -193,9 +177,8 @@ export function TaskManager() {
   }
 
   const handleToggleTask = async (task: Task) => {
-    const taskRef = doc(db, 'tasks', task.id);
     try {
-        await updateDoc(taskRef, { completed: !task.completed });
+        await toggleTask(task);
     } catch (error) {
         console.error("Error toggling task: ", error);
         toast({ title: "Error", description: "Could not update the task status. Please try again.", variant: "destructive" });
@@ -223,14 +206,7 @@ export function TaskManager() {
             return;
         }
 
-        const tasksToSync = tasks.map(t => ({
-            task: t.task,
-            category: t.category,
-            priority: t.priority,
-            completed: t.completed
-        }));
-
-        const result = await syncWithGoogleTasks({ accessToken: token, tasks: tasksToSync });
+        const result = await callSyncToGoogleTasks(token, tasks);
         if (result.success) {
             toast({
                 title: 'Sync Successful!',
@@ -261,9 +237,8 @@ export function TaskManager() {
             setIsCreatingEvent(false);
             return;
         }
-
-        const taskToEvent = { ...drawnTask, createdAt: drawnTask.createdAt.toMillis() }
-        const result = await createCalendarEvent({ accessToken: token, task: taskToEvent });
+        
+        const result = await callCreateCalendarEvent(token, drawnTask);
         if (result.success) {
             toast({
                 title: 'Event Created!',
@@ -292,7 +267,7 @@ export function TaskManager() {
     }
     setSubtaskState({ task: task, loading: true, subtasks: [] });
     try {
-        const result = await generateSubtasks({ task: task.task });
+        const result = await callGenerateSubtasks(task);
         setSubtaskState({ task: task, loading: false, subtasks: result.subtasks });
     } catch (error) {
         console.error("Error generating subtasks: ", error);
@@ -315,7 +290,7 @@ export function TaskManager() {
             return;
         }
         
-        const result = await importFromGoogleDoc({ accessToken: token, documentId: googleDocId });
+        const result = await callImportFromGoogleDoc(token, googleDocId);
         if (result.success && result.content) {
             setTaskInput(prev => prev ? `${prev}\n${result.content}` : result.content);
             toast({ title: 'Import Successful', description: 'Your Google Doc content has been added to the text area.'});
@@ -517,7 +492,7 @@ export function TaskManager() {
                         <Tooltip>
                            <TooltipTrigger asChild>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="icon" disabled={tasks.length === 0}>
+                                    <Button variant="destructive" size="icon" disabled={tasks.length === 0} onClick={handleEmptyJar}>
                                         <Trash2 className="h-4 w-4" />
                                         <span className="sr-only">Empty Jar</span>
                                     </Button>

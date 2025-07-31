@@ -108,7 +108,7 @@ export function TaskManager() {
     scene.add(directionalLight);
 
     const geometry = new THREE.BoxGeometry(2, 2, 2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x6B83A3 });
+    const material = new THREE.MeshStandardMaterial({ color: 0x6B83A3, transparent: true, opacity: 0.8 });
     const model = new THREE.Mesh(geometry, material);
     modelRef.current = model;
     scene.add(model);
@@ -119,10 +119,13 @@ export function TaskManager() {
     const originalColor = new THREE.Color(0x6B83A3);
     const clickColor = new THREE.Color(0xE5989B);
     
+    let animatedObjects: { mesh: THREE.Mesh; progress: number; }[] = [];
+    
     const animationDuration = 0.3; 
+    const taskAnimationDuration = 1.0;
 
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0, type: 'pop' };
+      animationState.current = { isAnimating: true, progress: 0, type: 'addTask' };
       setPlayAddAnimation(false);
     }
     
@@ -154,28 +157,41 @@ export function TaskManager() {
         model.rotation.y += 0.005;
         model.rotation.x += 0.005;
       }
-
+      
       if (animationState.current.isAnimating && model) {
         animationState.current.progress += deltaTime;
         const phase = animationState.current.progress / animationDuration;
         
-        if (animationState.current.type === 'pop') {
-            if (phase < 1) {
-              const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
-              model.scale.set(scale, scale, scale);
-            } else {
-              model.scale.set(1, 1, 1);
-              animationState.current.isAnimating = false;
-            }
-        } else if (animationState.current.type === 'click') {
+        if (animationState.current.type === 'click') {
             if (phase < 1) {
                 (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
             } else {
                 (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
                 animationState.current.isAnimating = false;
             }
+        } else if (animationState.current.type === 'addTask') {
+            const taskGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+            const taskMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const taskCube = new THREE.Mesh(taskGeometry, taskMaterial);
+            taskCube.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, 2);
+            scene.add(taskCube);
+            animatedObjects.push({ mesh: taskCube, progress: 0 });
+            animationState.current.isAnimating = false; // Reset for next trigger
         }
       }
+
+      // Handle animating task cubes into the jar
+      animatedObjects.forEach((obj) => {
+        obj.progress += deltaTime / taskAnimationDuration;
+        if (obj.progress < 1) {
+            obj.mesh.position.lerp(new THREE.Vector3(0, 0, 0), deltaTime * 2);
+        } else {
+            scene.remove(obj.mesh);
+        }
+      });
+      animatedObjects = animatedObjects.filter(obj => obj.progress < 1);
+
+
       renderer.render(scene, camera);
     };
     animate();

@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import {
@@ -11,8 +12,9 @@ import {
   onSnapshot,
   Timestamp,
 } from 'firebase/firestore';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
+import type { Mesh } from 'three';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -62,9 +64,33 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
 };
 
 
-function PlaceholderJar() {
+function PlaceholderJar({ playAnimation }: { playAnimation: boolean }) {
+  const meshRef = useRef<Mesh>(null!);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    if (playAnimation) {
+      // Simple "pop" animation
+      const time = state.clock.getElapsedTime();
+      const scale = 1 + Math.sin(time * 20) * 0.1;
+      meshRef.current.scale.set(scale, scale, scale);
+       if (state.clock.elapsedTime > 0.5) {
+          meshRef.current.scale.set(1, 1, 1);
+       }
+    } else {
+        meshRef.current.rotation.y += 0.005;
+    }
+  });
+
+  useEffect(() => {
+    if(playAnimation) {
+        // Reset animation state in parent after a short delay
+    }
+  }, [playAnimation]);
+
+
   return (
-    <mesh>
+    <mesh ref={meshRef}>
       <boxGeometry args={[1.5, 2, 1.5]} />
       <meshStandardMaterial color="royalblue" />
     </mesh>
@@ -83,7 +109,15 @@ export function TaskManager() {
   const [isDocImportOpen, setIsDocImportOpen] = useState(false);
   const [googleDocId, setGoogleDocId] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (playAddAnimation) {
+        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
+        return () => clearTimeout(timer);
+    }
+  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {
@@ -120,6 +154,7 @@ export function TaskManager() {
     try {
       const result = await processTasks(user.uid, taskInput);
       setTaskInput('');
+      setPlayAddAnimation(true);
       toast({
         title: 'Tasks Added',
         description: `${result.length} new task(s) have been saved to your jar.`
@@ -375,7 +410,7 @@ export function TaskManager() {
         )}
     </AlertDialog>
 
-     <div className="relative h-[calc(100vh-10rem)] w-full">
+     <div className="relative h-full w-full">
         <div className="absolute inset-0 z-10 grid md:grid-cols-2 gap-8 p-4">
             <div className="relative space-y-4">
                 <Card className="bg-background/80 backdrop-blur-sm">
@@ -594,7 +629,7 @@ export function TaskManager() {
         <Canvas className="absolute inset-0 z-0">
             <Suspense fallback={null}>
                 <Stage environment="city" intensity={0.6}>
-                    <PlaceholderJar />
+                    <PlaceholderJar playAnimation={playAddAnimation} />
                 </Stage>
             </Suspense>
             <OrbitControls makeDefault autoRotate />

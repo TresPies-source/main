@@ -43,21 +43,19 @@ Title: "Growth Dashboard"
 
 Layout: A responsive grid of cards, adapting for mobile and desktop.
 
-Components:
+Components (Cards stacked in single column):
 
-Focus & Win Card (lg:col-span-2):
+Focus Card:
 
 Focus Timer (src/components/features/dashboard/focus-timer.tsx): A card with a start/stop button for a count-up timer to track focused work sessions (displays HH:MM:SS).
 
-Win Jar (src/components/features/dashboard/win-jar.tsx): A card to log accomplishments. Contains an input field, an "Add Win" button, and a scrollable list of recent wins.
-
-Link Task to Focus Session: (Pro Feature) Option to associate a completed task with a focus session.
+Link Task to Focus Session: Option to associate a completed task with a focus session.
 
 Daily Streak Card: Displays the number of consecutive days the user has completed at least one Focus Session and/or logged a Win.
 
 Personal Records Card: Shows user records like "Longest Single Focus Session" and "Most Wins in a Day/Week."
 
-Growth Insights Card (Pro Feature): (Initially disabled/placeholder) Visualizations (charts) of total focus time over periods, win patterns, and gratitude themes. Includes a clear "Upgrade to Pro" call-to-action if not subscribed.
+Growth Insights Card: Visualizations (charts) of total focus time over periods, win patterns, and gratitude themes. Includes a button to "View Full Growth Dashboard."
 
 2.3. Task Jar
 Route: /tasks
@@ -66,35 +64,37 @@ File: src/app/tasks/page.tsx
 
 Title: "Task Jar"
 
-Layout: Two-column grid on larger screens, stacked on smaller screens.
+Layout: A central, 3D WebGL scene with a task jar model. UI elements for input are overlaid.
 
-Functionality: Users can input a list of tasks. An AI flow (categorizeAndPrioritizeTasks) processes the text to categorize each task (e.g., Work, Personal) and assign a priority (1-10). Tasks are persisted and can be managed.
+Functionality: Users interact with a 3D jar. They can input tasks via a form or voice. The task appears as a 3D object to be dragged into the jar.
 
 Components:
 
-Brain Dump Card:
+3D Scene Canvas:
 
-A large textarea for users to input their tasks.
+Task Jar 3D Model: A rotatable, openable jar that glows.
 
-A "Process with AI" button to submit the tasks.
+Task Objects: When a task is added (via text or voice), a 3D scroll or object appears in the scene.
 
-Import Options: Buttons/dropdown for "Import from Google Keep," "Import from Google Docs" (requires integration setup in Settings).
+Drag & Drop: Users can drag the 3D object into the jar. A successful drop triggers an animation, sound effect, and the object becoming a visible element inside the jar.
 
-Your Tasks Card:
+Input Overlay:
 
-Displays the list of processed tasks, each with a colored category indicator, its priority number, and a status (pending/completed).
+A card with a textarea for users to input their tasks.
 
-Task Actions: Checkbox to mark as complete, edit button, delete button.
+A "Process with AI" button.
 
-Draw a Task Button: Opens a dialog to randomly suggest a task, weighted by priority.
+Import Options: Buttons/dropdown for "Import from Google Keep," "Import from Google Docs."
 
-Empty Jar Button: Clears all tasks from the list (with confirmation dialog).
+Interaction Overlay:
 
-Export Options: Button/dropdown for "Export to Google Tasks," "Export to Google Calendar" (requires integration setup in Settings).
+Displays the list of processed tasks.
 
-Free Tier Limit Indicator: (If applicable) Displays "X/50 tasks" with an "Upgrade to Pro for Unlimited" prompt.
+Draw a Task Button: Randomly suggests a task, highlighting its corresponding 3D object.
 
-AI Sub-task Generation (Pro Feature): (Initially disabled/placeholder) A button next to individual tasks to "Break Down with AI," which generates sub-tasks.
+Empty Jar Button: Triggers a "clearing" animation for the 3D jar.
+
+AI Sub-task Generation Button: A button next to individual tasks to "Break Down with AI," which generates sub-tasks.
 
 2.4. Motivation Jar
 Route: /motivation
@@ -103,17 +103,25 @@ File: src/app/motivation/page.tsx
 
 Title: "Motivation Jar"
 
-Layout: A single, centered card.
+Layout: A central, 3D WebGL scene with a motivation jar model. UI elements for interaction are overlaid.
 
-Functionality: Displays a random motivational quote or affirmation from a predefined list.
+Functionality: Users can interact with the 3D jar to get a random motivational quote.
 
 Components:
 
-A blockquote to display the current quote/affirmation.
+3D Scene Canvas:
+
+Motivation Jar 3D Model: A unique, glowing jar model.
+
+Quote Animation: When the "Draw Another" button is clicked, a light orb or particle effect emerges from the jar, and the quote appears in an overlaid blockquote.
+
+Interaction Overlay:
+
+A blockquote to display the current quote.
 
 A "Draw Another" button to fetch a new random quote.
 
-Custom Affirmations (Pro Feature): (Initially disabled/placeholder) A section or button to "Add Your Own Affirmation" (input field and save button).
+Custom Affirmations Section: An overlaid input field and save button to allow all users to add their own affirmations.
 
 2.5. Gratitude Jar
 Route: /gratitude
@@ -122,31 +130,33 @@ File: src/app/gratitude/page.tsx
 
 Title: "Gratitude Jar"
 
-Layout: Two-column grid on larger screens, stacked on smaller screens.
+Layout: A central, 3D WebGL scene with a gratitude jar model. UI elements for input and display are overlaid.
 
-Functionality: Users can write down things they are grateful for and rate their level of gratitude. Entries are persisted and visually weighted.
+Functionality: Users write down and rate things they are grateful for. Entries appear as glowing objects inside the 3D jar.
 
 Components:
 
-Add Gratitude Card:
+3D Scene Canvas:
+
+Gratitude Jar 3D Model: A unique, transparent jar model that visually "fills up."
+
+Gratitude Objects: Each entry becomes a visible object (e.g., a sparkling particle, a glowing symbol) inside the jar. The size/glow of the object is based on its rating.
+
+Input Overlay:
 
 A textarea for the gratitude entry.
 
-A 5-star/heart rating system to indicate the intensity of the feeling.
+A 5-star/heart rating system.
 
-An "Add to Jar" button.
+An "Add to Jar" button. A successful add triggers a particle effect and sound as the object enters the jar.
 
-Free Tier Limit Indicator: (If applicable) Displays "X/100 entries" with an "Upgrade to Pro for Unlimited" prompt.
+Interaction Overlay:
 
-Your Gratitude Jar Card:
+A scrollable list of all submitted gratitude entries.
 
-Displays a list of all submitted gratitude entries, sorted with the newest first.
+AI Insights Button: Button to view "Gratitude Insights."
 
-The font size/prominence of each entry corresponds to its rating.
-
-AI Insights Button (Pro Feature): (Initially disabled/placeholder) Button to view "Gratitude Insights" (e.g., recurring themes, patterns).
-
-Enhanced Visualization (Future Idea): Placeholder for a dynamic, interactive visualization (e.g., a "growth tree" or "constellation" of gratitude).
+Enhanced Visualization (Future Idea): Placeholder to toggle the "Growth View" from here.
 
 2.6. Intention Setter
 Route: /intention
@@ -155,19 +165,25 @@ File: src/app/intention/page.tsx
 
 Title: "Intention Setter"
 
-Layout: A primary card for input and a secondary card for the AI's response.
+Layout: A central, 3D WebGL scene.
 
-Functionality: A user writes their intention for the day. An AI flow (generateEncouragingResponse) takes the intention and provides a supportive, encouraging message.
+Functionality: A user writes their intention. An AI flow provides a supportive message.
 
 Components:
 
-Intention Input Card:
+3D Scene Canvas:
+
+A stylized, floating scroll or object where the intention text is displayed.
+
+The AI response could appear as a shimmering text block next to it.
+
+Intention Input Overlay:
 
 A textarea for the user's intention.
 
 A "Set My Intention" button.
 
-Your Daily Boost Card:
+Your Daily Boost Card Overlay:
 
 Appears after submission.
 
@@ -175,9 +191,7 @@ Shows a loading state while waiting for the AI.
 
 Displays the AI-generated encouraging response.
 
-Personalized Intentions (Pro Feature): (Initially disabled/placeholder) AI response adapts based on past intentions.
-
-Guided Intention Setting (Future Idea): Placeholder for a multi-step prompt system.
+Personalized Intentions: AI response adapts based on past intentions.
 
 2.7. Settings Page
 Route: /settings
@@ -194,17 +208,17 @@ Account Information Card: User's email, name.
 
 Subscription Management Card:
 
-Displays current subscription status (Free/Pro).
+Displays current subscription status (Free/Pro+).
 
-"Upgrade to Pro" button (if Free).
+"Upgrade to Pro+" button (if Free).
 
-"Manage Subscription" button (if Pro, links to payment portal).
+"Manage Subscription" button (if Pro+, links to payment portal).
 
 Integrations Card:
 
 List of available integrations with connect/disconnect buttons.
 
-Google Suite:
+Google Suite (Free):
 
 Google Calendar: Toggle to enable/disable, "Connect/Disconnect" button.
 
@@ -214,13 +228,13 @@ Google Keep/Docs: Toggle to enable/disable, "Connect/Disconnect" button.
 
 Google Drive (for export): Toggle to enable/disable, "Connect/Disconnect" button.
 
-Chat Platforms:
+Chat Platforms (Free):
 
 Slack: "Manage Slack Integration" (links to Slack App directory/setup guide).
 
 Discord: "Manage Discord Integration" (links to Discord bot invite/setup guide).
 
-Other Productivity Tools (Pro Feature - Future):
+Pro+ Integrations:
 
 Todoist: "Connect/Disconnect" button.
 
@@ -228,15 +242,54 @@ Notion: "Connect/Disconnect" button.
 
 Asana: "Connect/Disconnect" button.
 
-Data Management Card:
+3D & Audio Preferences:
 
-"Export All Data" button (exports to Google Drive if connected, otherwise offers download).
+Zen Mode Toggle: Button to enable/disable the immersive 3D background.
+
+Sound Effects Volume: Slider to control volume of interaction sounds.
+
+Ambient Music Toggle: Button to enable/disable background music.
 
 About ZenJar & Our Roadmap Card:
 
 A prominent button: "Learn More About ZenJar & Our Roadmap"
 
 This button navigates to the public-facing section of the website.
+
+Collaborative Jars (Pro+ Feature):
+
+A section for managing shared jars. "Create Shared Jar" button, list of shared jars, and a button to "Manage Permissions."
+
+2.8. Win Jar (New Dedicated Page)
+Route: /wins
+
+File: src/app/wins/page.tsx
+
+Title: "Win Jar"
+
+Layout: A central, 3D WebGL scene with a win jar model. Overlaid UI for input and display.
+
+Functionality: Users log accomplishments, which are added to the 3D jar with a celebratory animation.
+
+Components:
+
+3D Scene Canvas:
+
+Win Jar 3D Model: A unique, solid 3D jar model (e.g., a trophy-like jar).
+
+Win Objects: Each win is added as a glowing 3D object (e.g., a stylized star or coin) with a celebratory particle effect and a distinctive sound.
+
+Input Overlay:
+
+A textarea for logging a new win.
+
+An "Add Win" button.
+
+Interaction Overlay:
+
+Displays a scrollable list of all logged wins.
+
+Growth View Teaser: A button or card that says "View your growth in the dashboard" to direct the user to the Growth page.
 
 3. Public-Facing Website (External to Main App)
 This section is accessible via the link in the Settings page and will have its own distinct routes.
@@ -277,7 +330,7 @@ High-level overview of completed features.
 
 Current development focus (e.g., "Phase 6: Public Presence & Core Integrations").
 
-Future planned features (e.g., "Phase 7: Advanced Integrations & Future Enhancements").
+Future planned features (e.g., "Phase 7: New ZenJar Pro+ Features & Future Enhancements").
 
 Visually appealing representation (e.g., timeline, collapsible sections).
 
@@ -371,48 +424,4 @@ Microphone Icon: A prominent microphone icon/button will be present in the main 
 
 Visual Feedback during Listening:
 
-The microphone icon will change state (e.g., color, pulsating animation) to indicate active listening.
-
-A small, temporary overlay or dedicated text area will display a real-time transcription of the user's speech.
-
-Messages like "Listening...", "Processing...", "Microphone access denied" will provide clear status updates.
-
-Command Structure & Examples:
-
-Adding Tasks: User says, "Add task: Buy groceries for dinner."
-
-System response: "Adding task: Buy groceries for dinner. Processing with AI..." followed by "Task added: 'Buy groceries for dinner' (Work, Priority 7)."
-
-Picking a Task: User says, "Pick a task."
-
-System response: "Here's a task for you: 'Review project proposal'."
-
-Getting Motivation: User says, "Give me motivation." or "Inspire me."
-
-System response: "Here's some motivation: 'The best way to predict the future is to create it.'"
-
-Adding Gratitude: User says, "I'm grateful for the sunny weather."
-
-System response: "Logged: 'Sunny weather'. Thank you for sharing your gratitude." (Initial MVP will not support voice-based rating).
-
-Setting Intention: User says, "Set my intention: Finish my report today."
-
-System response: "Setting your intention: Finish my report today. Processing..." followed by "That's a great goal! You've got this. Taking it one step at a time is the way to success."
-
-Confirmation & Error Handling:
-
-For actions like "Add task," a brief visual confirmation might appear (e.g., "Did you say 'Add task: Buy groceries'? Yes/No").
-
-If the command is unclear, the system will respond with "Sorry, I didn't catch that. Could you please rephrase?" or "What would you like to do?"
-
-Integration Flow:
-
-Web Speech API captures audio and converts to text.
-
-Transcribed text is sent to a Firebase Cloud Function for NLU.
-
-NLU (Genkit + Gemini) identifies intent and extracts entities.
-
-Cloud Function calls relevant ZenJar backend logic (Firestore, existing AI flows).
-
-Response is sent back to the frontend for display and/or audio feedback.
+The microphone icon will change state (e.g., color, pulsating animation)

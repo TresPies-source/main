@@ -42,7 +42,7 @@ export async function syncToGoogleTasks(accessToken: string, tasks: Task[]) {
         const tasklistId = tasklist.id;
 
         // 2. Clear existing tasks in the list to prevent duplicates (optional, but good for a "sync")
-        const existingTasks = await tasksService.tasks.list({ tasklist: tasklistId });
+        const existingTasks = await tasksService.tasks.list({ tasklist: tasklistId, showCompleted: true, showHidden: true });
         if(existingTasks.data.items) {
             for (const task of existingTasks.data.items) {
                 if (task.id) {

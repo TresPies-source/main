@@ -370,7 +370,7 @@ export function TaskManager() {
             <div className="flex justify-between items-center">
                 <CardTitle className="font-headline">Your Tasks</CardTitle>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" disabled={tasks.length === 0} onClick={handleExportToGoogleTasks} title="Export to Google Tasks">
+                    <Button variant="outline" size="sm" disabled={tasks.length === 0} onClick={handleExportToGoogleTasks} title="Export to Google Tasks">
                       {isSyncing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4" />}
                       <span className="sr-only">Export Tasks</span>
                     </Button>

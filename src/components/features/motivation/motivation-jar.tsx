@@ -253,7 +253,7 @@ export function MotivationJar() {
 
   return (
     <div className="flex flex-col h-full w-full items-center">
-      <div ref={mountRef} className="w-full max-w-3xl h-[250px] rounded-lg bg-card border mb-8" />
+      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
       <div className="space-y-8 w-full max-w-lg">
            <Card className="text-center shadow-lg">
               <CardHeader>

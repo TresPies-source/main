@@ -466,8 +466,8 @@ export function TaskManager() {
     </AlertDialog>
 
      <div className="flex flex-col h-full w-full">
-        <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card border mb-8" />
-        <div className="grid md:grid-cols-2 gap-8">
+      <div ref={mountRef} className="w-full h-[300px] rounded-lg bg-card mb-8" />
+      <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
                 <Card>
                 <CardHeader>

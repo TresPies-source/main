@@ -1,6 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+  Timestamp,
+} from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,9 +24,10 @@ import {
 } from "@/components/ui/tooltip"
 
 type GratitudeEntry = {
-  id: number;
+  id: string;
   text: string;
   rating: number;
+  createdAt: Timestamp;
 };
 
 const ratingDescriptions: { [key: number]: string } = {
@@ -28,13 +39,36 @@ const ratingDescriptions: { [key: number]: string } = {
 };
 
 export function GratitudeJar() {
+  const { user } = useAuth();
   const [entries, setEntries] = useState<GratitudeEntry[]>([]);
   const [newEntry, setNewEntry] = useState('');
   const [currentRating, setCurrentRating] = useState(3);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!user) {
+      setEntries([]);
+      return;
+    }
+
+    const q = query(collection(db, 'gratitude'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedEntries: GratitudeEntry[] = [];
+      querySnapshot.forEach((doc) => {
+        fetchedEntries.push({ ...doc.data(), id: doc.id } as GratitudeEntry);
+      });
+      setEntries(fetchedEntries.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+        toast({ title: 'Not signed in', description: 'You must be signed in to add to your jar.', variant: 'destructive' });
+        return;
+    }
     if (!newEntry.trim()) {
       toast({
         title: 'Empty entry',
@@ -44,10 +78,13 @@ export function GratitudeJar() {
       return;
     }
 
-    setEntries(prev => [
-      ...prev,
-      { id: Date.now(), text: newEntry, rating: currentRating },
-    ]);
+    await addDoc(collection(db, 'gratitude'), {
+      text: newEntry,
+      rating: currentRating,
+      userId: user.uid,
+      createdAt: Timestamp.now(),
+    });
+
     setNewEntry('');
     setCurrentRating(3);
     toast({
@@ -86,6 +123,7 @@ export function GratitudeJar() {
                 value={newEntry}
                 onChange={e => setNewEntry(e.target.value)}
                 className="min-h-[100px]"
+                disabled={!user}
               />
               <div>
                 <label className="text-sm font-medium mb-2 block">How grateful do you feel?</label>
@@ -108,10 +146,11 @@ export function GratitudeJar() {
                     </div>
                 </TooltipProvider>
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={!user}>
                 Add to Jar
               </Button>
             </form>
+            {!user && <p className="text-xs text-center text-muted-foreground mt-4">Please sign in to save your entries.</p>}
           </CardContent>
         </Card>
       </div>
@@ -133,21 +172,27 @@ export function GratitudeJar() {
             </div>
           </CardHeader>
           <CardContent>
-            {entries.length > 0 ? (
-                <div className="space-y-2">
-                    {entries.sort((a,b) => b.id - a.id).map(entry => (
-                        <div key={entry.id} className="p-3 bg-secondary/50 rounded-lg">
-                            <p className={`${getFontSizeClass(entry.rating)} transition-all`}>
-                                {entry.text}
-                            </p>
-                        </div>
-                    ))}
-                </div>
+            {user ? (
+                entries.length > 0 ? (
+                    <div className="space-y-2">
+                        {entries.map(entry => (
+                            <div key={entry.id} className="p-3 bg-secondary/50 rounded-lg">
+                                <p className={`${getFontSizeClass(entry.rating)} transition-all`}>
+                                    {entry.text}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                  <div className="text-center text-muted-foreground pt-20">
+                    <p>Your gratitude jar is empty.</p>
+                    <p className="text-sm">Add something you're thankful for to start.</p>
+                  </div>
+                )
             ) : (
-              <div className="text-center text-muted-foreground pt-20">
-                <p>Your gratitude jar is empty.</p>
-                <p className="text-sm">Add something you're thankful for to start.</p>
-              </div>
+                <div className="text-center text-muted-foreground pt-20">
+                    <p>Please sign in to see your gratitude jar.</p>
+                </div>
             )}
           </CardContent>
         </Card>

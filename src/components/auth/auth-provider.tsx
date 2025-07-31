@@ -38,6 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // from Firestore or via custom claims after they sign in.
       // For this prototype, we'll keep it simple.
       // e.g., checkUserProStatus(user).then(setIsPro);
+      // For demonstration, let's assume the user is Pro if they are logged in.
+      // You would replace this with actual subscription logic.
+      if (user) {
+        setIsPro(true);
+      } else {
+        setIsPro(false);
+      }
       setLoading(false);
     });
 

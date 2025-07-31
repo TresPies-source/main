@@ -76,12 +76,16 @@ export function TaskManager() {
   const [playAddAnimation, setPlayAddAnimation] = useState(false);
   const { toast } = useToast();
   const mountRef = useRef<HTMLDivElement>(null);
-  const animationState = useRef({ isAnimating: false, progress: 0 });
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const modelRef = useRef<THREE.Mesh | null>(null);
+  const animationState = useRef({ isAnimating: false, progress: 0, type: '' });
 
   useLayoutEffect(() => {
     if (!mountRef.current) return;
     const currentMount = mountRef.current;
+    
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
     camera.position.z = 4;
 
@@ -99,13 +103,38 @@ export function TaskManager() {
     const geometry = new THREE.BoxGeometry(2, 2, 2);
     const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
+    modelRef.current = model;
     scene.add(model);
+    
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const originalColor = new THREE.Color(0x8BAA7A);
+    const clickColor = new THREE.Color(0xE5989B);
     
     const animationDuration = 0.3; 
 
     if (playAddAnimation) {
-      animationState.current = { isAnimating: true, progress: 0 };
+      animationState.current = { isAnimating: true, progress: 0, type: 'pop' };
+      setPlayAddAnimation(false);
     }
+    
+    const handleMouseDown = (event: MouseEvent) => {
+        if (!currentMount) return;
+        const rect = currentMount.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / currentMount.clientWidth) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / currentMount.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children);
+        
+        if (intersects.length > 0 && intersects[0].object === modelRef.current) {
+            animationState.current = { isAnimating: true, progress: 0, type: 'click' };
+        }
+    };
+    
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
 
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -122,12 +151,22 @@ export function TaskManager() {
       if (animationState.current.isAnimating && model) {
         animationState.current.progress += deltaTime;
         const phase = animationState.current.progress / animationDuration;
-        if (phase < 1) {
-          const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
-          model.scale.set(scale, scale, scale);
-        } else {
-          model.scale.set(1, 1, 1);
-          animationState.current.isAnimating = false;
+        
+        if (animationState.current.type === 'pop') {
+            if (phase < 1) {
+              const scale = 1 + 0.2 * Math.sin(phase * Math.PI);
+              model.scale.set(scale, scale, scale);
+            } else {
+              model.scale.set(1, 1, 1);
+              animationState.current.isAnimating = false;
+            }
+        } else if (animationState.current.type === 'click') {
+            if (phase < 1) {
+                (model.material as THREE.MeshStandardMaterial).color.lerpColors(originalColor, clickColor, Math.sin(phase * Math.PI));
+            } else {
+                (model.material as THREE.MeshStandardMaterial).color.copy(originalColor);
+                animationState.current.isAnimating = false;
+            }
         }
       }
       renderer.render(scene, camera);
@@ -147,21 +186,17 @@ export function TaskManager() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
       }
       scene.clear();
       renderer.dispose();
+      geometry.dispose();
+      material.dispose();
     };
   }, [playAddAnimation]);
-
-  useEffect(() => {
-    if (playAddAnimation) {
-        const timer = setTimeout(() => setPlayAddAnimation(false), 500); // Animation duration
-        return () => clearTimeout(timer);
-    }
-  },[playAddAnimation]);
 
   useEffect(() => {
     if (!user) {

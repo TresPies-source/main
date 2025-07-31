@@ -38,11 +38,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    setLoading(true);
+  const getGoogleProvider = () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/tasks');
     provider.addScope('https://www.googleapis.com/auth/calendar.events');
+    provider.addScope('https://www.googleapis.com/auth/drive.file');
+    return provider;
+  }
+
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    const provider = getGoogleProvider();
     try {
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -74,9 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: 'Not Signed In', description: 'Please sign in first to connect your Google account.', variant: 'destructive' });
       return null;
     }
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/tasks');
-    provider.addScope('https://www.googleapis.com/auth/calendar.events');
+    const provider = getGoogleProvider();
 
     try {
       // linkWithPopup is for linking a new provider to an existing anonymous account

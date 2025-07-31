@@ -22,11 +22,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Info, Power, PowerOff, Compass, Trash2, Loader2 } from "lucide-react";
+import { Info, Power, PowerOff, Compass, Trash2, Loader2, Download } from "lucide-react";
 import { useState } from "react";
+import { exportToDrive } from "@/ai/flows/export-to-drive";
 
 function AccountCard() {
     const { user, loading } = useAuth();
@@ -91,9 +94,73 @@ function IntegrationsCard() {
 }
 
 function DataManagementCard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, googleAccessToken, connectGoogle } = useAuth();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleAuthForApi = async () => {
+    let token = googleAccessToken;
+    if (!token) {
+        token = await connectGoogle();
+    }
+    if (!token) {
+        toast({ title: 'Authentication Failed', description: 'Could not get Google access token. Please try connecting your account again.', variant: 'destructive' });
+        return null;
+    }
+    return token;
+  }
+
+  const handleExportData = async () => {
+    if (!user) return;
+    setIsExporting(true);
+
+    const token = await handleAuthForApi();
+    if(!token) {
+        setIsExporting(false);
+        return;
+    }
+
+    try {
+        // 1. Fetch all data from all collections
+        const collections = ['tasks', 'wins', 'focusSessions', 'gratitude', 'intentions', 'affirmations'];
+        const userData: { [key: string]: any[] } = {};
+
+        for (const collectionName of collections) {
+            const q = query(collection(db, collectionName), where('userId', '==', user.uid));
+            const snapshot = await getDocs(q);
+            userData[collectionName] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
+        // 2. Call the export flow
+        const result = await exportToDrive({ accessToken: token, userData });
+
+        if (result.success) {
+            toast({
+                title: "Export Successful",
+                description: result.message,
+                action: (
+                    <a href={result.fileLink} target="_blank" rel="noopener noreferrer">
+                       <Button variant="outline">View File</Button>
+                    </a>
+                )
+            });
+        } else {
+            throw new Error(result.message);
+        }
+
+    } catch (error: any) {
+         console.error('Error exporting data:', error);
+        toast({
+            title: 'Export Error',
+            description: error.message || "An unknown error occurred during export.",
+            variant: 'destructive',
+        });
+    } finally {
+        setIsExporting(false);
+    }
+  }
+
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -141,7 +208,10 @@ function DataManagementCard() {
         <CardDescription>Export or permanently delete your account data.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Button variant="outline" disabled>Export All Data</Button>
+        <Button variant="outline" onClick={handleExportData} disabled={!user || isExporting}>
+          {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4"/>}
+          Export All Data to Google Drive
+        </Button>
       </CardContent>
       <CardFooter className="border-t pt-6 bg-destructive/10">
         <div className="flex justify-between items-center w-full">

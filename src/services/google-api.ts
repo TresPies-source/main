@@ -2,6 +2,7 @@
 // This file will contain the logic to interact with Google APIs.
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import { Stream } from 'stream';
 
 type Task = {
     task: string;
@@ -120,5 +121,52 @@ export async function createGoogleCalendarEvent(accessToken: string, task: any) 
             throw new Error(`Google API Error: ${error.response.data.error_description}`);
         }
         throw new Error("Failed to create event in Google Calendar. Please try reconnecting your account.");
+    }
+}
+
+
+export async function exportDataToGoogleDrive(accessToken: string, userData: any) {
+    try {
+        const auth = await getAuthenticatedClient(accessToken);
+        const driveService = google.drive({ version: 'v3', auth });
+
+        const fileName = `zenjar-export-${new Date().toISOString()}.json`;
+        const fileContent = JSON.stringify(userData, null, 2);
+        
+        const bufferStream = new Stream.PassThrough();
+        bufferStream.end(Buffer.from(fileContent, 'utf-8'));
+
+
+        const fileMetadata = {
+            name: fileName,
+            parents: ['root'], // 'root' for the main "My Drive" folder
+        };
+
+        const media = {
+            mimeType: 'application/json',
+            body: bufferStream,
+        };
+
+        const file = await driveService.files.create({
+            requestBody: fileMetadata,
+            media: media,
+            fields: 'id, webViewLink',
+        });
+
+        if (!file.data.webViewLink) {
+            throw new Error("File was created but no link was returned.");
+        }
+
+        return {
+            success: true,
+            message: `Successfully exported your data to '${fileName}' in your Google Drive.`,
+            fileLink: file.data.webViewLink,
+        };
+    } catch (error: any) {
+        console.error("Error exporting data to Google Drive:", error);
+        if (error.response?.data?.error_description) {
+            throw new Error(`Google API Error: ${error.response.data.error_description}`);
+        }
+        throw new Error("Failed to export data to Google Drive. Please try reconnecting your account.");
     }
 }

@@ -36,6 +36,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import type { CategorizeAndPrioritizeTasksOutput } from '@/ai/flows/categorize-and-prioritize-tasks';
@@ -108,7 +109,7 @@ export function TaskManager() {
     scene.add(directionalLight);
 
     const geometry = new THREE.BoxGeometry(2, 2, 2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A }); // Standardized color
+    const material = new THREE.MeshStandardMaterial({ color: 0x8BAA7A });
     const model = new THREE.Mesh(geometry, material);
     scene.add(model);
     
@@ -641,11 +642,11 @@ export function TaskManager() {
                         <DropdownMenuContent>
                             <DropdownMenuLabel>Data Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)}>
+                            <DropdownMenuItem onSelect={() => setIsDocImportOpen(true)} disabled={!googleAccessToken}>
                                 <FileText className="mr-2 h-4 w-4" />
                                 Import from Google Doc
                             </DropdownMenuItem>
-                             <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing}>
+                             <DropdownMenuItem onClick={handleSyncToGoogleTasks} disabled={isSyncing || !googleAccessToken}>
                             {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RefreshCw className="mr-2 h-4 w-4" />}
                             Sync to Google Tasks
                             </DropdownMenuItem>
@@ -694,8 +695,8 @@ export function TaskManager() {
                         <AlertDialog open={!!drawnTask} onOpenChange={(open) => !open && setDrawnTask(null)}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="outline" size="icon" disabled={pendingTasksCount === 0} onClick={handleDrawTask}>
                                             <Dices className="h-4 w-4" />
                                             <span className="sr-only">Draw a task</span>
                                         </Button>

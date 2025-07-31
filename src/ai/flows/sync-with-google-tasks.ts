@@ -13,7 +13,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { syncToGoogleTasks } from '@/services/google-api';
 
-export const SyncWithGoogleTasksInputSchema = z.object({
+const SyncWithGoogleTasksInputSchema = z.object({
   accessToken: z.string().describe('The OAuth access token for the user.'),
   tasks: z.array(
     z.object({
@@ -24,14 +24,14 @@ export const SyncWithGoogleTasksInputSchema = z.object({
     })
   ).describe('The list of tasks to sync.'),
 });
-export type SyncWithGoogleTasksInput = z.infer<typeof SyncWithGoogleTasksInputSchema>;
+type SyncWithGoogleTasksInput = z.infer<typeof SyncWithGoogleTasksInputSchema>;
 
-export const SyncWithGoogleTasksOutputSchema = z.object({
+const SyncWithGoogleTasksOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   tasklistLink: z.string().optional(),
 });
-export type SyncWithGoogleTasksOutput = z.infer<typeof SyncWithGoogleTasksOutputSchema>;
+type SyncWithGoogleTasksOutput = z.infer<typeof SyncWithGoogleTasksOutputSchema>;
 
 export async function syncWithGoogleTasks(input: SyncWithGoogleTasksInput): Promise<SyncWithGoogleTasksOutput> {
   return syncWithGoogleTasksFlow(input);

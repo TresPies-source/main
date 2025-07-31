@@ -288,7 +288,11 @@ export function TaskManager() {
       scene.children.forEach(child => {
         if (child instanceof THREE.Mesh) {
             child.geometry.dispose();
-            child.material.dispose();
+            if (Array.isArray(child.material)) {
+                child.material.forEach(m => m.dispose());
+            } else {
+                child.material.dispose();
+            }
         }
       });
       scene.clear();
@@ -616,7 +620,8 @@ export function TaskManager() {
     </AlertDialog>
 
      <div className="flex flex-col h-full w-full">
-        <div className="w-full h-[300px] bg-card rounded-lg relative">
+      <div className="w-full h-[300px] rounded-lg bg-card mb-8">
+        <div className="w-full h-full relative">
             {isModelLoading && (
                 <div className="absolute inset-0 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -624,6 +629,7 @@ export function TaskManager() {
             )}
             <div ref={mountRef} className="w-full h-full" />
         </div>
+      </div>
         <div className="grid md:grid-cols-2 gap-8 mt-8">
             <div className="space-y-4">
                 <Card>
@@ -839,5 +845,7 @@ export function TaskManager() {
     </>
   );
 }
+
+    
 
     

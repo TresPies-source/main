@@ -259,13 +259,13 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="outline">
-                    <Link href="/about">
+                    <Link href="/public/about">
                         <Info className="mr-2 h-4 w-4" />
                         Our Philosophy
                     </Link>
                 </Button>
                  <Button asChild variant="outline">
-                    <Link href="/roadmap">
+                    <Link href="/public/roadmap">
                         <Compass className="mr-2 h-4 w-4" />
                         Development Roadmap
                     </Link>

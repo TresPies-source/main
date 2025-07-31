@@ -1,10 +1,10 @@
-import MainLayout from "@/components/layout/main-layout";
+import PublicLayout from "@/components/layout/public-layout";
 import { AboutContent } from "@/components/features/about/about-content";
 
 export default function AboutPage() {
   return (
-    <MainLayout title="About ZenJar">
+    <PublicLayout>
       <AboutContent />
-    </MainLayout>
+    </PublicLayout>
   );
 }

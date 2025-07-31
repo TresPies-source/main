@@ -1,10 +1,10 @@
-import MainLayout from "@/components/layout/main-layout";
+import PublicLayout from "@/components/layout/public-layout";
 import { RoadmapContent } from "@/components/features/roadmap/roadmap-content";
 
 export default function RoadmapPage() {
   return (
-    <MainLayout title="Development Roadmap">
+    <PublicLayout>
       <RoadmapContent />
-    </MainLayout>
+    </PublicLayout>
   );
 }

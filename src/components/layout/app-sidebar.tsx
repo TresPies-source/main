@@ -88,10 +88,10 @@ export default function AppSidebar() {
              <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={pathname === '/about'}
+                    isActive={pathname.startsWith('/public/about')}
                     tooltip={{ children: 'About' }}
                 >
-                    <Link href="/about">
+                    <Link href="/public/about">
                     <Info />
                     <span>About</span>
                     </Link>
@@ -100,10 +100,10 @@ export default function AppSidebar() {
             <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={pathname === '/roadmap'}
+                    isActive={pathname.startsWith('/public/roadmap')}
                     tooltip={{ children: 'Roadmap' }}
                 >
-                    <Link href="/roadmap">
+                    <Link href="/public/roadmap">
                     <Compass />
                     <span>Roadmap</span>
                     </Link>

@@ -9,7 +9,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     return (
         <div className="min-h-screen flex flex-col bg-background">
             <PublicHeader />
-            <main className="flex-1">
+            <main className="flex-1 container py-8">
                 {children}
             </main>
             <footer className="py-6 md:px-8 md:py-0 border-t">

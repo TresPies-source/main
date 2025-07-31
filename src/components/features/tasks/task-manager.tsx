@@ -209,7 +209,7 @@ export function TaskManager() {
                 title: 'Sync Successful!',
                 description: result.message,
                 action: (
-                    <a href={result.tasklistLink} target="_blank" rel="noopener noreferrer">
+                    <a href={result.tasklistLink!} target="_blank" rel="noopener noreferrer">
                        <Button variant="outline">View Tasks</Button>
                     </a>
                 )
@@ -242,7 +242,7 @@ export function TaskManager() {
                 title: 'Event Created!',
                 description: result.message,
                 action: (
-                    <a href={result.eventLink} target="_blank" rel="noopener noreferrer">
+                    <a href={result.eventLink!} target="_blank" rel="noopener noreferrer">
                        <Button variant="outline">View Event</Button>
                     </a>
                 )

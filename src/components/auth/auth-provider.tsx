@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut, addScope } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,6 +16,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  connectGoogle: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +53,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const connectGoogle = async () => {
+    if (!auth.currentUser) {
+      toast({ title: 'Not Signed In', description: 'Please sign in first to connect your Google account.', variant: 'destructive' });
+      return;
+    }
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/tasks');
+    provider.addScope('https://www.googleapis.com/auth/calendar.events');
+
+    try {
+      await signInWithPopup(auth.currentUser, provider);
+      toast({
+        title: 'Google Account Connected',
+        description: 'You can now use Google integrations.',
+      });
+    } catch (error) {
+      console.error("Error connecting Google account: ", error);
+      toast({
+        title: 'Connection Error',
+        description: 'Could not connect your Google account. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -74,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signInWithGoogle,
     signOut: handleSignOut,
+    connectGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

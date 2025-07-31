@@ -24,7 +24,7 @@ import { OrbitControls, Stage } from '@react-three/drei';
 function PlaceholderJar() {
   return (
     <mesh>
-      <cylinderGeometry args={[1, 1, 2, 32]} />
+      <capsuleGeometry args={[0.8, 1, 4, 8]} />
       <meshStandardMaterial color="skyblue" />
     </mesh>
   );

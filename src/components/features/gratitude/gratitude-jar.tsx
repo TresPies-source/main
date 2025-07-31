@@ -38,7 +38,7 @@ import { OrbitControls, Stage } from '@react-three/drei';
 function PlaceholderJar() {
   return (
     <mesh>
-      <cylinderGeometry args={[1, 1, 2, 32]} />
+      <icosahedronGeometry args={[1.5, 0]} />
       <meshStandardMaterial color="hotpink" />
     </mesh>
   );

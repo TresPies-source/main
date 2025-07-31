@@ -25,7 +25,7 @@ import { OrbitControls, Stage } from '@react-three/drei';
 function PlaceholderJar() {
   return (
     <mesh>
-      <cylinderGeometry args={[1, 1, 2, 32]} />
+      <coneGeometry args={[1, 2, 32]} />
       <meshStandardMaterial color="orange" />
     </mesh>
   );

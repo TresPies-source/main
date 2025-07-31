@@ -24,7 +24,7 @@ import { OrbitControls, Stage } from '@react-three/drei';
 function PlaceholderJar() {
   return (
     <mesh>
-      <cylinderGeometry args={[1, 1, 2, 32]} />
+      <torusGeometry args={[1, 0.4, 16, 100]} />
       <meshStandardMaterial color="gold" />
     </mesh>
   );
@@ -164,7 +164,7 @@ export function MotivationJar() {
   }
 
   return (
-    <div className="relative h-full w-full max-w-4xl">
+    <div className="relative h-full w-full max-w-4xl mx-auto">
         <div className="absolute inset-0 z-10 grid gap-8 p-4">
             <div className="space-y-8">
                  <Card className="text-center shadow-lg bg-background/80 backdrop-blur-sm">

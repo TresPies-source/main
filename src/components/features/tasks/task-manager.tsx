@@ -65,7 +65,7 @@ type Task = CategorizeAndPrioritizeTasksOutput[0] & {
 function PlaceholderJar() {
   return (
     <mesh>
-      <cylinderGeometry args={[1, 1, 2, 32]} />
+      <boxGeometry args={[1.5, 2, 1.5]} />
       <meshStandardMaterial color="royalblue" />
     </mesh>
   );

@@ -29,7 +29,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, Zap, ChevronsDown, ChevronsUp, FileText, StickyNote } from 'lucide-react';
+import { Loader2, Wand2, Dices, Trash2, X, Upload, CalendarPlus, ListChecks, RefreshCw, Zap, ChevronsDown, FileText } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -129,8 +129,8 @@ export function TaskManager() {
     } catch (error) {
       console.error('Error processing tasks:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to process and save tasks. Please try again.',
+        title: 'Error Processing Tasks',
+        description: 'Failed to process and save tasks. The AI may be unavailable, or there might be a connection issue. Please try again.',
         variant: 'destructive',
       });
     }
@@ -153,31 +153,46 @@ export function TaskManager() {
   const handleEmptyJar = async () => {
     if (!user) return;
     
-    const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
-    const querySnapshot = await getDocs(q);
-    const batch = writeBatch(db);
-    querySnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-    });
-    await batch.commit();
+    try {
+        const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        const batch = writeBatch(db);
+        querySnapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
 
-    toast({
-        title: 'Jar Emptied',
-        description: 'All tasks have been cleared from your account.',
-    })
+        toast({
+            title: 'Jar Emptied',
+            description: 'All tasks have been cleared from your account.',
+        });
+    } catch (error) {
+        console.error("Error emptying jar: ", error);
+        toast({ title: "Error", description: "Could not empty the task jar. Please try again.", variant: "destructive" });
+    }
   }
 
   const handleDeleteTask = async (taskId: string) => {
-    await deleteDoc(doc(db, "tasks", taskId));
-    toast({
-        title: "Task Deleted",
-        description: "The task has been removed from your jar."
-    })
+    try {
+        await deleteDoc(doc(db, "tasks", taskId));
+        toast({
+            title: "Task Deleted",
+            description: "The task has been removed from your jar."
+        });
+    } catch (error) {
+        console.error("Error deleting task: ", error);
+        toast({ title: "Error", description: "Could not delete the task. Please try again.", variant: "destructive" });
+    }
   }
 
   const handleToggleTask = async (task: Task) => {
     const taskRef = doc(db, 'tasks', task.id);
-    await updateDoc(taskRef, { completed: !task.completed });
+    try {
+        await updateDoc(taskRef, { completed: !task.completed });
+    } catch (error) {
+        console.error("Error toggling task: ", error);
+        toast({ title: "Error", description: "Could not update the task status. Please try again.", variant: "destructive" });
+    }
   }
 
   const handleAuthForApi = async () => {
@@ -194,20 +209,20 @@ export function TaskManager() {
 
   const handleSyncToGoogleTasks = async () => {
     setIsSyncing(true);
-    const token = await handleAuthForApi();
-    if (!token) {
-        setIsSyncing(false);
-        return;
-    }
-
-    const tasksToSync = tasks.map(t => ({
-        task: t.task,
-        category: t.category,
-        priority: t.priority,
-        completed: t.completed
-    }));
-
     try {
+        const token = await handleAuthForApi();
+        if (!token) {
+            setIsSyncing(false);
+            return;
+        }
+
+        const tasksToSync = tasks.map(t => ({
+            task: t.task,
+            category: t.category,
+            priority: t.priority,
+            completed: t.completed
+        }));
+
         const result = await syncWithGoogleTasks({ accessToken: token, tasks: tasksToSync });
         if (result.success) {
             toast({
@@ -233,13 +248,13 @@ export function TaskManager() {
     if (!drawnTask) return;
     
     setIsCreatingEvent(true);
-    const token = await handleAuthForApi();
-    if (!token) {
-        setIsCreatingEvent(false);
-        return;
-    }
-
     try {
+        const token = await handleAuthForApi();
+        if (!token) {
+            setIsCreatingEvent(false);
+            return;
+        }
+
         const taskToEvent = { ...drawnTask, createdAt: drawnTask.createdAt.toMillis() }
         const result = await createCalendarEvent({ accessToken: token, task: taskToEvent });
         if (result.success) {
@@ -273,6 +288,7 @@ export function TaskManager() {
         const result = await generateSubtasks({ task: task.task });
         setSubtaskState({ task: task, loading: false, subtasks: result.subtasks });
     } catch (error) {
+        console.error("Error generating subtasks: ", error);
         toast({ title: 'AI Error', description: 'Could not generate subtasks. Please try again.', variant: 'destructive' });
         setSubtaskState({ task: null, loading: false, subtasks: [] });
     }
@@ -285,13 +301,13 @@ export function TaskManager() {
     }
     setIsImporting(true);
 
-    const token = await handleAuthForApi();
-    if(!token) {
-        setIsImporting(false);
-        return;
-    }
-    
     try {
+        const token = await handleAuthForApi();
+        if(!token) {
+            setIsImporting(false);
+            return;
+        }
+        
         const result = await importFromGoogleDoc({ accessToken: token, documentId: googleDocId });
         if (result.success && result.content) {
             setTaskInput(prev => prev ? `${prev}\n${result.content}` : result.content);
@@ -521,7 +537,7 @@ export function TaskManager() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="icon" disabled={tasks.length === 0 || !user}>
-                           <ChevronsUp className="h-4 w-4" />
+                           <RefreshCw className="h-4 w-4" />
                            <span className="sr-only">Export or Sync</span>
                         </Button>
                       </DropdownMenuTrigger>

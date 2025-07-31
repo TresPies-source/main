@@ -1,3 +1,4 @@
+
 // src/pages/api/discord.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { handleDiscordCommand } from '@/ai/flows/handle-discord-command';
@@ -21,6 +22,7 @@ const COMMAND_RESPONSE_TYPE = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
+        res.setHeader('Allow', ['POST']);
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
@@ -28,14 +30,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // This is a simplified example and skips verification for prototype purposes.
     // To implement, get your public key from the Discord Developer Portal.
     if (DISCORD_PUBLIC_KEY) {
-        const signature = req.headers['x-signature-ed25519'];
-        const timestamp = req.headers['x-signature-timestamp'];
-        const body = req.body; // Raw body is needed, this might require custom body parser config
+        // const signature = req.headers['x-signature-ed25519'];
+        // const timestamp = req.headers['x-signature-timestamp'];
+        // const body = req.body; // Raw body is needed, this might require custom body parser config
 
         // const isVerified = verifyKey(body, signature, timestamp, DISCORD_PUBLIC_KEY);
         // if (!isVerified) {
+        //     console.error('Invalid Discord request signature.');
         //     return res.status(401).end('invalid request signature');
         // }
+    } else if (process.env.NODE_ENV === 'production') {
+        console.error("DISCORD_PUBLIC_KEY is not set. Signature verification is required in production.");
+        return res.status(500).json({ error: "Server configuration error." });
     } else {
         console.warn("Discord signature verification skipped. Set DISCORD_PUBLIC_KEY for production.")
     }
@@ -84,6 +90,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } catch (error: any) {
         console.error('Error in Discord API handler:', error);
-        return res.status(500).json({ error: 'An internal error occurred.' });
+        return res.status(500).json({ error: 'An internal error occurred while processing the command.' });
     }
 }

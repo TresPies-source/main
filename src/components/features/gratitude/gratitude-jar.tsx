@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -10,7 +11,6 @@ import {
   onSnapshot,
   addDoc,
   Timestamp,
-  getDocs,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,6 +56,7 @@ export function GratitudeJar() {
   const [newEntry, setNewEntry] = useState('');
   const [currentRating, setCurrentRating] = useState(3);
   const [insightsState, setInsightsState] = useState<{ loading: boolean; data: AnalyzeGratitudePatternsOutput | null; open: boolean }>({ loading: false, data: null, open: false });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -95,19 +96,27 @@ export function GratitudeJar() {
       return;
     }
 
-    await addDoc(collection(db, 'gratitude'), {
-      text: newEntry,
-      rating: currentRating,
-      userId: user.uid,
-      createdAt: Timestamp.now(),
-    });
+    setIsSubmitting(true);
+    try {
+        await addDoc(collection(db, 'gratitude'), {
+          text: newEntry,
+          rating: currentRating,
+          userId: user.uid,
+          createdAt: Timestamp.now(),
+        });
 
-    setNewEntry('');
-    setCurrentRating(3);
-    toast({
-        title: 'Gratitude Added',
-        description: 'Your moment has been saved in the jar.',
-    })
+        setNewEntry('');
+        setCurrentRating(3);
+        toast({
+            title: 'Gratitude Added',
+            description: 'Your moment has been saved in the jar.',
+        });
+    } catch (error) {
+        console.error("Error adding gratitude:", error);
+        toast({ title: "Error", description: "Could not save your gratitude entry. Please try again.", variant: "destructive" });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
   
   const handleAnalyzeGratitude = async () => {
@@ -206,7 +215,7 @@ export function GratitudeJar() {
                 value={newEntry}
                 onChange={e => setNewEntry(e.target.value)}
                 className="min-h-[100px]"
-                disabled={!user}
+                disabled={!user || isSubmitting}
               />
               <div>
                 <label className="text-sm font-medium mb-2 block">How grateful do you feel?</label>
@@ -229,8 +238,8 @@ export function GratitudeJar() {
                     </div>
                 </TooltipProvider>
               </div>
-              <Button type="submit" className="w-full" disabled={!user}>
-                Add to Jar
+              <Button type="submit" className="w-full" disabled={!user || isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Add to Jar'}
               </Button>
             </form>
             {!isPro && user && entries.length >= 100 && (

@@ -1,6 +1,7 @@
+
 // src/pages/api/slack.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import { handleSlackCommand, HandleSlackCommandInput, HandleSlackCommandOutput } from '@/ai/flows/handle-slack-command';
+import { handleSlackCommand, HandleSlackCommandOutput } from '@/ai/flows/handle-slack-command';
 import { urlencoded } from 'body-parser';
 import { promisify } from 'util';
 
@@ -20,12 +21,18 @@ const urlencodedParser = promisify(urlencoded({ extended: true }));
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<HandleSlackCommandOutput | { error: string }>) {
     if (req.method !== 'POST') {
+        res.setHeader('Allow', ['POST']);
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     // In a production app, you would also verify the Slack signing secret here
     // to ensure requests are genuinely from Slack.
     // https://api.slack.com/authentication/verifying-requests-from-slack
+    if (process.env.NODE_ENV === 'production' && !process.env.SLACK_SIGNING_SECRET) {
+        console.error("SLACK_SIGNING_SECRET is not set. This is required in production.");
+        return res.status(500).json({ error: 'Server configuration error.' });
+    }
+
 
     try {
         // Slack sends data as x-www-form-urlencoded, so we need to parse it.
@@ -45,6 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     } catch (error: any) {
         console.error('Error in Slack API handler:', error);
-        res.status(500).json({ error: 'An internal error occurred.' });
+        res.status(500).json({ error: 'An internal error occurred while processing the command.' });
     }
 }

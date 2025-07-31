@@ -1,16 +1,10 @@
-
 {
   "manifest_version": 3,
   "name": "ZenJar",
   "version": "1.0",
-  "description": "A minimalist companion for focus, gratitude, and motivation.",
+  "description": "A minimalist companion for wellness and productivity.",
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
+    "default_popup": "popup.html"
   },
   "icons": {
     "16": "icon16.png",
@@ -21,18 +15,11 @@
     "identity",
     "storage"
   ],
-  "host_permissions": [
-    "https://*.firebaseapp.com/*",
-    "https://*.firebaseio.com/*",
-    "https://*.firebasedatabase.app/*",
-    "https://*.cloudfunctions.net/*",
-    "https://*.googleapis.com/*"
-  ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' https://apis.google.com/ https://www.gstatic.com/ https://www.googleapis.com https://securetoken.googleapis.com; "
+    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' https://apis.google.com/ https://www.gstatic.com/ https://www.googleapis.com/ https://securetoken.googleapis.com;"
   },
   "oauth2": {
-    "client_id": "634724124220-4k5j9f5vjqn2q1q3gq2qgq2qgq2qgq2q.apps.googleusercontent.com",
+    "client_id": "634724124220-k19r9m9k808p8k8v1j7f2g3h4i5j6k7l.apps.googleusercontent.com",
     "scopes": [
       "profile",
       "email"

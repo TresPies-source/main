@@ -1,50 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZenJar</title>
-  <link rel="stylesheet" href="style.css">
+    <title>ZenJar</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div id="loading-screen" class="screen">
-    <p>Loading ZenJar...</p>
-  </div>
-
-  <div id="login-screen" class="screen" style="display: none;">
-    <div class="header">
-        <img src="icon48.png" alt="ZenJar Logo" class="logo">
-        <h1>Welcome to ZenJar</h1>
-    </div>
-    <p>Sign in to connect with your jars.</p>
-    <button id="login-btn">Sign in with Google</button>
-  </div>
-
-  <div id="main-app" class="screen" style="display: none;">
-    <div class="header">
-      <img src="icon48.png" alt="ZenJar Logo" class="logo">
-      <h1 id="welcome-message">ZenJar</h1>
-      <button id="logout-btn" title="Logout">Logout</button>
+    <div id="loading-view" class="view">
+        <p>Loading...</p>
     </div>
 
-    <div id="result-display"></div>
-
-    <div class="action-buttons">
-       <button id="get-motivation-btn">Get Motivation</button>
-       <button id="draw-task-btn">Draw a Task</button>
+    <div id="login-view" class="view" style="display: none;">
+        <div class="header">
+            <h1>Welcome to ZenJar</h1>
+        </div>
+        <button id="login-btn">Sign in with Google</button>
     </div>
 
-    <div class="task-adder">
-      <form id="task-form">
-        <textarea id="task-input" placeholder="Brain dump your tasks here..." required></textarea>
-        <button type="submit" id="add-task-btn">Add Tasks with AI</button>
-      </form>
-    </div>
-    
-    <div class="footer">
-        <a href="#" id="open-app-link">Open Full App</a>
-    </div>
-  </div>
+    <div id="main-view" class="view" style="display: none;">
+        <div class="header">
+            <h1 id="welcome-message"></h1>
+            <button id="logout-btn">Sign Out</button>
+        </div>
 
-  <script src="popup.js"></script>
+        <div id="add-task-section">
+            <h2>Add to Task Jar</h2>
+            <textarea id="task-input" placeholder="Brain dump your tasks here..."></textarea>
+            <button id="add-task-btn">Process with AI</button>
+        </div>
+        
+        <div class="actions-section">
+            <h2>Quick Actions</h2>
+            <div class="button-group">
+                <button id="motivation-btn">Get Motivation</button>
+                <button id="draw-task-btn">Draw a Task</button>
+            </div>
+        </div>
+
+        <div id="display-area"></div>
+
+        <div class="footer">
+            <a href="#" id="open-app-link">Open Full App</a>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

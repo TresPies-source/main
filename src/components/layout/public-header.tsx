@@ -32,6 +32,9 @@ export function PublicHeader() {
              <Link href="/public/terms" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/terms" ? "text-foreground" : "text-foreground/60")}>
                 Terms
             </Link>
+            <Link href="/public/license" className={cn("transition-colors hover:text-foreground/80", pathname === "/public/license" ? "text-foreground" : "text-foreground/60")}>
+                License
+            </Link>
         </nav>
         <div className="flex-1 flex justify-end">
             <Button asChild>
